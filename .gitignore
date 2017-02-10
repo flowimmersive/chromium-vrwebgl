@@ -30,6 +30,7 @@
 *_proto_cpp.xml
 *~
 !Android.mk
+!Application.mk
 .*.sw?
 .DS_Store
 .classpath
@@ -74,6 +75,7 @@ vs-chromium-project.txt
 /build/x64/
 /build/linux/bin/eu-strip
 /build/linux/debian_*-sysroot/
+/build/linux/ubuntu_*-sysroot/
 /build/mac_files
 /buildtools
 # The Chrome OS build creates a /c symlink due to http://crbug.com/54866.
@@ -464,6 +466,7 @@ vs-chromium-project.txt
 /third_party/yasm/generate_files.xml
 /third_party/yasm/source/patched-yasm
 /third_party/yasm/yasm.xml
+/third_party/node/
 /tools/.bisect-builds-cache.json
 /tools/distcc
 /tools/gn/bin/linux
