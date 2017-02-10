@@ -6,7 +6,9 @@
 
 optional_url=$1
 
+  # -n org.chromium.android_webview.shell/.AwShellActivity \
+
 adb shell am start \
   -a android.intent.action.VIEW \
-  -n org.chromium.android_webview.shell/.AwShellActivity \
+  -n org.chromium.android_webview.shell/.URLEntryActivity \
   ${optional_url:+-d "$optional_url"}
