@@ -1,0 +1,6 @@
+[
+] interface VRWebGLShaderPrecisionFormat {
+    readonly attribute long rangeMin;
+    readonly attribute long rangeMax;
+    readonly attribute long precision;
+};

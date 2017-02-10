@@ -78,6 +78,12 @@ component("modules") {
     configs -= [ "//build/config/compiler:default_symbols" ]
     configs += [ "//build/config/compiler:no_symbols" ]
   }
+
+  ldflags = [
+    "-L../../third_party/VRWebGL/lib/armeabi-v7a",
+    "-lVRWebGL_OculusMobileSDK"
+  ]
+
 }
 
 # GYP version: WebKit/Source/modules/modules.gyp:modules_testing

@@ -13,6 +13,10 @@
 
 #include "wtf/Forward.h"
 
+// VRWebGL BEGIN
+class VRWebGLEyeParameters;
+// VRWebGL END
+
 namespace blink {
 
 struct WebVREyeParameters;
@@ -28,6 +32,10 @@ public:
     unsigned long renderHeight() const { return m_renderHeight; }
 
     void update(const device::blink::VREyeParametersPtr&);
+
+    // VRWebGL BEGIN
+    void update(const VRWebGLEyeParameters&);
+    // VRWebGL END
 
     DECLARE_VIRTUAL_TRACE()
 

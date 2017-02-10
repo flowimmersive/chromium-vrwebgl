@@ -1,0 +1,20 @@
+[
+    Constructor
+] interface VRWebGLVideo {
+    attribute DOMString src;
+    attribute double volume;
+    attribute boolean loop;
+    attribute double currentTime;
+
+    readonly attribute boolean paused;
+    readonly attribute double duration;
+    readonly attribute long videoWidth;
+    readonly attribute long videoHeight;
+    readonly attribute boolean prepared;
+    readonly attribute boolean ended;
+
+    void play();
+    void pause();
+    boolean checkPrepared();
+    boolean checkEnded();
+};
