@@ -231,6 +231,15 @@ public class AwTestContainerView extends FrameLayout {
         return new HardwareView(context);
     }
 
+    public void setZOrderMediaOverlay(boolean isMediaOverlay)
+    {
+        if (mHardwareView != null)
+        {
+            System.out.println("VRWebGL: setZOrderMediaOverlay");
+            mHardwareView.setZOrderMediaOverlay(isMediaOverlay);
+        }
+    }
+
     public AwTestContainerView(Context context, boolean allowHardwareAcceleration) {
         super(context);
         if (allowHardwareAcceleration) {
