@@ -30,6 +30,7 @@
 *_proto_cpp.xml
 *~
 !Android.mk
+!Application.mk
 .*.sw?
 .DS_Store
 .classpath
@@ -492,6 +493,7 @@ vs-chromium-project.txt
 /third_party/yasm/generate_files.xml
 /third_party/yasm/source/patched-yasm
 /third_party/yasm/yasm.xml
+/third_party/node/
 /tools/.bisect-builds-cache.json
 /tools/distcc
 /tools/gn/bin/linux
