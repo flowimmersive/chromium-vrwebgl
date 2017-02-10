@@ -11,6 +11,10 @@
 #include "platform/heap/Handle.h"
 #include "wtf/Forward.h"
 
+// VRWebGL BEGIN
+class VRWebGLPose;
+// VRWebGL END
+
 namespace blink {
 
 class VRPose final : public GarbageCollected<VRPose>, public ScriptWrappable {
@@ -27,6 +31,10 @@ class VRPose final : public GarbageCollected<VRPose>, public ScriptWrappable {
   DOMFloat32Array* linearAcceleration() const { return m_linearAcceleration; }
 
   void setPose(const device::mojom::blink::VRPosePtr&);
+
+  // VRWebGL BEGIN
+  void setPose(const VRWebGLPose& vrWebGLPose);
+  // VRWebGL END
 
   DECLARE_VIRTUAL_TRACE();
 

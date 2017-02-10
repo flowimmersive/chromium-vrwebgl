@@ -171,6 +171,12 @@ target(modules_target_type, "modules") {
     configs -= [ "//build/config/compiler:default_symbols" ]
     configs += [ "//build/config/compiler:no_symbols" ]
   }
+
+  ldflags = [
+    "-L../../third_party/VRWebGL/lib/armeabi-v7a",
+    "-lVRWebGL_OculusMobileSDK"
+  ]
+
 }
 
 source_set("modules_testing") {

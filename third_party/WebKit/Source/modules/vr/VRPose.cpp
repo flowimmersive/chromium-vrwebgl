@@ -4,6 +4,10 @@
 
 #include "modules/vr/VRPose.h"
 
+// VRWebGL BEGIN
+#include "modules/vr/VRWebGLPose.h"
+// VRWebGL END
+
 namespace blink {
 
 namespace {
@@ -31,6 +35,19 @@ void VRPose::setPose(const device::mojom::blink::VRPosePtr& state) {
   m_angularAcceleration = mojoArrayToFloat32Array(state->angularAcceleration);
   m_linearAcceleration = mojoArrayToFloat32Array(state->linearAcceleration);
 }
+
+// VRWebGL BEGIN
+void VRPose::setPose(const VRWebGLPose& vrWebGLPose)
+{
+    m_timeStamp = 0;
+    m_orientation = DOMFloat32Array::create(vrWebGLPose.orientation, 4);
+    m_position = nullptr;
+    m_angularVelocity = nullptr;
+    m_linearVelocity = nullptr;
+    m_angularAcceleration = nullptr;
+    m_linearAcceleration = nullptr;
+}
+// VRWebGL END
 
 DEFINE_TRACE(VRPose) {
   visitor->trace(m_orientation);

@@ -4,6 +4,8 @@
 
 #include "modules/vr/VREyeParameters.h"
 
+#include "modules/vr/VRWebGLEyeParameters.h"
+
 namespace blink {
 
 VREyeParameters::VREyeParameters() {
@@ -28,9 +30,29 @@ void VREyeParameters::update(
   m_renderHeight = eyeParameters->renderHeight;
 }
 
-DEFINE_TRACE(VREyeParameters) {
-  visitor->trace(m_offset);
-  visitor->trace(m_fieldOfView);
+// VRWebGL BEGIN
+void VREyeParameters::update(const VRWebGLEyeParameters& eyeParameters)
+{
+    m_offset->data()[0] = eyeParameters.interpupillaryDistance;
+    m_offset->data()[1] = 0;
+    m_offset->data()[2] = 0;
+
+    GLfloat halfXFOV = eyeParameters.xFOV / 2.0;
+    GLfloat halfYFOV = eyeParameters.yFOV / 2.0;
+    m_fieldOfView->setUpDegrees(halfYFOV);
+    m_fieldOfView->setDownDegrees(halfYFOV);
+    m_fieldOfView->setLeftDegrees(halfXFOV);
+    m_fieldOfView->setRightDegrees(halfXFOV);
+
+    m_renderWidth = eyeParameters.width;
+    m_renderHeight = eyeParameters.height;
+}
+// VRWebGL END
+
+DEFINE_TRACE(VREyeParameters)
+{
+    visitor->trace(m_offset);
+    visitor->trace(m_fieldOfView);
 }
 
 }  // namespace blink

@@ -13,6 +13,10 @@
 
 #include "wtf/Forward.h"
 
+// VRWebGL BEGIN
+class VRWebGLEyeParameters;
+// VRWebGL END
+
 namespace blink {
 
 class VREyeParameters final : public GarbageCollected<VREyeParameters>,
@@ -28,6 +32,10 @@ class VREyeParameters final : public GarbageCollected<VREyeParameters>,
   unsigned long renderHeight() const { return m_renderHeight; }
 
   void update(const device::mojom::blink::VREyeParametersPtr&);
+
+  // VRWebGL BEGIN
+  void update(const VRWebGLEyeParameters&);
+  // VRWebGL END
 
   DECLARE_VIRTUAL_TRACE()
 
