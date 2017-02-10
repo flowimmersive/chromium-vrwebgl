@@ -11,11 +11,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+<!--    
     <LinearLayout android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <!--suppress LabelFor -->
         <EditText android:id="@+id/url"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -39,6 +39,7 @@
             android:src="@android:drawable/ic_media_next"
             android:scaleType="center" />
     </LinearLayout>
+-->
     <LinearLayout android:id="@+id/content_container"
         android:orientation="horizontal"
         android:layout_width="match_parent"

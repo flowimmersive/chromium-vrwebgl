@@ -17,6 +17,9 @@ group("test") {
 
 android_apk("android_webview_apk") {
   deps = [
+    ":vrwebgl_zxing_javalib",
+    ":vrwebgl_ovr_systemutils_javalib",
+    ":vrwebgl_ovr_vrapi_javalib",
     ":android_webview_apk_assets",
     ":android_webview_apk_resources",
     "//android_webview:android_webview_java",
@@ -31,6 +34,8 @@ android_apk("android_webview_apk") {
   apk_name = "AndroidWebView"
   android_manifest = "shell/AndroidManifest.xml"
   java_files = [
+    "shell/src/org/chromium/android_webview/shell/Utils.java",
+    "shell/src/org/chromium/android_webview/shell/URLEntryActivity.java",
     "shell/src/org/chromium/android_webview/shell/AwShellActivity.java",
     "shell/src/org/chromium/android_webview/shell/AwShellApplication.java",
     "shell/src/org/chromium/android_webview/shell/AwShellResourceProvider.java",
@@ -46,6 +51,11 @@ android_apk("android_webview_apk") {
   shared_libraries = [
     ":libdrawgl",
     ":libstandalonelibwebviewchromium",
+  ]
+
+  loadable_modules = [
+    "shell/VRWebGL/libs/armeabi-v7a/libVRWebGL_OculusMobileSDK.so",
+    "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/armeabi-v7a/libvrapi.so"  
   ]
 
   native_lib_version_rule = "//build/util:chrome_version_json"
@@ -68,6 +78,13 @@ android_assets("android_webview_apk_assets") {
     "//v8:v8_external_startup_data_assets",
   ]
   sources = [
+    "shell/assets/oculussig_02157df22d8d7c23",
+    "shell/assets/oculussig_22aa6e11",
+    "shell/assets/oculussig_4317d84d",
+    "shell/assets/oculussig_9ed13553",
+    "shell/assets/oculussig_67a5ceee",
+    "shell/assets/config.json",
+    "shell/assets/VRWebGL.js",
     "shell/assets/asset_file.html",
     "shell/assets/asset_icon.png",
     "shell/assets/cookie_test.html",
@@ -82,6 +99,40 @@ android_assets("android_webview_apk_assets") {
     "shell/assets/visual_state_on_page_commit_visible_test.html",
     "shell/assets/visual_state_waits_for_js_detached_test.html",
     "shell/assets/visual_state_waits_for_js_test.html",
+  ]
+  renaming_sources = [
+    "shell/assets/tests/basic/index01.html",
+    "shell/assets/tests/basic/index02.html",
+    "shell/assets/tests/basic/crate.gif",
+    "shell/assets/tests/basic/webgl-utils.js",
+    "shell/assets/tests/basic/glMatrix-0.9.5.min.js",
+
+    "shell/assets/tests/video/index.html",
+    "shell/assets/tests/video/video.mp4",
+    "shell/assets/tests/video/glMatrix-0.9.5.min.js",
+
+    "shell/assets/tests/cubes/index.html",
+    "shell/assets/tests/cubes/three.min.js",
+    "shell/assets/tests/cubes/VRControls.js",
+    "shell/assets/tests/cubes/VREffect.js",
+    "shell/assets/tests/cubes/WebVR.js"
+  ]
+  renaming_destinations = [
+    "tests/basic/index01.html",
+    "tests/basic/index02.html",
+    "tests/basic/crate.gif",
+    "tests/basic/webgl-utils.js",
+    "tests/basic/glMatrix-0.9.5.min.js",
+
+    "tests/video/index.html",
+    "tests/video/video.mp4",
+    "tests/video/glMatrix-0.9.5.min.js",
+
+    "tests/cubes/index.html",
+    "tests/cubes/three.min.js",
+    "tests/cubes/VRControls.js",
+    "tests/cubes/VREffect.js",
+    "tests/cubes/WebVR.js"
   ]
 }
 
@@ -290,4 +341,17 @@ shared_library("libdrawgl") {
     "shell/src/draw_gl/draw_gl.cc",
   ]
   configs -= [ "//build/config/android:hide_native_jni_exports" ]
+}
+
+# ====================================================================================
+
+# REFRENCING THESE TARGETS ONE BY ONE SEEMS TO WORK.
+android_java_prebuilt("vrwebgl_zxing_javalib") {
+  jar_path = "shell/VRWebGL/zxing-2.3.0/android-integration-2.3.0-supportv4.jar"
+}
+android_java_prebuilt("vrwebgl_ovr_systemutils_javalib") {
+  jar_path = "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/SystemUtils.jar"
+}
+android_java_prebuilt("vrwebgl_ovr_vrapi_javalib") {
+  jar_path = "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/VrApi.jar"
 }
