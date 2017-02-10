@@ -15,12 +15,12 @@ group("test") {
   ]
 }
 
+# GYP: //android_webview/android_webview_tests.gypi:android_webview_apk
 android_apk("android_webview_apk") {
   deps = [
     ":vrwebgl_zxing_javalib",
-    "//third_party/android_protobuf:protobuf_nano_javalib",
-    ":vrwebgl_gvr_common_java",
-    "//third_party/android_tools:android_support_v7_appcompat_java",
+    ":vrwebgl_ovr_systemutils_javalib",
+    ":vrwebgl_ovr_vrapi_javalib",
     ":android_webview_apk_assets",
     ":android_webview_apk_resources",
     "//android_webview:android_webview_java",
@@ -55,8 +55,8 @@ android_apk("android_webview_apk") {
   ]
 
   loadable_modules = [
-    "shell/VRWebGL/libs/armeabi-v7a/libVRWebGL_GVRMobileSDK.so",
-    "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.40.0/armeabi-v7a/libgvr.so"
+    "shell/VRWebGL/libs/armeabi-v7a/libVRWebGL_OculusMobileSDK.so",
+    "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/armeabi-v7a/libvrapi.so"  
   ]
 
   native_lib_version_rule = "//build/util:chrome_version_json"
@@ -101,12 +101,41 @@ android_assets("android_webview_apk_assets") {
     "shell/assets/visual_state_waits_for_js_detached_test.html",
     "shell/assets/visual_state_waits_for_js_test.html",
   ]
-#  renaming_sources = [
-#    "shell/assets/tests/gamepad/index.html",
-#  ]
-#  renaming_destinations = [
-#    "tests/gamepad/index.html",
-#  ]
+  renaming_sources = [
+    "shell/assets/tests/basic/index01.html",
+    "shell/assets/tests/basic/index02.html",
+    "shell/assets/tests/basic/crate.gif",
+    "shell/assets/tests/basic/webgl-utils.js",
+    "shell/assets/tests/basic/glMatrix-0.9.5.min.js",
+
+    "shell/assets/tests/video/index.html",
+    "shell/assets/tests/video/video.mp4",
+    "shell/assets/tests/video/glMatrix-0.9.5.min.js",
+
+    "shell/assets/tests/cubes/index.html",
+    "shell/assets/tests/cubes/three.min.js",
+    "shell/assets/tests/cubes/VRControls.js",
+    "shell/assets/tests/cubes/VREffect.js",
+    "shell/assets/tests/cubes/WebVR.js"
+  ]
+  renaming_destinations = [
+    "tests/basic/index01.html",
+    "tests/basic/index02.html",
+    "tests/basic/crate.gif",
+    "tests/basic/webgl-utils.js",
+    "tests/basic/glMatrix-0.9.5.min.js",
+
+    "tests/video/index.html",
+    "tests/video/video.mp4",
+    "tests/video/glMatrix-0.9.5.min.js",
+
+    "tests/cubes/index.html",
+    "tests/cubes/three.min.js",
+    "tests/cubes/VRControls.js",
+    "tests/cubes/VREffect.js",
+    "tests/cubes/WebVR.js"
+  ]
+}
 }
 
 shared_library("libstandalonelibwebviewchromium") {
@@ -322,9 +351,9 @@ shared_library("libdrawgl") {
 android_java_prebuilt("vrwebgl_zxing_javalib") {
   jar_path = "shell/VRWebGL/zxing-2.3.0/android-integration-2.3.0-supportv4.jar"
 }
-android_aar_prebuilt("vrwebgl_gvr_common_java") {
-  aar_path = "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.40.0/sdk-common-1.40.0.aar"
-  proguard_configs = [ "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.40.0/proguard-gvr.txt" ]
-  ignore_manifest = true  # Ignored because manifest merging is not supported (http://crbug.com/643967)
-  ignore_native_libraries = true
+android_java_prebuilt("vrwebgl_ovr_systemutils_javalib") {
+  jar_path = "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/SystemUtils.jar"
+}
+android_java_prebuilt("vrwebgl_ovr_vrapi_javalib") {
+  jar_path = "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/VrApi.jar"
 }

@@ -65,12 +65,12 @@ import org.chromium.content.app.ContentApplication;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.WebContents;
 
-import android.opengl.GLSurfaceView;
 import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import java.io.BufferedReader;
@@ -93,9 +93,6 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.Bitmap;
 
-import com.google.vr.ndk.base.AndroidCompat;
-import com.google.vr.ndk.base.GvrLayout;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -107,13 +104,13 @@ import android.speech.RecognitionListener;
  * This is a lightweight activity for tests that only require WebView functionality.
  */
 public class AwShellActivity extends Activity implements 
+        SurfaceTexture.OnFrameAvailableListener,
         MediaPlayer.OnVideoSizeChangedListener,
         MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnPreparedListener,
         AudioManager.OnAudioFocusChangeListener,
-        GLSurfaceView.Renderer {  
-
+        SurfaceHolder.Callback {  
     private static final String TAG = "cr.AwShellActivity";
     private static final String PREFERENCES_NAME = "AwShellPrefs";
     private static final String INITIAL_URL = "No URL provided either in the intent nor in the config.json";
@@ -130,8 +127,8 @@ public class AwShellActivity extends Activity implements
     private static final int INDEX_WEBVIEW = 1;
     private static final int INDEX_SPEECH_RECOGNITION = 2;
 
-    private GLSurfaceView surfaceView;
-    private GvrLayout gvrLayout;
+    private SurfaceView surfaceView;
+    private SurfaceHolder surfaceHolder;
     private long nativePointer = 0;   
     // This is done on the GL thread because refreshViewerProfile isn't thread-safe.
     private final Runnable refreshViewerProfileRunnable = new Runnable() {
@@ -631,8 +628,7 @@ public class AwShellActivity extends Activity implements
 
         ContextUtils.initApplicationContext(getApplicationContext());
         AwBrowserProcess.loadLibrary();
-        System.loadLibrary("gvr");
-        System.loadLibrary("VRWebGL_GVRMobileSDK");
+        System.loadLibrary("VRWebGL_OculusMobileSDK");
 
         if (CommandLine.getInstance().hasSwitch(AwShellSwitches.ENABLE_ATRACE)) {
             Log.e(TAG, "Enabling Android trace.");
@@ -690,29 +686,13 @@ public class AwShellActivity extends Activity implements
                     }
                   }
                 });
-        // Initialize GvrLayout and the native renderer.
-        gvrLayout = new GvrLayout(this);
-        layout.addView(gvrLayout);
-        // Add the GLSurfaceView to the GvrLayout.
-        surfaceView = new GLSurfaceView(this);
-        surfaceView.setZOrderMediaOverlay(true);
-        surfaceView.setEGLContextClientVersion(3);
-        surfaceView.setEGLConfigChooser(8, 8, 8, 0, 0, 0);
-        surfaceView.setPreserveEGLContextOnPause(true);
-        surfaceView.setRenderer(this);
-        gvrLayout.setPresentationView(surfaceView);
-        // Enable scan line racing.
-        if (gvrLayout.setAsyncReprojectionEnabled(true)) {
-          // Scanline racing decouples the app framerate from the display framerate,
-          // allowing immersive interaction even at the throttled clockrates set by
-          // sustained performance mode.
-          AndroidCompat.setSustainedPerformanceMode(this, true);
-        }
-        // Enable VR Mode.
-        AndroidCompat.setVrModeEnabled(this, true);
-
         // Prevent screen from dimming/locking.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        surfaceView = new SurfaceView( this );
+        layout.addView(surfaceView);
+        surfaceView.setZOrderMediaOverlay(true);
+        surfaceView.getHolder().addCallback( this );   
 
         // Load the VRWebGL.js file
         try
@@ -804,7 +784,7 @@ public class AwShellActivity extends Activity implements
         audioManager = (AudioManager) getSystemService( Context.AUDIO_SERVICE );
 
         // Create the native side
-        nativePointer = nativeOnCreate( gvrLayout.getGvrApi().getNativeGvrContext() );        
+        nativePointer = nativeOnCreate( this );        
     }
 
     @Override protected void onStart()
@@ -817,11 +797,6 @@ public class AwShellActivity extends Activity implements
     {
         super.onResume();
 
-        nativeOnResume( nativePointer );
-        gvrLayout.onResume();
-        surfaceView.onResume();
-        surfaceView.queueEvent(refreshViewerProfileRunnable);
-
         if (!urlLoaded)
         {
             mAwTestContainerView.getAwContents().loadUrl(url);
@@ -829,21 +804,19 @@ public class AwShellActivity extends Activity implements
         }
 
         surfaceView.setZOrderMediaOverlay(true);
+        nativeOnResume( nativePointer );
     }
 
     @Override protected void onPause()
     {
-        super.onPause();
-
         nativeOnPause( nativePointer );
-        gvrLayout.onPause();
-        surfaceView.onPause();
+        super.onPause();
     }
 
     @Override protected void onStop()
     {
-        super.onStop();
         nativeOnStop( nativePointer );
+        super.onStop();
     }
 
     @Override
@@ -855,13 +828,16 @@ public class AwShellActivity extends Activity implements
             mDevToolsServer = null;
         }
 
-        // Destruction order is important; shutting down the GvrLayout will detach
-        // the GLSurfaceView and stop the GL thread, allowing safe shutdown of
-        // native resources from the UI thread.
-        gvrLayout.shutdown();
+        if ( surfaceHolder != null )
+        {
+            nativeOnSurfaceDestroyed( nativePointer );
+        }
 
         nativeOnDestroy( nativePointer );
+        super.onDestroy();
         nativePointer = 0;
+
+        System.out.println("VRWebGL: onDestroy 4");
     }
 
     private AwTestContainerView createAwTestContainerView() {
@@ -907,6 +883,68 @@ public class AwShellActivity extends Activity implements
                     }
                     speechRecognitions.clear();
                 }
+                return null;
+            }
+
+            @Override
+            public void onDownloadStart(String url,
+                                        String userAgent,
+                                        String contentDisposition,
+                                        String mimeType,
+                                        long contentLength) {
+                System.out.println("VRWebGL: onDownloadStart. url = " + url);
+            }
+
+            @Override
+            public void handleJsAlert(String url, String message, final JsResultReceiver receiver) {
+                Utils.createAlertDialog(AwShellActivity.this, url, message, new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        receiver.confirm();
+                    }
+                }, 1, "Ok", null, null).show();                
+            }
+
+            @Override
+            public void handleJsPrompt(String url, String message, String defaultValue, final JsPromptResultReceiver receiver) {
+                final EditText editText = new EditText(AwShellActivity.this);
+                Utils.createPromptDialog(AwShellActivity.this, editText, url, message, new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        if (which == DialogInterface.BUTTON_POSITIVE)
+                        {
+                            receiver.confirm(editText.getText().toString());
+                        }
+                        else 
+                        {
+                            receiver.cancel();
+                        }
+                    }
+                }, 2, "Ok", "Cancel", null).show();                
+            }
+
+            @Override
+            public void handleJsConfirm(String url, String message, final JsResultReceiver receiver) {
+                Utils.createAlertDialog(AwShellActivity.this, url, message, new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        if (which == DialogInterface.BUTTON_POSITIVE) 
+                        {
+                            receiver.confirm();
+                        }
+                        else 
+                        {
+                            receiver.cancel();
+                        }
+
+                    }
+                }, 2, "Yes", "No", null).show();                
             }
 
             @Override
@@ -1773,7 +1811,7 @@ public class AwShellActivity extends Activity implements
     // Native calls
     
     // Activity lifecycle
-    private native long nativeOnCreate( long nativeGvrContext );
+    private native long nativeOnCreate( Activity obj );
     private native void nativeOnStart( long nativePointer );
     private native void nativeOnResume( long nativePointer );
     private native void nativeOnPause( long nativePointer );
@@ -1783,8 +1821,9 @@ public class AwShellActivity extends Activity implements
     private native void nativeOnPageStarted();
 
     // Surface lifecycle
-    public native void nativeOnSurfaceCreated( long nativePointer);
-    public native void nativeOnDrawFrame( long nativePointer );
+    public native void nativeOnSurfaceCreated( long nativePointer, Surface s );
+    public native void nativeOnSurfaceChanged( long nativePointer, Surface s );
+    public native void nativeOnSurfaceDestroyed( long nativePointer );
 
     // Input
     private native void nativeOnKeyEvent( long nativePointer, int keyCode, int action );

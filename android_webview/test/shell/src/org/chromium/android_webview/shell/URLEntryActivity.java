@@ -34,8 +34,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.net.Uri;
 
-import com.google.vr.ndk.base.DaydreamApi;
-
 public class URLEntryActivity extends Activity
 {
 	private static final String LAST_USED_URL_KEY = "url";
@@ -52,9 +50,6 @@ public class URLEntryActivity extends Activity
 	private JSONArray urlHistoryURLs = null;
 	private JSONObject config = null;
 	private HashSet<Integer> urlIndicesToRemove = new HashSet<Integer>();
-
-	private DaydreamApi ddApi = null;
-
 	private OnCheckedChangeListener checkedChangeListener = new OnCheckedChangeListener()
 	{
 		@Override
@@ -136,8 +131,6 @@ public class URLEntryActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-
-		ddApi = DaydreamApi.create(this);
 		
 		setContentView(R.layout.url_entry_layout);
 		
@@ -175,8 +168,7 @@ public class URLEntryActivity extends Activity
 					Intent intent = new Intent(getApplicationContext(), AwShellActivity.class);
 					intent.setData(Uri.parse(url));
 					intent.putExtra("config", config.toString());
-					ddApi.launchInVr(intent);
-					// startActivity(intent);
+					startActivity(intent);
 		  	}
 		  	catch(MalformedURLException e)
 		  	{
@@ -254,9 +246,8 @@ public class URLEntryActivity extends Activity
 				}, 2, "Yes", "No", null).show();
 			}
 		});
-
+		
 		// This is protocol to be followed:
-		// 0.- If a URL is passed in the intent, use it directly.
 		// 1.- Read if the config.json file exists in the assets.
 		// 		1.1.- If it exists, check if the clearCache property exists.
 		//			1.1.1.- If the property exists, it's value is what drives the checkBox and if the user changes the value he/she needs to be notified that the values will only be used in the execution but it won't be stored as the assets file value prevails.
