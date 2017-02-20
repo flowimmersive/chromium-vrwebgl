@@ -144,6 +144,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -165,6 +167,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_attachShader> newInstance(VRWebGLProgram* program, VRWebGLShader* shader);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -188,6 +192,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -208,6 +214,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_bindBuffer> newInstance(GLenum target, VRWebGLBuffer* buffer);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -230,6 +238,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -250,6 +260,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_bindRenderbuffer> newInstance(GLenum target, VRWebGLRenderbuffer* renderbuffer);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -272,6 +284,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -292,6 +306,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -311,6 +327,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_blendEquation> newInstance(GLenum mode);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -333,6 +351,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -353,6 +373,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_blendFunc> newInstance(GLenum sfactor, GLenum dfactor);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -376,6 +398,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_blendFuncSeparate> newInstance(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -403,6 +427,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -428,6 +454,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -449,6 +477,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -468,6 +498,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_clear> newInstance(GLbitfield mask);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -489,6 +521,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -508,6 +542,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_clearDepthf> newInstance(GLclampf depth);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -529,6 +565,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -548,6 +586,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_colorMask> newInstance(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -570,6 +610,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -591,6 +633,8 @@ public:
     
     virtual bool isSynchronous() const override;
 
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -612,6 +656,8 @@ public:
     
     virtual bool isSynchronous() const override;
 
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -632,6 +678,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_createProgram> newInstance(VRWebGLProgram* program);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -654,6 +702,8 @@ public:
     
     virtual bool isSynchronous() const override;
 
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -676,6 +726,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -697,6 +749,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -716,6 +770,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_cullFace> newInstance(GLenum mode);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -738,6 +794,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -758,6 +816,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_deleteFramebuffer> newInstance(VRWebGLFramebuffer* framebuffer);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -780,6 +840,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -800,6 +862,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_deleteRenderbuffer> newInstance(VRWebGLRenderbuffer* renderbuffer);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -822,6 +886,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -843,6 +909,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -863,6 +931,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -882,6 +952,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_depthMask> newInstance(GLboolean flag);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -904,6 +976,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -925,6 +999,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -945,6 +1021,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -964,6 +1042,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_disableVertexAttribArray> newInstance(GLuint index);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -986,6 +1066,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_drawArrays> newInstance(GLenum mode, GLint first, GLsizei count);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1010,6 +1092,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1030,6 +1114,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1049,6 +1135,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_enableVertexAttribArray> newInstance(GLuint index);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1072,6 +1160,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_framebufferRenderbuffer> newInstance(GLenum target, GLenum attachment, GLenum renderbuffertarget, VRWebGLRenderbuffer* renderbuffer);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1097,6 +1187,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1116,6 +1208,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_frontFace> newInstance(GLenum mode);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1137,6 +1231,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_generateMipmap> newInstance(GLenum target);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1164,6 +1260,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1190,6 +1288,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1212,6 +1312,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1231,6 +1333,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_getError> newInstance();
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1253,6 +1357,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1274,6 +1380,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1294,6 +1402,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_getIntegerv> newInstance(GLenum pname);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1317,6 +1427,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1337,6 +1449,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_getProgramInfoLog> newInstance(VRWebGLProgram* program);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1360,6 +1474,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1380,6 +1496,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_getShaderInfoLog> newInstance(VRWebGLShader* shader);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1403,6 +1521,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1425,6 +1545,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1444,6 +1566,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_lineWidth> newInstance(GLfloat width);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1466,6 +1590,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1486,6 +1612,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_pixelStorei> newInstance(GLenum pname, GLint param);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1513,6 +1641,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1536,6 +1666,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1558,6 +1690,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_scissor> newInstance(GLint x, GLint y, GLsizei width, GLsizei height);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1584,6 +1718,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1606,6 +1742,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1627,6 +1765,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_texParameterf> newInstance(GLenum target, GLenum pname, GLfloat param);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -1659,6 +1799,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -1679,6 +1821,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_uniform1i> newInstance(const VRWebGLUniformLocation* location, GLint x);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -1704,6 +1848,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -1724,6 +1870,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_uniform1f> newInstance(const VRWebGLUniformLocation* location, GLfloat x);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -1749,6 +1897,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -1770,6 +1920,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_uniform2f> newInstance(const VRWebGLUniformLocation* location, GLfloat x, GLfloat y);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -1795,6 +1947,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -1816,6 +1970,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_uniform2i> newInstance(const VRWebGLUniformLocation* location, GLint x, GLint y);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -1841,6 +1997,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -1863,6 +2021,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_uniform3f> newInstance(const VRWebGLUniformLocation* location, GLfloat x, GLfloat y, GLfloat z);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -1888,6 +2048,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -1910,6 +2072,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_uniform3i> newInstance(const VRWebGLUniformLocation* location, GLint x, GLint y, GLint z);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -1935,6 +2099,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -1958,6 +2124,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_uniform4f> newInstance(const VRWebGLUniformLocation* location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -1983,6 +2151,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -2007,6 +2177,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -2030,6 +2202,8 @@ public:
     virtual ~VRWebGLCommand_uniform4iv();
 
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -2056,6 +2230,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -2080,6 +2256,8 @@ public:
     virtual ~VRWebGLCommand_uniformMatrix3fv();
 
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
         
@@ -2107,6 +2285,8 @@ public:
 
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
         
     virtual std::string name() const override;
@@ -2126,6 +2306,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_useProgram> newInstance(VRWebGLProgram* program);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -2152,6 +2334,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -2176,6 +2360,8 @@ public:
     
     virtual bool isSynchronous() const override;
     
+    virtual bool canBeProcessedImmediately() const override;
+    
     virtual void* process() override;
     
     virtual std::string name() const override;
@@ -2195,6 +2381,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_getString> newInstance(GLenum pname);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
@@ -2216,6 +2404,8 @@ public:
     static std::shared_ptr<VRWebGLCommand_setCameraWorldMatrix> newInstance(const GLfloat* matrix);
     
     virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
     
     virtual void* process() override;
     
