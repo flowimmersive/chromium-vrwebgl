@@ -84,35 +84,42 @@ void* VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing(const std::s
     
     pthread_mutex_lock( &m_mutex );
 
-    ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing(%s)", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
+    ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing(%s) begins", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
     
     if (vrWebGLCommand->isSynchronous())
     {
-        // The command is synchronous, so:
-        // 1.- Store the command so it can be executed in the OpenGL thread (check update).
-        // 2.- Stack all the commands up until now to be called too!
-        // 3.- Wait for the synchronous command to be processed.
-        // 4.- Return the result of the call
-        m_synchronousVRWebGLCommand = vrWebGLCommand;
-
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing %d commands in the batch before adding", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-        m_vrWebGLCommandQueueBatch.insert(m_vrWebGLCommandQueueBatch.end(), m_vrWebGLCommandQueue.begin(), m_vrWebGLCommandQueue.end());
-        m_vrWebGLCommandQueue.clear();
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing %d commands in the batch after adding", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-
-        if (m_insideAFrame)
+        if (vrWebGLCommand->canBeProcessedImmediately())
         {
-            ALOGE("VRWebGL: A synchronous call has been made inside a frame. Not a great idea. Many of these calls might slow down the JS process as they block the JS thread until the result of the call is provided from the OpenGL thread.");
+            result = vrWebGLCommand->process();
         }
-        
-        m_synchronousVRWebGLCommandResult = 0;
+        else
+        {
+            // The command is synchronous, so:
+            // 1.- Store the command so it can be executed in the OpenGL thread (check the update method).
+            // 2.- Stack all the commands up until now to be called too!
+            // 3.- Wait for the synchronous command to be processed.
+            // 4.- Return the result of the call
+            m_synchronousVRWebGLCommand = vrWebGLCommand;
 
-        // while ( !m_synchronousVRWebGLCommandResult )
-        // {
-            pthread_cond_wait( &m_synchronousVRWebGLCommandProcessed, &m_mutex );
-        // }
-        
-        result = m_synchronousVRWebGLCommandResult;
+            ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing %d commands in the batch before adding", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
+            m_vrWebGLCommandQueueBatch.insert(m_vrWebGLCommandQueueBatch.end(), m_vrWebGLCommandQueue.begin(), m_vrWebGLCommandQueue.end());
+            m_vrWebGLCommandQueue.clear();
+            ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing %d commands in the batch after adding", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
+
+            if (m_insideAFrame)
+            {
+                ALOGE("VRWebGL: A synchronous call has been made inside a frame. Not a great idea. Many of these calls might slow down the JS process as they block the JS thread until the result of the call is provided from the OpenGL thread.");
+            }
+            
+            m_synchronousVRWebGLCommandResult = 0;
+
+            // while ( !m_synchronousVRWebGLCommandResult )
+            // {
+                pthread_cond_wait( &m_synchronousVRWebGLCommandProcessed, &m_mutex );
+            // }
+            
+            result = m_synchronousVRWebGLCommandResult;
+        }
     }
     else
     {
@@ -120,6 +127,8 @@ void* VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing(const std::s
         m_vrWebGLCommandQueue.push_back(vrWebGLCommand);
     }
     
+    ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::queueVRWebGLCommandForProcessing(%s) ends", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
+
     pthread_mutex_unlock( &m_mutex );
     
     return result;
@@ -224,7 +233,7 @@ void VRWebGLCommandProcessorImpl::renderFrame(bool process)
         ALOGV("VRWebGL: %s: VRWebGLCommandProcessorImpl::renderFrame %d commands in the batch after process", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
     }
 
-    // Increment the renderFrameCallCounter to measure when the 2 calls, one for each eye, are made so we can notify to whoever is waiting for this condition
+    // Increment the indexOfEyeBeingRendered to measure when the 2 calls, one for each eye, are made so we can notify to whoever is waiting for this condition
     m_indexOfEyeBeingRendered++;
     if (m_indexOfEyeBeingRendered == 1)
     {        
