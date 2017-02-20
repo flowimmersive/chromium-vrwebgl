@@ -603,7 +603,7 @@ VRWebGLRenderbuffer* VRWebGLRenderingContext::createRenderbuffer()
 VRWebGLShader* VRWebGLRenderingContext::createShader(GLenum type)
 {
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::createShader begin";
-	VRWebGLShader* vrWebGLShader = new VRWebGLShader();
+	VRWebGLShader* vrWebGLShader = new VRWebGLShader(type);
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_createShader::newInstance(vrWebGLShader, type);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
@@ -662,6 +662,8 @@ void VRWebGLRenderingContext::deleteProgram(VRWebGLProgram* program)
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::deleteProgram end";
+    // TODO: Not ideal as there could be a race condition (VRWebGLCommand_deleteProgram is not synchronous)
+    program->markAsDeleted();
 }
 
 void VRWebGLRenderingContext::deleteRenderbuffer(VRWebGLRenderbuffer* renderbuffer)
@@ -680,6 +682,8 @@ void VRWebGLRenderingContext::deleteShader(VRWebGLShader* shader)
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::deleteShader end";
+    // TODO: Not ideal as there could be a race condition (VRWebGLCommand_deleteShader is not synchronous)
+    shader->markAsDeleted();
 }
 
 void VRWebGLRenderingContext::deleteTexture(VRWebGLTexture* texture)
