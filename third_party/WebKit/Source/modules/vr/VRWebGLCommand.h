@@ -3,6 +3,8 @@
 
 // #define VRWEBGL_SHOW_LOG
 
+#define VRWEBGL_USE_CACHE
+
 // TODO: For some reason GLES3.0 does not define this extension macro... so we add it manually! Used in video handling.
 #define GL_TEXTURE_EXTERNAL_OES           0x8D65
 
@@ -29,6 +31,8 @@ public:
     bool insideAFrame() const;
 
     virtual bool isSynchronous() const = 0;
+
+    virtual bool canBeProcessedImmediately() const = 0;
     
     virtual void* process() = 0;
     
