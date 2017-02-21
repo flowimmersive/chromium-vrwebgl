@@ -7,7 +7,7 @@ rm -rf ../Backup_VRWebGL/$BRANCH_NAME/*
 # WebKit vr
 mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/vr
 if [ $? -ne 0 ]; then exit 1; fi
-cp -r third_party/WebKit/Source/modules/vr ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/vr/
+cp -r third_party/WebKit/Source/modules/vr/*.* ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/vr/
 if [ $? -ne 0 ]; then exit 1; fi
 cp -r third_party/WebKit/Source/modules/BUILD.gn ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/
 if [ $? -ne 0 ]; then exit 1; fi
