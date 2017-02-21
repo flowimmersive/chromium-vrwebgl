@@ -9,6 +9,10 @@ mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/m
 if [ $? -ne 0 ]; then exit 1; fi
 cp -r third_party/WebKit/Source/modules/vr ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/vr/
 if [ $? -ne 0 ]; then exit 1; fi
+cp -r third_party/WebKit/Source/modules/BUILD.gn ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/
+if [ $? -ne 0 ]; then exit 1; fi
+cp -r third_party/WebKit/Source/modules/modules.gypi ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/
+if [ $? -ne 0 ]; then exit 1; fi
 # Android Chromium Webview
 # NOTE: Could copy only the elements that have been changed.
 mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/android_webview/test
@@ -26,6 +30,10 @@ rm -rf ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/android_webview/test/shell/VR
 if [ $? -ne 0 ]; then exit 1; fi
 rm -rf ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/android_webview/test/shell/tango
 if [ $? -ne 0 ]; then exit 1; fi
+# adb_run_android_webview_shell
+mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android
+if [ $? -ne 0 ]; then exit 1; fi
+cp build/android/adb_run_android_webview_shell ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android
 # APK
 mkdir ../Backup_VRWebGL/$BRANCH_NAME/bin
 if [ $? -ne 0 ]; then exit 1; fi
