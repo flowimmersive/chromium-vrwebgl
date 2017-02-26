@@ -18,8 +18,7 @@ group("test") {
 android_apk("android_webview_apk") {
   deps = [
     ":vrwebgl_zxing_javalib",
-    ":vrwebgl_ovr_systemutils_javalib",
-    ":vrwebgl_ovr_vrapi_javalib",
+    ":vrwebgl_gvr_javalib",
     ":android_webview_apk_assets",
     ":android_webview_apk_resources",
     "//android_webview:android_webview_java",
@@ -54,8 +53,8 @@ android_apk("android_webview_apk") {
   ]
 
   loadable_modules = [
-    "shell/VRWebGL/libs/armeabi-v7a/libVRWebGL_OculusMobileSDK.so",
-    "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/armeabi-v7a/libvrapi.so"  
+    "shell/VRWebGL/libs/armeabi-v7a/libVRWebGL_GVRMobileSDK.so",
+    "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.20.0/armeabi-v7a/libgvr.so"  
   ]
 
   native_lib_version_rule = "//build/util:chrome_version_json"
@@ -349,9 +348,6 @@ shared_library("libdrawgl") {
 android_java_prebuilt("vrwebgl_zxing_javalib") {
   jar_path = "shell/VRWebGL/zxing-2.3.0/android-integration-2.3.0-supportv4.jar"
 }
-android_java_prebuilt("vrwebgl_ovr_systemutils_javalib") {
-  jar_path = "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/SystemUtils.jar"
-}
-android_java_prebuilt("vrwebgl_ovr_vrapi_javalib") {
-  jar_path = "shell/VRWebGL/jni/3rdparty/ovr_sdk_mobile_1.0.3/VrApi.jar"
+android_java_prebuilt("vrwebgl_gvr_javalib") {
+  jar_path = "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.20.0/sdk-common-1.20.0.jar"
 }
