@@ -157,6 +157,7 @@ public class AwShellActivity extends Activity implements
 
         ContextUtils.initApplicationContext(getApplicationContext());
         AwBrowserProcess.loadLibrary();
+        System.loadLibrary("gvr");
         System.loadLibrary("VRWebGL_GVRMobileSDK");
 
         if (CommandLine.getInstance().hasSwitch(AwShellSwitches.ENABLE_ATRACE)) {
