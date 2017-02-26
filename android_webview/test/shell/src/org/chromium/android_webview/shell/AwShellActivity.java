@@ -56,9 +56,8 @@ import org.chromium.content.app.ContentApplication;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.WebContents;
 
+import android.opengl.GLSurfaceView;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -79,6 +78,12 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.graphics.SurfaceTexture;
 
+import com.google.vr.ndk.base.AndroidCompat;
+import com.google.vr.ndk.base.GvrLayout;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
 /**
  * This is a lightweight activity for tests that only require WebView functionality.
  */
@@ -89,7 +94,7 @@ public class AwShellActivity extends Activity implements
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnPreparedListener,
         AudioManager.OnAudioFocusChangeListener,
-        SurfaceHolder.Callback {  
+        GLSurfaceView.Renderer {  
     private static final String TAG = "cr.AwShellActivity";
     private static final String PREFERENCES_NAME = "AwShellPrefs";
     private static final String INITIAL_URL = "No URL provided either in the intent nor in the config.json";
@@ -98,10 +103,10 @@ public class AwShellActivity extends Activity implements
     private AwDevToolsServer mDevToolsServer;
     private AwTestContainerView mAwTestContainerView;
 
-    private SurfaceView surfaceView;
-    private SurfaceHolder surfaceHolder;
+    private GLSurfaceView surfaceView;
+    private GvrLayout gvrLayout;
     private long nativePointer = 0;   
-
+    
     private class Video
     {
         public SurfaceTexture surfaceTexture = null;
@@ -126,6 +131,19 @@ public class AwShellActivity extends Activity implements
     // This is the same as data_reduction_proxy::switches::kDataReductionProxyKey.
     private static final String DATA_REDUCTION_PROXY_KEY = "spdy-proxy-auth-value";
 
+    private void setImmersiveSticky() {
+        getWindow()
+            .getDecorView()
+            .setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -139,7 +157,7 @@ public class AwShellActivity extends Activity implements
 
         ContextUtils.initApplicationContext(getApplicationContext());
         AwBrowserProcess.loadLibrary();
-        System.loadLibrary("VRWebGL_OculusMobileSDK");
+        System.loadLibrary("VRWebGL_GVRMobileSDK");
 
         if (CommandLine.getInstance().hasSwitch(AwShellSwitches.ENABLE_ATRACE)) {
             Log.e(TAG, "Enabling Android trace.");
@@ -154,10 +172,31 @@ public class AwShellActivity extends Activity implements
 
         layout.addView(mAwTestContainerView);           
 
-        surfaceView = new SurfaceView( this );
-        layout.addView(surfaceView);
+        // Ensure fullscreen immersion.
+        setImmersiveSticky();
+        getWindow()
+            .getDecorView()
+            .setOnSystemUiVisibilityChangeListener(
+                new View.OnSystemUiVisibilityChangeListener() {
+                  @Override
+                  public void onSystemUiVisibilityChange(int visibility) {
+                    if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                      setImmersiveSticky();
+                    }
+                  }
+                });
+
+        // Initialize GvrLayout and the native renderer.
+        gvrLayout = new GvrLayout(this);
+        layout.addView(gvrLayout);
+        // Add the GLSurfaceView to the GvrLayout.
+        surfaceView = new GLSurfaceView(this);
         surfaceView.setZOrderMediaOverlay(true);
-        surfaceView.getHolder().addCallback( this );   
+        surfaceView.setEGLContextClientVersion(2);
+        surfaceView.setEGLConfigChooser(8, 8, 8, 0, 0, 0);
+        surfaceView.setPreserveEGLContextOnPause(true);
+        surfaceView.setRenderer(this);
+        gvrLayout.setPresentationView(surfaceView);
 
         // Load the VRWebGL.js file
         try
@@ -284,16 +323,11 @@ public class AwShellActivity extends Activity implements
             mDevToolsServer = null;
         }
 
-        if ( surfaceHolder != null )
-        {
-            nativeOnSurfaceDestroyed( nativePointer );
-        }
-
         nativeOnDestroy( nativePointer );
         super.onDestroy();
         nativePointer = 0;
 
-        System.out.println("VRWebGL: onDestroy 4");
+        System.out.println("VRWebGL: onDestroy");
     }
 
     private AwTestContainerView createAwTestContainerView() {
@@ -558,12 +592,12 @@ public class AwShellActivity extends Activity implements
         return mAwTestContainerView.dispatchGenericMotionEvent(event);
     }
     
-    @Override public void surfaceCreated( SurfaceHolder holder )
+    @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) 
     {
         if ( nativePointer != 0 )
         {
-            nativeOnSurfaceCreated( nativePointer, holder.getSurface() );
-            surfaceHolder = holder;
+            nativeOnSurfaceCreated( nativePointer );
         }
 
         if (!urlLoaded)
@@ -577,22 +611,15 @@ public class AwShellActivity extends Activity implements
         System.out.println("VRWebGL: surfaceCreated and page loaded: " + layout.getMeasuredWidth() + "x" + layout.getMeasuredHeight());
     }
 
-    @Override public void surfaceChanged( SurfaceHolder holder, int format, int width, int height )
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height)
     {
-        if ( nativePointer != 0 )
-        {
-            nativeOnSurfaceChanged( nativePointer, holder.getSurface() );
-            surfaceHolder = holder;
-        }
     }
-    
-    @Override public void surfaceDestroyed( SurfaceHolder holder )
+
+    @Override
+    public void onDrawFrame(GL10 gl) 
     {
-        if ( nativePointer != 0 )
-        {
-            nativeOnSurfaceDestroyed( nativePointer );
-            surfaceHolder = null;
-        }
+        nativeOnDrawFrame(nativePointer);
     }
 
     @Override
@@ -919,9 +946,8 @@ public class AwShellActivity extends Activity implements
     private native void nativeOnPageStarted();
 
     // Surface lifecycle
-    public native void nativeOnSurfaceCreated( long nativePointer, Surface s );
-    public native void nativeOnSurfaceChanged( long nativePointer, Surface s );
-    public native void nativeOnSurfaceDestroyed( long nativePointer );
+    public native void nativeOnSurfaceCreated( long nativePointer);
+    public native void nativeOnDrawFrame( long nativePointer );
 
     // Input
     private native void nativeOnKeyEvent( long nativePointer, int keyCode, int action );
