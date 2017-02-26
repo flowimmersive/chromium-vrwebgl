@@ -8,7 +8,7 @@ if [ $EXIT_CODE -ne 0 ]; then
 	exit $EXIT_CODE
 fi
 mkdir -p ../../../../../third_party/VRWebGL/lib/armeabi-v7a
-cp ../libs/armeabi-v7a/libVRWebGL_OculusMobileSDK.so ../../../../../third_party/VRWebGL/lib/armeabi-v7a
+cp ../libs/armeabi-v7a/libVRWebGL_GVRMobileSDK.so ../../../../../third_party/VRWebGL/lib/armeabi-v7a
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then 
 	exit $EXIT_CODE
