@@ -39,7 +39,6 @@ void VRPose::setPose(const device::mojom::blink::VRPosePtr& state) {
 // VRWebGL BEGIN
 void VRPose::setPose(const VRWebGLPose& vrWebGLPose)
 {
-    m_timeStamp = 0;
     m_orientation = DOMFloat32Array::create(vrWebGLPose.orientation, 4);
     m_position = nullptr;
     m_angularVelocity = nullptr;
