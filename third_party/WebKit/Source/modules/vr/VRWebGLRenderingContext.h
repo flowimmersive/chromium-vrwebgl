@@ -220,8 +220,8 @@ private:
     void resetUnpackParameters();
     void restoreUnpackParameters();
     void texImage2DBase(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels);
-    void texImage2DImpl(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha);
-    void texImageImpl(TexImageFunctionID functionID, GLenum target, GLint level, GLint internalformat, GLint xoffset, GLint yoffset, GLint zoffset, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha);
+    // void texImage2DImpl(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha);
+    void texImageImpl(TexImageFunctionID functionID, GLenum target, GLint level, GLint internalformat, GLint xoffset, GLint yoffset, GLint zoffset, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha, const IntRect& sourceImageRect, GLsizei depth, GLint unpackImageHeight);
     PassRefPtr<Image> drawImageIntoBuffer(PassRefPtr<Image> passImage, int width, int height, const char* functionName);
     GLenum convertTexInternalFormat(GLenum internalformat, GLenum type);
     void texParameter(GLenum target, GLenum pname, GLfloat paramf, GLint parami, bool isFloat);
@@ -235,19 +235,103 @@ private:
     ScriptValue getWebGLIntArrayParameter(ScriptState* scriptState, GLenum pname);
     static bool isPrefixReserved(const String& name);
     const char* getTexImageFunctionName(TexImageFunctionID funcName);
+    IntRect sentinelEmptyRect();
+    IntRect safeGetImageSize(Image* image);
+    IntRect getImageDataSize(ImageData* pixels);
     PassRefPtr<Image> videoFrameToImage(HTMLVideoElement* video);
     void texImageHelperHTMLVideoElement(TexImageFunctionID functionID,
         GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, GLint xoffset,
-        GLint yoffset, GLint zoffset, HTMLVideoElement* video, ExceptionState& exceptionState);
+        GLint yoffset, GLint zoffset, HTMLVideoElement* video, const IntRect& sourceImageRect,
+        GLsizei depth, GLint unpackImageHeight, ExceptionState& exceptionState);
     void texImageHelperDOMArrayBufferView(TexImageFunctionID functionID,
         GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border,
         GLenum format, GLenum type, GLsizei depth, GLint xoffset, GLint yoffset, GLint zoffset, DOMArrayBufferView* pixels);
     void texImageHelperImageData(TexImageFunctionID functionID,
         GLenum target, GLint level, GLint internalformat, GLint border, GLenum format,
-        GLenum type, GLsizei depth, GLint xoffset, GLint yoffset, GLint zoffset, ImageData* pixels);
+        GLenum type, GLsizei depth, GLint xoffset, GLint yoffset, GLint zoffset, ImageData* pixels, const IntRect& sourceImageRect, GLint unpackImageHeight);
     void texImageHelperHTMLImageElement(TexImageFunctionID functionID,
         GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, GLint xoffset,
-        GLint yoffset, GLint zoffset, HTMLImageElement* image, ExceptionState& exceptionState);
+        GLint yoffset, GLint zoffset, HTMLImageElement* image, const IntRect& sourceImageRect,
+        GLsizei depth, GLint unpackImageHeight, ExceptionState& exceptionState);
+
+    template <typename T>
+    IntRect getTextureSourceSize(T* textureSource) {
+        return IntRect(0, 0, textureSource->width(), textureSource->height());
+    }
+
+    template <typename T>
+    bool validateTexImageSubRectangle(
+        const char* functionName, TexImageFunctionID functionID, T* image, 
+        const IntRect& subRect, GLsizei depth, GLint unpackImageHeight,
+        bool* selectingSubRectangle) 
+    {
+        // DCHECK(functionName);
+        // DCHECK(selectingSubRectangle);
+        // DCHECK(image);
+        // int imageWidth = static_cast<int>(image->width());
+        // int imageHeight = static_cast<int>(image->height());
+        // *selectingSubRectangle =
+        //     !(subRect.x() == 0 && subRect.y() == 0 &&
+        //     subRect.width() == imageWidth && subRect.height() == imageHeight);
+        // // If the source image rect selects anything except the entire
+        // // contents of the image, assert that we're running WebGL 2.0 or
+        // // higher, since this should never happen for WebGL 1.0 (even though
+        // // the code could support it). If the image is null, that will be
+        // // signaled as an error later.
+        // DCHECK(!*selectingSubRectangle || isWebGL2OrHigher())
+        //     << "subRect = (" << subRect.width() << " x " << subRect.height()
+        //     << ") @ (" << subRect.x() << ", " << subRect.y() << "), image = ("
+        //     << imageWidth << " x " << imageHeight << ")";
+
+        // if (subRect.x() < 0 || subRect.y() < 0 || subRect.maxX() > imageWidth ||
+        //         subRect.maxY() > imageHeight || subRect.width() < 0 ||
+        //         subRect.height() < 0) {
+        //     synthesizeGLError(GL_INVALID_OPERATION, functionName,
+        //     "source sub-rectangle specified via pixel unpack "
+        //     "parameters is invalid");
+        //     return false;
+        // }
+
+        // if (functionID == TexImage3D || functionID == TexSubImage3D) {
+        //     DCHECK_GE(unpackImageHeight, 0);
+
+        //     if (depth < 1) {
+        //     synthesizeGLError(GL_INVALID_OPERATION, functionName,
+        //     "Can't define a 3D texture with depth < 1");
+        //     return false;
+        // }
+
+        // // According to the WebGL 2.0 spec, specifying depth > 1 means
+        // // to select multiple rectangles stacked vertically.
+        // WTF::CheckedNumeric<GLint> maxYAccessed;
+        // if (unpackImageHeight) {
+        //     maxYAccessed = unpackImageHeight;
+        // } else {
+        //     maxYAccessed = subRect.height();
+        // }
+        // maxYAccessed *= depth - 1;
+        // maxYAccessed += subRect.height();
+        // maxYAccessed += subRect.y();
+
+        // if (!maxYAccessed.IsValid()) {
+        //     synthesizeGLError(GL_INVALID_OPERATION, functionName,
+        //     "Out-of-range parameters passed for 3D texture "
+        //     "upload");
+        //     return false;
+        // }
+
+        // if (maxYAccessed.ValueOrDie() > imageHeight) {
+        //     synthesizeGLError(GL_INVALID_OPERATION, functionName,
+        //     "Not enough data supplied to upload to a 3D texture "
+        //     "with depth > 1");
+        //     return false;
+        // }
+        // } else {
+        //     DCHECK_EQ(depth, 1);
+        //     DCHECK_EQ(unpackImageHeight, 0);
+        // }
+        return true;
+    }
 
 	HashSet<UntracedMember<VRWebGLObject>> m_vrWebGLObjects;
 	// Member<HTMLCanvasElement> m_canvas;

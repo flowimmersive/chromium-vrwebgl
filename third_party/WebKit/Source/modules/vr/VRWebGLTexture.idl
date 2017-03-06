@@ -1,3 +1,2 @@
-[
-] interface VRWebGLTexture {
+interface VRWebGLTexture {
 };

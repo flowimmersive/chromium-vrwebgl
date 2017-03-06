@@ -115,7 +115,7 @@ private:
 
     UChar current()
     {
-        ASSERT_WITH_SECURITY_IMPLICATION(m_position < m_length);
+        ASSERT(m_position < m_length);
         return m_sourceString[m_position];
     }
 
@@ -939,7 +939,7 @@ ScriptValue VRWebGLRenderingContext::getExtension(ScriptState* scriptState, cons
 	bool result = false;
 	for (size_t i = 0; !result && i < m_supportedExtensionNames.size(); i++) 
 	{
-		result = name.contains(m_supportedExtensionNames[i], TextCaseInsensitive);
+		result = name.contains(m_supportedExtensionNames[i], TextCaseASCIIInsensitive);
 	}
 	return result ? WebGLAny(scriptState, true) : ScriptValue::createNull(scriptState);
 }
@@ -1472,6 +1472,28 @@ const char* VRWebGLRenderingContext::getTexImageFunctionName(TexImageFunctionID 
     }
 }
 
+IntRect VRWebGLRenderingContext::sentinelEmptyRect() 
+{
+  // Return a rectangle with -1 width and height so we can recognize
+  // it later and recalculate it based on the Image whose data we'll
+  // upload. It's important that there be no possible differences in
+  // the logic which computes the image's size.
+  return IntRect(0, 0, -1, -1);
+}
+
+IntRect VRWebGLRenderingContext::safeGetImageSize(Image* image) {
+  if (!image)
+    return IntRect();
+
+  return getTextureSourceSize(image);
+}
+
+IntRect VRWebGLRenderingContext::getImageDataSize(ImageData* pixels) 
+{
+  DCHECK(pixels);
+  return getTextureSourceSize(pixels);
+}
+
 void VRWebGLRenderingContext::texImageHelperDOMArrayBufferView(TexImageFunctionID functionID,
     GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border,
     GLenum format, GLenum type, GLsizei depth, GLint xoffset, GLint yoffset, GLint zoffset, DOMArrayBufferView* pixels)
@@ -1536,7 +1558,8 @@ void VRWebGLRenderingContext::texImageHelperDOMArrayBufferView(TexImageFunctionI
 
 void VRWebGLRenderingContext::texImageHelperImageData(TexImageFunctionID functionID,
     GLenum target, GLint level, GLint internalformat, GLint border, GLenum format,
-    GLenum type, GLsizei depth, GLint xoffset, GLint yoffset, GLint zoffset, ImageData* pixels)
+    GLenum type, GLsizei depth, GLint xoffset, GLint yoffset, GLint zoffset, ImageData* pixels,
+    const IntRect& sourceImageRect, GLint unpackImageHeight)
 {
     const char* funcName = getTexImageFunctionName(functionID);
     if (!pixels) {
@@ -1552,6 +1575,13 @@ void VRWebGLRenderingContext::texImageHelperImageData(TexImageFunctionID functio
     //     functionType = TexImage;
     // else
     //     functionType = TexSubImage;
+
+    // Adjust the source image rectangle if doing a y-flip.
+    IntRect adjustedSourceImageRect = sourceImageRect;
+    if (m_unpackFlipY) {
+        adjustedSourceImageRect.setY(pixels->height() - adjustedSourceImageRect.maxY());
+    }
+
     Vector<uint8_t> data;
     bool needConversion = true;
     // The data from ImageData is always of format RGBA8.
@@ -1563,7 +1593,11 @@ void VRWebGLRenderingContext::texImageHelperImageData(TexImageFunctionID functio
             // The UNSIGNED_INT_10F_11F_11F_REV type pack/unpack isn't implemented.
             type = GL_FLOAT;
         }
-        if (!WebGLImageConversion::extractImageData(pixels->data()->data(), WebGLImageConversion::DataFormat::DataFormatRGBA8, pixels->size(), format, type, m_unpackFlipY, m_unpackPremultiplyAlpha, data)) {
+
+        if (!WebGLImageConversion::extractImageData(
+                pixels->data()->data(), WebGLImageConversion::DataFormat::DataFormatRGBA8, 
+                pixels->size(), adjustedSourceImageRect, depth, unpackImageHeight, format, 
+                type, m_unpackFlipY, m_unpackPremultiplyAlpha, data)) {
 	        VLOG(0) << "VRWebGL: ERROR: " << funcName << ", bad image data.";
             return;
         }
@@ -1586,24 +1620,47 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
     GLsizei width, GLsizei height, GLint border,
     GLenum format, GLenum type, DOMArrayBufferView* pixels)
 {
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 1 begins";
     texImageHelperDOMArrayBufferView(TexImage2D, target, level, internalformat, width, height, border, format, type, 1, 0, 0, 0, pixels);
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 1 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, ImageData* pixels)
 {
-    texImageHelperImageData(TexImage2D, target, level, internalformat, 0, format, type, 1, 0, 0, 0, pixels);
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 2 begins";
+    texImageHelperImageData(TexImage2D, target, level, internalformat, 0, format, type, 1, 0, 0, 0, pixels, getImageDataSize(pixels), 0);
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 2 ends";
 }
 
 void VRWebGLRenderingContext::texImageHelperHTMLImageElement(TexImageFunctionID functionID,
     GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, GLint xoffset,
-    GLint yoffset, GLint zoffset, HTMLImageElement* image, ExceptionState& exceptionState)
+    GLint yoffset, GLint zoffset, HTMLImageElement* image, const IntRect& sourceImageRect,
+    GLsizei depth, GLint unpackImageHeight, ExceptionState& exceptionState)
 {
+    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 1";
     const char* funcName = getTexImageFunctionName(functionID);
 
+    if (image->cachedImage() == 0)
+    {
+        VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement: no image";
+        return;
+    }
+
+    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 2: " << image->cachedImage();
+
     RefPtr<Image> imageForRender = image->cachedImage()->getImage();
+
+    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 3";
+
     if (imageForRender && imageForRender->isSVGImage())
+    {
+        VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 4";
         imageForRender = drawImageIntoBuffer(imageForRender.release(), image->width(), image->height(), funcName);
+        VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 5";
+    }
+
+    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 6";
 
     // TexImageFunctionType functionType;
     // if (functionID == TexImage2D)
@@ -1615,13 +1672,21 @@ void VRWebGLRenderingContext::texImageHelperHTMLImageElement(TexImageFunctionID 
     // if (!imageForRender || !validateTexFunc(funcName, functionType, SourceHTMLImageElement, target, level, internalformat, imageForRender->width(), imageForRender->height(), 1, 0, format, type, xoffset, yoffset, zoffset))
     //     return;
 
-    texImageImpl(functionID, target, level, internalformat, xoffset, yoffset, zoffset, format, type, imageForRender.get(), WebGLImageConversion::HtmlDomImage, m_unpackFlipY, m_unpackPremultiplyAlpha);
+    VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImageHelperHTMLImageElement before calling texImageImpl";
+    texImageImpl(functionID, target, level, internalformat, xoffset, yoffset, zoffset, format, type, imageForRender.get(), WebGLImageConversion::HtmlDomImage, m_unpackFlipY, m_unpackPremultiplyAlpha, sourceImageRect, depth, unpackImageHeight);
+    VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImageHelperHTMLImageElement after calling texImageImpl";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, HTMLImageElement* image, ExceptionState& exceptionState)
 {
-    texImageHelperHTMLImageElement(TexImage2D, target, level, internalformat, format, type, 0, 0, 0, image, exceptionState);
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 3 begins";
+
+    texImageHelperHTMLImageElement(TexImage2D, 
+        target, level, internalformat, format, type, 0, 
+        0, 0, image, sentinelEmptyRect(), 1, 0, exceptionState);
+
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 3 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
@@ -1657,7 +1722,8 @@ PassRefPtr<Image> VRWebGLRenderingContext::videoFrameToImage(HTMLVideoElement* v
 
 void VRWebGLRenderingContext::texImageHelperHTMLVideoElement(TexImageFunctionID functionID,
     GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, GLint xoffset,
-    GLint yoffset, GLint zoffset, HTMLVideoElement* video, ExceptionState& exceptionState)
+    GLint yoffset, GLint zoffset, HTMLVideoElement* video, const IntRect& sourceImageRect,
+    GLsizei depth, GLint unpackImageHeight, ExceptionState& exceptionState)
 {
     // const char* funcName = getTexImageFunctionName(functionID);
     // TexImageFunctionType functionType;
@@ -1700,18 +1766,21 @@ void VRWebGLRenderingContext::texImageHelperHTMLVideoElement(TexImageFunctionID 
     RefPtr<Image> image = videoFrameToImage(video);
     if (!image)
         return;
-    texImageImpl(functionID, target, level, internalformat, xoffset, yoffset, zoffset, format, type, image.get(), WebGLImageConversion::HtmlDomVideo, m_unpackFlipY, m_unpackPremultiplyAlpha);
+    texImageImpl(functionID, target, level, internalformat, xoffset, yoffset, zoffset, format, type, image.get(), WebGLImageConversion::HtmlDomVideo, m_unpackFlipY, m_unpackPremultiplyAlpha, sourceImageRect, depth, unpackImageHeight);
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, HTMLVideoElement* video, ExceptionState& exceptionState)
 {
-    texImageHelperHTMLVideoElement(TexImage2D, target, level, internalformat, format, type, 0, 0, 0, video, exceptionState);
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 4 begins";
+    texImageHelperHTMLVideoElement(TexImage2D, target, level, internalformat, format, type, 0, 0, 0, video, sentinelEmptyRect(), 1, 0, exceptionState);
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 4 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, VRWebGLVideo* video, ExceptionState& exceptionState)
 {
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 5 begins";
     // Check if the currently bound texture has a video texture id already.
     // If it does not have it (== 0), assign the video texture id to it.
     if (m_textureCurrentlyBound)
@@ -1721,11 +1790,14 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
             m_textureCurrentlyBound->setVideoTextureId(video->videoTextureId());
         }
     }
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 5 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, ImageBitmap* bitmap, ExceptionState& exceptionState)
 {
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 6 begins";
+    VLOG(0) << "VRWebGLRenderingContext::texImage2D 6 ends";
     // ASSERT(bitmap->bitmapImage());
     // OwnPtr<uint8_t[]> pixelData = bitmap->copyBitmapData(bitmap->isPremultiplied() ? PremultiplyAlpha : DontPremultiplyAlpha);
     // Vector<uint8_t> data;
@@ -2181,7 +2253,7 @@ void VRWebGLRenderingContext::texImage2DBase(GLenum target, GLint level, GLint i
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2DBase end";
 }
 
-void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum target, GLint level, GLint internalformat, GLint xoffset, GLint yoffset, GLint zoffset, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha)
+void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum target, GLint level, GLint internalformat, GLint xoffset, GLint yoffset, GLint zoffset, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha, const IntRect& sourceImageRect, GLsizei depth, GLint unpackImageHeight)
 {
     const char* funcName = getTexImageFunctionName(functionID);
     // All calling functions check isContextLost, so a duplicate check is not needed here.
@@ -2189,6 +2261,22 @@ void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum
         // The UNSIGNED_INT_10F_11F_11F_REV type pack/unpack isn't implemented.
         type = GL_FLOAT;
     }
+
+    IntRect subRect = sourceImageRect;
+    if (subRect == sentinelEmptyRect()) {
+        // Recalculate based on the size of the Image.
+        subRect = safeGetImageSize(image);
+    }
+    bool selectingSubRectangle = false;
+    if (!validateTexImageSubRectangle(funcName, functionID, image, subRect, depth, unpackImageHeight, &selectingSubRectangle)) {
+        return;
+    }
+    // Adjust the source image rectangle if doing a y-flip.
+    IntRect adjustedSourceImageRect = subRect;
+    if (flipY) {
+        adjustedSourceImageRect.setY(image->height() - adjustedSourceImageRect.maxY());
+    }    
+
     Vector<uint8_t> data;
     WebGLImageConversion::ImageExtractor imageExtractor(image, domSource, premultiplyAlpha, m_unpackColorspaceConversion == GL_NONE);
     if (!imageExtractor.imagePixelData()) {
@@ -2203,7 +2291,11 @@ void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum
     if (type == GL_UNSIGNED_BYTE && sourceDataFormat == WebGLImageConversion::DataFormatRGBA8 && format == GL_RGBA && alphaOp == WebGLImageConversion::AlphaDoNothing && !flipY) {
         needConversion = false;
     } else {
-        if (!WebGLImageConversion::packImageData(image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat, imageExtractor.imageWidth(), imageExtractor.imageHeight(), imageExtractor.imageSourceUnpackAlignment(), data)) {
+
+        if (!WebGLImageConversion::packImageData(
+                image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat, 
+                imageExtractor.imageWidth(), imageExtractor.imageHeight(), adjustedSourceImageRect, depth,
+                imageExtractor.imageSourceUnpackAlignment(), unpackImageHeight, data)) {
 	        VLOG(0) << "VRWebGL: ERROR: " << funcName << ", packImage error";
             return;
         }
@@ -2223,38 +2315,41 @@ void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum
     restoreUnpackParameters();
 }
 
-void VRWebGLRenderingContext::texImage2DImpl(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha)
-{
-    // All calling functions check isContextLost, so a duplicate check is not needed here.
-    if (type == GL_UNSIGNED_INT_10F_11F_11F_REV) {
-        // The UNSIGNED_INT_10F_11F_11F_REV type pack/unpack isn't implemented.
-        type = GL_FLOAT;
-    }
-    Vector<uint8_t> data;
-    WebGLImageConversion::ImageExtractor imageExtractor(image, domSource, premultiplyAlpha, m_unpackColorspaceConversion == GL_NONE);
-    if (!imageExtractor.imagePixelData()) {
-        VLOG(0) << "VRWebGL: ERROR: texImage2D, bad image data";
-        return;
-    }
-    WebGLImageConversion::DataFormat sourceDataFormat = imageExtractor.imageSourceFormat();
-    WebGLImageConversion::AlphaOp alphaOp = imageExtractor.imageAlphaOp();
-    const void* imagePixelData = imageExtractor.imagePixelData();
+// void VRWebGLRenderingContext::texImage2DImpl(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, Image* image, WebGLImageConversion::ImageHtmlDomSource domSource, bool flipY, bool premultiplyAlpha)
+// {
+//     // All calling functions check isContextLost, so a duplicate check is not needed here.
+//     if (type == GL_UNSIGNED_INT_10F_11F_11F_REV) {
+//         // The UNSIGNED_INT_10F_11F_11F_REV type pack/unpack isn't implemented.
+//         type = GL_FLOAT;
+//     }
+//     Vector<uint8_t> data;
+//     WebGLImageConversion::ImageExtractor imageExtractor(image, domSource, premultiplyAlpha, m_unpackColorspaceConversion == GL_NONE);
+//     if (!imageExtractor.imagePixelData()) {
+//         VLOG(0) << "VRWebGL: ERROR: texImage2D, bad image data";
+//         return;
+//     }
+//     WebGLImageConversion::DataFormat sourceDataFormat = imageExtractor.imageSourceFormat();
+//     WebGLImageConversion::AlphaOp alphaOp = imageExtractor.imageAlphaOp();
+//     const void* imagePixelData = imageExtractor.imagePixelData();
 
-    bool needConversion = true;
-    if (type == GL_UNSIGNED_BYTE && sourceDataFormat == WebGLImageConversion::DataFormatRGBA8 && format == GL_RGBA && alphaOp == WebGLImageConversion::AlphaDoNothing && !flipY) {
-        needConversion = false;
-    } else {
-    	VLOG(0) << "VRWebGL: converting image..." << type << " == " << GL_UNSIGNED_BYTE << ", " << (int)sourceDataFormat << " == " << (int)WebGLImageConversion::DataFormatRGBA8 << ", " << format << " == " << GL_RGBA << ", " << (int)alphaOp << " == " << (int)WebGLImageConversion::AlphaDoNothing << ", " << (flipY ? "true" : "false");
-        if (!WebGLImageConversion::packImageData(image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat, imageExtractor.imageWidth(), imageExtractor.imageHeight(), imageExtractor.imageSourceUnpackAlignment(), data)) {
-            VLOG(0) << "VRWebGL: ERROR: texImage2D, packImage error";
-            return;
-        }
-    }
+//     bool needConversion = true;
+//     if (type == GL_UNSIGNED_BYTE && sourceDataFormat == WebGLImageConversion::DataFormatRGBA8 && format == GL_RGBA && alphaOp == WebGLImageConversion::AlphaDoNothing && !flipY) {
+//         needConversion = false;
+//     } else {
+//     	VLOG(0) << "VRWebGL: converting image..." << type << " == " << GL_UNSIGNED_BYTE << ", " << (int)sourceDataFormat << " == " << (int)WebGLImageConversion::DataFormatRGBA8 << ", " << format << " == " << GL_RGBA << ", " << (int)alphaOp << " == " << (int)WebGLImageConversion::AlphaDoNothing << ", " << (flipY ? "true" : "false");
+//         if (!WebGLImageConversion::packImageData(
+//                 image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat, 
+//                 imageExtractor.imageWidth(), imageExtractor.imageHeight(), adjustedSourceImageRect, depth,
+//                 imageExtractor.imageSourceUnpackAlignment(), data)) {
+//             VLOG(0) << "VRWebGL: ERROR: texImage2D, packImage error";
+//             return;
+//         }
+//     }
 
-    resetUnpackParameters();
-    texImage2DBase(target, level, internalformat, imageExtractor.imageWidth(), imageExtractor.imageHeight(), 0, format, type, needConversion ? data.data() : imagePixelData);
-    restoreUnpackParameters();
-}
+//     resetUnpackParameters();
+//     texImage2DBase(target, level, internalformat, imageExtractor.imageWidth(), imageExtractor.imageHeight(), 0, format, type, needConversion ? data.data() : imagePixelData);
+//     restoreUnpackParameters();
+// }
 
 PassRefPtr<Image> VRWebGLRenderingContext::drawImageIntoBuffer(PassRefPtr<Image> passImage,
     int width, int height, const char* functionName)

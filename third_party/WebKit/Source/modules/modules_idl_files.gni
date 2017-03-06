@@ -271,6 +271,17 @@ modules_idl_files =
                     "vr/VRFrameData.idl",
                     "vr/VRPose.idl",
                     "vr/VRStageParameters.idl",
+                    "vr/VRWebGLActiveInfo.idl",
+                    "vr/VRWebGLBuffer.idl",
+                    "vr/VRWebGLFramebuffer.idl",
+                    "vr/VRWebGLProgram.idl",
+                    "vr/VRWebGLRenderbuffer.idl",
+                    "vr/VRWebGLRenderingContext.idl",
+                    "vr/VRWebGLShader.idl",
+                    "vr/VRWebGLShaderPrecisionFormat.idl",
+                    "vr/VRWebGLTexture.idl",
+                    "vr/VRWebGLUniformLocation.idl",
+                    "vr/VRWebGLVideo.idl",
                     "webaudio/AnalyserNode.idl",
                     "webaudio/AudioBuffer.idl",
                     "webaudio/AudioBufferCallback.idl",
@@ -537,6 +548,7 @@ modules_dictionary_idl_files =
                     "webusb/USBControlTransferParameters.idl",
                     "webusb/USBDeviceFilter.idl",
                     "webusb/USBDeviceRequestOptions.idl",
+                    "vr/VRWebGLContextAttributes.idl",
                   ],
                   "abspath")
 
@@ -961,4 +973,6 @@ generated_modules_dictionary_files = [
   "$blink_modules_output_dir/webusb/USBDeviceFilter.h",
   "$blink_modules_output_dir/webusb/USBDeviceRequestOptions.cpp",
   "$blink_modules_output_dir/webusb/USBDeviceRequestOptions.h",
+  "$blink_modules_output_dir/vr/VRWebGLContextAttributes.cpp",
+  "$blink_modules_output_dir/vr/VRWebGLContextAttributes.h",
 ]

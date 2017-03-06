@@ -1,7 +1,7 @@
 #ifndef VRWebGLCommand_h
 #define VRWebGLCommand_h
 
-// #define VRWEBGL_SHOW_LOG
+#define VRWEBGL_SHOW_LOG
 
 #define VRWEBGL_USE_CACHE
 

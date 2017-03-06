@@ -1,3 +1,2 @@
-[
-] interface VRWebGLProgram {
+interface VRWebGLProgram {
 };

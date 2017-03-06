@@ -1,3 +1,2 @@
-[
-] interface VRWebGLBuffer {
+interface VRWebGLBuffer {
 };

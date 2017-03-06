@@ -174,7 +174,7 @@ target(modules_target_type, "modules") {
 
   ldflags = [
     "-L../../third_party/VRWebGL/lib/armeabi-v7a",
-    "-lVRWebGL_OculusMobileSDK"
+    "-lVRWebGL_GVRMobileSDK"
   ]
 
 }

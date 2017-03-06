@@ -1,3 +1,2 @@
-[
-] interface VRWebGLShader {
+interface VRWebGLShader {
 };
