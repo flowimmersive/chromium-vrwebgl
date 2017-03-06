@@ -11,7 +11,7 @@ cp -r third_party/WebKit/Source/modules/vr/*.* ../Backup_VRWebGL/$BRANCH_NAME/ch
 if [ $? -ne 0 ]; then exit 1; fi
 cp -r third_party/WebKit/Source/modules/BUILD.gn ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/
 if [ $? -ne 0 ]; then exit 1; fi
-cp -r third_party/WebKit/Source/modules/modules.gypi ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/
+cp -r third_party/WebKit/Source/modules/modules_idl_files.gni ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/third_party/WebKit/Source/modules/
 if [ $? -ne 0 ]; then exit 1; fi
 # Android Chromium Webview
 # NOTE: Could copy only the elements that have been changed.
@@ -31,9 +31,10 @@ if [ $? -ne 0 ]; then exit 1; fi
 rm -rf ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/android_webview/test/shell/tango
 if [ $? -ne 0 ]; then exit 1; fi
 # adb_run_android_webview_shell
-mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android
+mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android/lint
 if [ $? -ne 0 ]; then exit 1; fi
 cp build/android/adb_run_android_webview_shell ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android
+cp build/android/lint/suppressions.xml ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android/lint
 # APK
 mkdir ../Backup_VRWebGL/$BRANCH_NAME/bin
 if [ $? -ne 0 ]; then exit 1; fi
