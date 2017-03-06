@@ -40,6 +40,10 @@ Still reading?
   </issue>
   <issue id="ContentDescription" severity="Error">
     <ignore regexp="chromecast/internal"/>
+    <ignore regexp="android_webview/test/shell/res"/>
+  </issue>
+  <issue id="NestedWeights" severity="Error">
+    <ignore regexp="android_webview/test/shell/res"/>
   </issue>
   <issue id="DefaultLocale">
     <ignore regexp="clank"/>
@@ -48,6 +52,7 @@ Still reading?
     <ignore regexp="org/chromium/chrome/browser/preferences/website/UsbChooserPreferences"/>
     <ignore regexp="org/chromium/chrome/browser/preferences/website/UsbDevicePreferences"/>
     <ignore regexp="third_party/cacheinvalidation/src/java/com/google/ipc/invalidation/external/client/contrib/AndroidListenerState.java"/>
+    <ignore regexp="android_webview/test/shell/src"/>
   </issue>
   <!-- TODO(crbug.com/635567): Fix this properly. -->
   <issue id="Deprecated" severity="Error">
@@ -87,6 +92,7 @@ Still reading?
   </issue>
   <issue id="HardcodedText" severity="Error">
     <ignore regexp="chromecast/internal"/>
+    <ignore regexp="android_webview/test/shell/res"/>
     <ignore regexp="remoting/android/host/res/layout/main.xml"/>
   </issue>
   <issue id="IconColors" severity="Error">
@@ -135,6 +141,7 @@ Still reading?
   <issue id="IconMissingDensityFolder">
     <!-- see crbug.com/542435 -->
     <ignore regexp="android_webview/apk/java/res"/>
+    <ignore regexp="android_webview/test/shell/res"/>
     <ignore regexp="android_webview/tools/system_webview_shell/apk/res"/>
     <ignore regexp="chrome/android/webapk/shell_apk/res"/>
     <ignore regexp="chromecast/internal"/>
@@ -150,6 +157,7 @@ Still reading?
   <issue id="InconsistentLayout" severity="ignore"/>
   <issue id="InefficientWeight" severity="Error">
     <ignore regexp="android_webview/tools/system_webview_shell/apk/res/layout/activity_webview_browser.xml"/>
+    <ignore regexp="android_webview/test/shell/res"/>
   </issue>
   <issue id="InflateParams" severity="ignore"/>
   <issue id="InlinedApi" severity="ignore"/>
@@ -158,6 +166,7 @@ Still reading?
   </issue>
   <issue id="LabelFor" severity="Error">
     <ignore regexp="android_webview/tools/system_webview_shell/apk/res/layout/activity_webview_browser.xml"/>
+    <ignore regexp="android_webview/test/shell/res"/>
   </issue>
   <issue id="LintError" severity="Error"/>
   <issue id="LogConditional" severity="ignore"/>
@@ -260,6 +269,7 @@ Still reading?
   </issue>
   <issue id="TextFields" severity="Error">
     <ignore regexp="chromecast/internal"/>
+    <ignore regexp="android_webview/test/shell/res"/>
   </issue>
   <issue id="TypographyDashes" severity="Error">
     <ignore regexp="chrome/app/policy/android/values-v21/restriction_values.xml"/>
