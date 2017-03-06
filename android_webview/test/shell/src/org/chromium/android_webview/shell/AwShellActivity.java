@@ -106,6 +106,13 @@ public class AwShellActivity extends Activity implements
     private GLSurfaceView surfaceView;
     private GvrLayout gvrLayout;
     private long nativePointer = 0;   
+    // This is done on the GL thread because refreshViewerProfile isn't thread-safe.
+    private final Runnable refreshViewerProfileRunnable = new Runnable() {
+        @Override
+        public void run() {
+            gvrLayout.getGvrApi().refreshViewerProfile();
+        }
+    };
     
     private class Video
     {
@@ -157,6 +164,7 @@ public class AwShellActivity extends Activity implements
 
         ContextUtils.initApplicationContext(getApplicationContext());
         AwBrowserProcess.loadLibrary();
+        System.loadLibrary("gvr");
         System.loadLibrary("VRWebGL_GVRMobileSDK");
 
         if (CommandLine.getInstance().hasSwitch(AwShellSwitches.ENABLE_ATRACE)) {
@@ -185,7 +193,6 @@ public class AwShellActivity extends Activity implements
                     }
                   }
                 });
-
         // Initialize GvrLayout and the native renderer.
         gvrLayout = new GvrLayout(this);
         layout.addView(gvrLayout);
@@ -197,6 +204,18 @@ public class AwShellActivity extends Activity implements
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setRenderer(this);
         gvrLayout.setPresentationView(surfaceView);
+        // Enable scan line racing.
+        if (gvrLayout.setAsyncReprojectionEnabled(true)) {
+          // Scanline racing decouples the app framerate from the display framerate,
+          // allowing immersive interaction even at the throttled clockrates set by
+          // sustained performance mode.
+          AndroidCompat.setSustainedPerformanceMode(this, true);
+        }
+        // Enable VR Mode.
+        AndroidCompat.setVrModeEnabled(this, true);
+
+        // Prevent screen from dimming/locking.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // Load the VRWebGL.js file
         try
@@ -288,8 +307,13 @@ public class AwShellActivity extends Activity implements
 
         audioManager = (AudioManager) getSystemService( Context.AUDIO_SERVICE );
 
+        System.out.println("VRWebGL: onCreate before calling nativeOnCreate");
+
         // Create the native side
-        nativePointer = nativeOnCreate( this );        
+        nativePointer = nativeOnCreate( gvrLayout.getGvrApi().getNativeGvrContext() );        
+
+        System.out.println("VRWebGL: onCreate after calling nativeOnCreate");
+
     }
 
     @Override protected void onStart()
@@ -301,30 +325,63 @@ public class AwShellActivity extends Activity implements
     @Override protected void onResume()
     {
         super.onResume();
+
+        System.out.println("VRWebGL: onResume before calling nativeOnResume");
+
         nativeOnResume( nativePointer );
+        gvrLayout.onResume();
+        surfaceView.onResume();
+        surfaceView.queueEvent(refreshViewerProfileRunnable);
+
+        System.out.println("VRWebGL: onResume url = " + url);
+
+        if (!urlLoaded)
+        {
+            mAwTestContainerView.getAwContents().loadUrl(url);
+            urlLoaded = true;
+        }
+
+        surfaceView.setZOrderMediaOverlay(true);
+
+        System.out.println("VRWebGL: onResume after calling nativeOnResume");
+
     }
 
     @Override protected void onPause()
     {
-        nativeOnPause( nativePointer );
         super.onPause();
+
+        System.out.println("VRWebGL: onPause before calling nativeOnPause");
+
+        nativeOnPause( nativePointer );
+        gvrLayout.onPause();
+        surfaceView.onPause();
+
+        System.out.println("VRWebGL: onPause before calling nativeOnPause");
+
     }
 
     @Override protected void onStop()
     {
-        nativeOnStop( nativePointer );
         super.onStop();
+        nativeOnStop( nativePointer );
     }
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
+
         if (mDevToolsServer != null) {
             mDevToolsServer.destroy();
             mDevToolsServer = null;
         }
 
+        // Destruction order is important; shutting down the GvrLayout will detach
+        // the GLSurfaceView and stop the GL thread, allowing safe shutdown of
+        // native resources from the UI thread.
+        gvrLayout.shutdown();
+
         nativeOnDestroy( nativePointer );
-        super.onDestroy();
         nativePointer = 0;
 
         System.out.println("VRWebGL: onDestroy");
@@ -363,7 +420,7 @@ public class AwShellActivity extends Activity implements
                 // the injected JS is wiped out, we will inject it when another resource is requested. This may or may not work in many 
                 // cases depending on when the resource is requested. 
                 // Waiting for a better answer from the chromium forums.
-                if (!request.url.equals(AwShellActivity.this.url) && !jsInjected)
+                if (!AwShellActivity.this.url.toLowerCase().contains("file://") || !request.url.equals(AwShellActivity.this.url) && !jsInjected)
                 {
                     mAwTestContainerView.getAwContents().evaluateJavaScript(vrWebGLJSCode, null);
                     jsInjected = true;
@@ -595,18 +652,15 @@ public class AwShellActivity extends Activity implements
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) 
     {
+
+        System.out.println("VRWebGL: onSurfaceCreated before calling nativeOnSurfaceCreated");
+
         if ( nativePointer != 0 )
         {
             nativeOnSurfaceCreated( nativePointer );
         }
 
-        if (!urlLoaded)
-        {
-            mAwTestContainerView.getAwContents().loadUrl(url);
-            urlLoaded = true;
-        }
-
-        surfaceView.setZOrderMediaOverlay(true);
+        System.out.println("VRWebGL: onSurfaceCreated after calling nativeOnSurfaceCreated");
 
         System.out.println("VRWebGL: surfaceCreated and page loaded: " + layout.getMeasuredWidth() + "x" + layout.getMeasuredHeight());
     }
@@ -936,7 +990,7 @@ public class AwShellActivity extends Activity implements
     // Native calls
     
     // Activity lifecycle
-    private native long nativeOnCreate( Activity obj );
+    private native long nativeOnCreate( long nativeGvrContext );
     private native void nativeOnStart( long nativePointer );
     private native void nativeOnResume( long nativePointer );
     private native void nativeOnPause( long nativePointer );

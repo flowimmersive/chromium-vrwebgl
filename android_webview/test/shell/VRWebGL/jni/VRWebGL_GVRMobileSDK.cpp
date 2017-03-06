@@ -84,10 +84,8 @@ class VRWebGL_GVRMobileSDK {
   gvr::BufferViewport scratch_viewport_;
 
   gvr::Mat4f head_view_;
-  gvr::Mat4f model_cube_;
-  gvr::Mat4f camera_;
-  gvr::Mat4f view_;
-  gvr::Mat4f modelview_;
+  gvr::Mat4f projectionMatrixTransposed;
+  gvr::Mat4f viewMatrixTransposed;
   gvr::Sizei render_size_;
 
   gvr::ViewerType gvr_viewer_type_;
@@ -214,7 +212,7 @@ static void CheckGLError(const char* label) {
   if (gl_error != GL_NO_ERROR) {
     LOGW("GL error @ %s: %d", label, gl_error);
     // Crash immediately to make OpenGL errors obvious.
-    abort();
+    // abort();
   }
 }
 
@@ -308,6 +306,16 @@ void VRWebGL_GVRMobileSDK::InitializeGl() {
 }
 
 void VRWebGL_GVRMobileSDK::DrawFrame() {
+  VRWebGLCommandProcessor::getInstance()->update();
+
+  // In order to reduce the flickering, when a synchronous command has been executed in the update call, do not render anything.
+  // Not perfect, as the render get stalled, but at least it is better than rendering with an undefined state of the opengl context.
+  if (/*!appThread->renderEnabled || */VRWebGLCommandProcessor::getInstance()->m_synchronousVRWebGLCommandBeenProcessedInUpdate())
+  {
+    VRWebGLCommandProcessor::getInstance()->renderFrame(false);
+    return;
+  }
+
   PrepareFramebuffer();
   gvr::Frame frame = swapchain_->AcquireFrame();
 
@@ -333,15 +341,15 @@ void VRWebGL_GVRMobileSDK::DrawFrame() {
   glClearColor(0.1f, 0.1f, 0.1f, 0.5f);  // Dark background so text shows up.
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   viewport_list_->GetBufferViewport(0, &scratch_viewport_);
-  // DrawWorld(left_eye_view, scratch_viewport_);
+  DrawWorld(left_eye_view, scratch_viewport_);
   viewport_list_->GetBufferViewport(1, &scratch_viewport_);
-  // DrawWorld(right_eye_view, scratch_viewport_);
+  DrawWorld(right_eye_view, scratch_viewport_);
   frame.Unbind();
 
   // Submit frame.
   frame.Submit(*viewport_list_, head_view_);
 
-  CheckGLError("onDrawFrame");
+  // CheckGLError("onDrawFrame");
 }
 
 void VRWebGL_GVRMobileSDK::PrepareFramebuffer() {
@@ -369,17 +377,251 @@ void VRWebGL_GVRMobileSDK::DrawWorld(const gvr::Mat4f& view_matrix,
                                      const gvr::BufferViewport& viewport) {
   const gvr::Recti pixel_rect =
       CalculatePixelSpaceRect(render_size_, viewport.GetSourceUv());
-
+  
+  GLfloat viewportWidth = pixel_rect.right - pixel_rect.left;
+  GLfloat viewportHeight = pixel_rect.top - pixel_rect.bottom;
   glViewport(pixel_rect.left, pixel_rect.bottom,
-             pixel_rect.right - pixel_rect.left,
-             pixel_rect.top - pixel_rect.bottom);
+             viewportWidth, viewportHeight);
 
-  CheckGLError("World drawing setup");
-
+  // CheckGLError("World drawing setup");
+  
   const gvr::Mat4f perspective =
       PerspectiveMatrixFromView(viewport.GetSourceFov(), kZNear, kZFar);
+  
+  // Transpose oculus projection and view matrices to be opengl compatible.
+  VRWebGL_transposeMatrix4((const GLfloat*)perspective.m[0], (GLfloat*)projectionMatrixTransposed.m[0]);
+  VRWebGL_transposeMatrix4((const GLfloat*)view_matrix.m[0], (GLfloat*)viewMatrixTransposed.m[0]);
+  
+  // Setup the information before rendering current eye's frame
+  VRWebGLCommandProcessor::getInstance()->setViewAndProjectionMatrices((const GLfloat*)projectionMatrixTransposed.m[0], (const GLfloat*)viewMatrixTransposed.m[0]);  
+  // VRWebGLCommandProcessor::getInstance()->setFramebuffer(ovrFramebuffer_GetCurrent(frameBuffer));
+  VRWebGLCommandProcessor::getInstance()->setViewport(pixel_rect.left, pixel_rect.bottom, viewportWidth, viewportHeight);
+  // Render current eye's frame
+  VRWebGLCommandProcessor::getInstance()->renderFrame();
 }
 
+void VRWebGLCommandProcessor::getPose(VRWebGLPose& pose)
+{
+    // ==============================================
+    // THIS CODE IS JUST FOR REFERENCE PURPOSES! BEGIN
+    //            // Position and orientation together.
+    //            typedef struct ovrPosef_
+    //            {
+    //                ovrQuatf  Orientation;
+    //                ovrVector3f Position;
+    //            } ovrPosef;
+    //            typedef struct ovrRigidBodyPosef_
+    //            {
+    //                ovrPosef  Pose;
+    //                ovrVector3f AngularVelocity;
+    //                ovrVector3f LinearVelocity;
+    //                ovrVector3f AngularAcceleration;
+    //                ovrVector3f LinearAcceleration;
+    //                double    TimeInSeconds;      // Absolute time of this pose.
+    //                double    PredictionInSeconds;  // Seconds this pose was predicted ahead.
+    //            } ovrRigidBodyPosef;
+    //
+    //            // Bit flags describing the current status of sensor tracking.
+    //            typedef enum
+    //            {
+    //                VRAPI_TRACKING_STATUS_ORIENTATION_TRACKED = 0x0001, // Orientation is currently tracked.
+    //                VRAPI_TRACKING_STATUS_POSITION_TRACKED    = 0x0002, // Position is currently tracked.
+    //                VRAPI_TRACKING_STATUS_HMD_CONNECTED     = 0x0080  // HMD is available & connected.
+    //            } ovrTrackingStatus;
+    //
+    //            // Tracking state at a given absolute time.
+    //            typedef struct ovrTracking_
+    //            {
+    //                // Sensor status described by ovrTrackingStatus flags.
+    //                unsigned int    Status;
+    //                // Predicted head configuration at the requested absolute time.
+    //                // The pose describes the head orientation and center eye position.
+    //                ovrRigidBodyPosef HeadPose;
+    //            } ovrTracking;
+    // THIS CODE IS JUST FOR REFERENCE PURPOSES! END
+    // ==============================================    
+    // pthread_mutex_lock( &ovrApp::HeadTrackingInfoMutex );
+    // pose.orientation[0] = ovrApp::Pose.Pose.Orientation.x;
+    // pose.orientation[1] = ovrApp::Pose.Pose.Orientation.y;
+    // pose.orientation[2] = ovrApp::Pose.Pose.Orientation.z;
+    // pose.orientation[3] = ovrApp::Pose.Pose.Orientation.w;
+    // pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );     
+}
+
+void VRWebGLCommandProcessor::getEyeParameters(VRWebGLEyeParameters& eyeParameters)
+{
+    // pthread_mutex_lock( &ovrApp::HeadTrackingInfoMutex );
+    // eyeParameters.xFOV = ovrApp::EyeParameters.xFOV;
+    // eyeParameters.yFOV = ovrApp::EyeParameters.yFOV;
+    // eyeParameters.width = ovrApp::EyeParameters.width;
+    // eyeParameters.height = ovrApp::EyeParameters.height;
+    // eyeParameters.interpupillaryDistance = ovrApp::EyeParameters.interpupillaryDistance;
+    // pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );       
+}
+
+void VRWebGLCommandProcessor::setCameraProjectionMatrix(GLfloat* cameraProjectionMatrix)
+{
+  // GLfloat far = (cameraProjectionMatrix[14]) / (1 + cameraProjectionMatrix[10]);
+  // GLfloat near = (far + far * cameraProjectionMatrix[10]) / (cameraProjectionMatrix[10] - 1);
+  //   pthread_mutex_lock( &ovrRenderer::NewNearFarMutex );
+  //   ovrRenderer::NewNear = near;
+  //   ovrRenderer::NewFar = far;
+  //   pthread_mutex_unlock( &ovrRenderer::NewNearFarMutex );      
+}
+
+void VRWebGLCommandProcessor::setRenderEnabled(bool flag)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_SET_RENDER_ENABLED, MQ_WAIT_RECEIVED );
+    // ovrMessage_SetIntegerParm(&message, 0, (int)(flag ? 1 : 0));
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+GLuint VRWebGLCommandProcessor::newVideoTexture()
+{
+  //   ovrMessage message;
+  //   ovrMessage_Init( &message, MESSAGE_ON_NEW_VIDEO, MQ_WAIT_PROCESSED );
+  //   GLuint videoTextureId = 0;
+  //   message.Result = &videoTextureId;
+  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+  // return videoTextureId;
+  return 0;
+}
+
+void VRWebGLCommandProcessor::deleteVideoTexture(GLuint videoTextureId)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_NEW_VIDEO, MQ_WAIT_NONE );
+    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+void VRWebGLCommandProcessor::setVideoSource(GLuint videoTextureId, const std::string& src)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_SRC, MQ_WAIT_NONE );
+    // std::string* newSrc = new std::string(src);
+    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+    // ovrMessage_SetPointerParm(&message, 1, newSrc);
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+void VRWebGLCommandProcessor::playVideo(GLuint videoTextureId, double volume, bool loop)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_PLAY_VIDEO, MQ_WAIT_NONE );
+    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+    // ovrMessage_SetFloatParm(&message, 1, (float)volume);
+    // ovrMessage_SetIntegerParm(&message, 2, (int)(loop ? 1 : 0));
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+void VRWebGLCommandProcessor::pauseVideo(GLuint videoTextureId)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_PAUSE_VIDEO, MQ_WAIT_NONE );
+    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+void VRWebGLCommandProcessor::setVideoVolume(GLuint videoTextureId, double volume)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_VOLUME, MQ_WAIT_NONE );
+    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+    // ovrMessage_SetFloatParm(&message, 1, (float)volume);
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+void VRWebGLCommandProcessor::setVideoLoop(GLuint videoTextureId, bool loop)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_LOOP, MQ_WAIT_NONE );
+    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+    // ovrMessage_SetIntegerParm(&message, 1, (int)(loop ? 1 : 0));
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+void VRWebGLCommandProcessor::setVideoCurrentTime(GLuint videoTextureId, double currentTime)
+{
+    // ovrMessage message;
+    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_CURRENT_TIME, MQ_WAIT_NONE );
+    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+    // ovrMessage_SetIntegerParm(&message, 1, (int)(currentTime * 1000.0));
+    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+}
+
+double VRWebGLCommandProcessor::getVideoCurrentTime(GLuint videoTextureId)
+{
+  //   ovrMessage message;
+  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_CURRENT_TIME, MQ_WAIT_PROCESSED );
+  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+  //   int currentTime = 0;
+  //   message.Result = &currentTime;
+  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+  // return (double)currentTime / 1000.0;
+  return 0;
+}
+
+double VRWebGLCommandProcessor::getVideoDuration(GLuint videoTextureId)
+{
+  //   ovrMessage message;
+  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_DURATION, MQ_WAIT_PROCESSED );
+  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+  //   int duration = 0;
+  //   message.Result = &duration;
+  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+  // return (double)duration / 1000.0;
+  return 0;
+}
+
+int VRWebGLCommandProcessor::getVideoWidth(GLuint videoTextureId)
+{
+  //   ovrMessage message;
+  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_WIDTH, MQ_WAIT_PROCESSED );
+  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+  //   int width = 0;
+  //   message.Result = &width;
+  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+  // return width;
+  return 0;
+}
+
+int VRWebGLCommandProcessor::getVideoHeight(GLuint videoTextureId)
+{
+  //   ovrMessage message;
+  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_HEIGHT, MQ_WAIT_PROCESSED );
+  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+  //   int height = 0;
+  //   message.Result = &height;
+  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+  // return height;
+  return 0;
+}
+
+bool VRWebGLCommandProcessor::checkVideoPrepared(GLuint videoTextureId)
+{
+  //   ovrMessage message;
+  //   ovrMessage_Init( &message, MESSAGE_ON_CHECK_VIDEO_PREPARED, MQ_WAIT_PROCESSED );
+  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+  //   bool prepared = false;
+  //   message.Result = &prepared;
+  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+  // return prepared;
+  return false;
+}
+
+bool VRWebGLCommandProcessor::checkVideoEnded(GLuint videoTextureId)
+{
+  //   ovrMessage message;
+  //   ovrMessage_Init( &message, MESSAGE_ON_CHECK_VIDEO_ENDED, MQ_WAIT_PROCESSED );
+  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
+  //   bool ended = false;
+  //   message.Result = &ended;
+  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
+  // return ended;
+  return 0;
+}
 // ===============================================================================================
 
 #define JNI_METHOD(return_type, method_name) \
@@ -400,10 +642,27 @@ inline VRWebGL_GVRMobileSDK *native(jlong ptr) {
 extern "C" {
 
 JNI_METHOD(jlong, nativeOnCreate)
-(JNIEnv *env, jclass clazz, jobject class_loader, jobject android_context,
- jlong native_gvr_api) {
+(JNIEnv *env, jclass clazz, jlong native_gvr_api) {
   return jptr(
       new VRWebGL_GVRMobileSDK(reinterpret_cast<gvr_context *>(native_gvr_api)));
+}
+
+JNI_METHOD(void, nativeOnStart)
+(JNIEnv *env, jclass clazz, jlong handle) {
+}
+
+JNI_METHOD(void, nativeOnPause)
+(JNIEnv *env, jobject obj, jlong handle) {
+  native(handle)->OnPause();
+}
+
+JNI_METHOD(void, nativeOnResume)
+(JNIEnv *env, jobject obj, jlong handle) {
+  native(handle)->OnResume();
+}
+
+JNI_METHOD(void, nativeOnStop)
+(JNIEnv *env, jobject obj, jlong handle) {
 }
 
 JNI_METHOD(void, nativeOnDestroy)
@@ -421,14 +680,10 @@ JNI_METHOD(void, nativeOnDrawFrame)
   native(handle)->DrawFrame();
 }
 
-JNI_METHOD(void, nativeOnPause)
-(JNIEnv *env, jobject obj, jlong handle) {
-  native(handle)->OnPause();
+JNI_METHOD(void, nativeOnPageStarted)
+(JNIEnv *env, jobject obj) {
+  VRWebGLCommandProcessor::getInstance()->reset();
 }
 
-JNI_METHOD(void, nativeOnResume)
-(JNIEnv *env, jobject obj, jlong handle) {
-  native(handle)->OnResume();
-}
 
 }  // extern "C"

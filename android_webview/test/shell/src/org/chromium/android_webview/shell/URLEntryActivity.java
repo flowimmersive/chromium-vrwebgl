@@ -34,6 +34,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.net.Uri;
 
+import com.google.vr.ndk.base.DaydreamApi;
+
 public class URLEntryActivity extends Activity
 {
 	private static final String LAST_USED_URL_KEY = "url";
@@ -50,6 +52,9 @@ public class URLEntryActivity extends Activity
 	private JSONArray urlHistoryURLs = null;
 	private JSONObject config = null;
 	private HashSet<Integer> urlIndicesToRemove = new HashSet<Integer>();
+
+	private DaydreamApi ddApi = null;
+
 	private OnCheckedChangeListener checkedChangeListener = new OnCheckedChangeListener()
 	{
 		@Override
@@ -131,6 +136,8 @@ public class URLEntryActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+		ddApi = DaydreamApi.create(this);
 		
 		setContentView(R.layout.url_entry_layout);
 		
@@ -168,7 +175,8 @@ public class URLEntryActivity extends Activity
 					Intent intent = new Intent(getApplicationContext(), AwShellActivity.class);
 					intent.setData(Uri.parse(url));
 					intent.putExtra("config", config.toString());
-					startActivity(intent);
+					ddApi.launchInVr(intent);
+					// startActivity(intent);
 		  	}
 		  	catch(MalformedURLException e)
 		  	{

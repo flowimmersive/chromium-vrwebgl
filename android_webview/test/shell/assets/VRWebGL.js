@@ -223,14 +223,30 @@
 			// 5.- void gl.texImage2D(target, level, internalformat, format, type, HTMLVideoElement? pixels);
 			if (argumentsArray.length === 6) {
 				if (argumentsArray[5] instanceof HTMLCanvasElement) {
+
+					console.log("VRWebGL.js: Transforming HTMLCanvasElement to an HTMLImageElement");
+
 					// Let's assume that the parameter is a canvas.
 					var canvas = argumentsArray[5]
 					var canvasInBase64 = canvas.toDataURL();
 					var image = new Image();
-					image.src = canvasInBase64;
 					argumentsArray[5] = image;
+					// Store the argumentsArray so there is no closure needed.
+					image.argumentsArray = argumentsArray;
+					image.addEventListener("load", function(event) {
+
+						console.log("VRWebGL.js: Executing the original texImage2D with the canvas converted into an image.");
+
+						originalVRWebGLTexImage2D.apply(vrWebGLRenderingContexts[0], event.target.argumentsArray);						
+					});
+
+					image.src = canvasInBase64;
+
+					console.log("VRWebGL.js: canvasInBase64.length = " + canvasInBase64.length);
+
+					return;
 				}
-				// TODO: Still 2 calls are not being handled: the ones that pass these parameters. ImageData and HTMLVideoElement
+				// TODO: Still 2 calls are not being handled: the ones that pass these parameters: ImageData and HTMLVideoElement
 			}
 			return originalVRWebGLTexImage2D.apply(this, argumentsArray);
 		}
