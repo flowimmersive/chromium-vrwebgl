@@ -1620,17 +1620,13 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
     GLsizei width, GLsizei height, GLint border,
     GLenum format, GLenum type, DOMArrayBufferView* pixels)
 {
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 1 begins";
     texImageHelperDOMArrayBufferView(TexImage2D, target, level, internalformat, width, height, border, format, type, 1, 0, 0, 0, pixels);
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 1 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, ImageData* pixels)
 {
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 2 begins";
     texImageHelperImageData(TexImage2D, target, level, internalformat, 0, format, type, 1, 0, 0, 0, pixels, getImageDataSize(pixels), 0);
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 2 ends";
 }
 
 void VRWebGLRenderingContext::texImageHelperHTMLImageElement(TexImageFunctionID functionID,
@@ -1638,29 +1634,20 @@ void VRWebGLRenderingContext::texImageHelperHTMLImageElement(TexImageFunctionID 
     GLint yoffset, GLint zoffset, HTMLImageElement* image, const IntRect& sourceImageRect,
     GLsizei depth, GLint unpackImageHeight, ExceptionState& exceptionState)
 {
-    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 1";
     const char* funcName = getTexImageFunctionName(functionID);
 
     if (image->cachedImage() == 0)
     {
-        VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement: no image";
+        VLOG(0) << "VRWebGL: ERROR: No image in texImage2D call.";
         return;
     }
 
-    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 2: " << image->cachedImage();
-
     RefPtr<Image> imageForRender = image->cachedImage()->getImage();
-
-    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 3";
 
     if (imageForRender && imageForRender->isSVGImage())
     {
-        VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 4";
         imageForRender = drawImageIntoBuffer(imageForRender.release(), image->width(), image->height(), funcName);
-        VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 5";
     }
-
-    VLOG(0) << "VRWebGLRenderingContext::texImageHelperHTMLImageElement 6";
 
     // TexImageFunctionType functionType;
     // if (functionID == TexImage2D)
@@ -1672,21 +1659,15 @@ void VRWebGLRenderingContext::texImageHelperHTMLImageElement(TexImageFunctionID 
     // if (!imageForRender || !validateTexFunc(funcName, functionType, SourceHTMLImageElement, target, level, internalformat, imageForRender->width(), imageForRender->height(), 1, 0, format, type, xoffset, yoffset, zoffset))
     //     return;
 
-    VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImageHelperHTMLImageElement before calling texImageImpl";
     texImageImpl(functionID, target, level, internalformat, xoffset, yoffset, zoffset, format, type, imageForRender.get(), WebGLImageConversion::HtmlDomImage, m_unpackFlipY, m_unpackPremultiplyAlpha, sourceImageRect, depth, unpackImageHeight);
-    VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImageHelperHTMLImageElement after calling texImageImpl";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, HTMLImageElement* image, ExceptionState& exceptionState)
 {
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 3 begins";
-
     texImageHelperHTMLImageElement(TexImage2D, 
         target, level, internalformat, format, type, 0, 
         0, 0, image, sentinelEmptyRect(), 1, 0, exceptionState);
-
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 3 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
@@ -1772,15 +1753,12 @@ void VRWebGLRenderingContext::texImageHelperHTMLVideoElement(TexImageFunctionID 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, HTMLVideoElement* video, ExceptionState& exceptionState)
 {
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 4 begins";
     texImageHelperHTMLVideoElement(TexImage2D, target, level, internalformat, format, type, 0, 0, 0, video, sentinelEmptyRect(), 1, 0, exceptionState);
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 4 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, VRWebGLVideo* video, ExceptionState& exceptionState)
 {
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 5 begins";
     // Check if the currently bound texture has a video texture id already.
     // If it does not have it (== 0), assign the video texture id to it.
     if (m_textureCurrentlyBound)
@@ -1790,14 +1768,12 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
             m_textureCurrentlyBound->setVideoTextureId(video->videoTextureId());
         }
     }
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 5 ends";
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, ImageBitmap* bitmap, ExceptionState& exceptionState)
 {
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 6 begins";
-    VLOG(0) << "VRWebGLRenderingContext::texImage2D 6 ends";
+    VLOG(0) << "VRWebGL: ERROR: textImage2D with ImageBitmap is still not supported. Sorry :(.";  
     // ASSERT(bitmap->bitmapImage());
     // OwnPtr<uint8_t[]> pixelData = bitmap->copyBitmapData(bitmap->isPremultiplied() ? PremultiplyAlpha : DontPremultiplyAlpha);
     // Vector<uint8_t> data;
