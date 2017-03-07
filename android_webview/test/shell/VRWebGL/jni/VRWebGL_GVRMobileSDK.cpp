@@ -102,8 +102,8 @@ class VRWebGL_GVRMobileSDK {
   }
 
 namespace {
-static const float kZNear = 1.0f;
-static const float kZFar = 100.0f;
+static const float kZNear = 0.001f;
+static const float kZFar = 100000.0f;
 
 static const int kCoordsPerVertex = 3;
 
