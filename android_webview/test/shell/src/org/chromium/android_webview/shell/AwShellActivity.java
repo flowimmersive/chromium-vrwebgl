@@ -4,12 +4,14 @@
 
 package org.chromium.android_webview.shell;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.res.AssetFileDescriptor;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Debug;
 import android.text.TextUtils;
@@ -33,6 +35,10 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+
+import android.support.v4.content.ContextCompat;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback;
 
 import org.chromium.android_webview.AwBrowserContext;
 import org.chromium.android_webview.AwBrowserProcess;
@@ -99,6 +105,7 @@ public class AwShellActivity extends Activity implements
     private static final String PREFERENCES_NAME = "AwShellPrefs";
     private static final String INITIAL_URL = "No URL provided either in the intent nor in the config.json";
     private static final String LAST_USED_URL_KEY = "url";
+    private static final int READ_EXTERNAL_STORAGE_PERMISSION_ID = 3;
     private AwBrowserContext mBrowserContext;
     private AwDevToolsServer mDevToolsServer;
     private AwTestContainerView mAwTestContainerView;
@@ -150,10 +157,36 @@ public class AwShellActivity extends Activity implements
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
+    private void requestExternalStorageReadPermission() 
+    {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) 
+        {
+            // Should we show an explanation?
+            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) 
+            // {
+
+            //     // Show an expanation to the user *asynchronously* -- don't block
+            //     // this thread waiting for the user's response! After the user
+            //     // sees the explanation, try again to request the permission.
+
+            // } 
+            // else 
+            {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        READ_EXTERNAL_STORAGE_PERMISSION_ID);
+            }
+        }
+    }    
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestExternalStorageReadPermission();
 
         CommandLine.init(new String[] { "chrome", "--ignore-gpu-blacklist", "--enable-webvr" });
 
@@ -420,7 +453,7 @@ public class AwShellActivity extends Activity implements
                 // the injected JS is wiped out, we will inject it when another resource is requested. This may or may not work in many 
                 // cases depending on when the resource is requested. 
                 // Waiting for a better answer from the chromium forums.
-                if (!AwShellActivity.this.url.toLowerCase().contains("file://") || !request.url.equals(AwShellActivity.this.url) && !jsInjected)
+                if (!AwShellActivity.this.url.toLowerCase().contains("file://") && !request.url.equals(AwShellActivity.this.url) && !jsInjected)
                 {
                     mAwTestContainerView.getAwContents().evaluateJavaScript(vrWebGLJSCode, null);
                     jsInjected = true;
