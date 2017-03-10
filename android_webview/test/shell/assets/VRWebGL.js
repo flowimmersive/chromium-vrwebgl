@@ -915,6 +915,36 @@
 			navigator.getVRDevices = navigator.getVRDisplays = function() { return new Promise(function(resolve, reject) { resolve([]); })};
 		}
 
+		var originalNavigatorGetGamepads = navigator.getGamepads;
+		navigator.getGamepads = function() {
+			var argumentsArray = Array.prototype.slice.apply(arguments);
+			var originalGamepads = originalNavigatorGetGamepads.apply(navigator, argumentsArray);
+			// The originalGamepads cannot be modified so we will create a proper array :).
+			var gamepads = new Array(originalGamepads.length);
+
+			// TODO: Maybe even remove/replace the DD controller if it exists.
+			if (vrWebGLRenderingContexts.length > 0) {
+				var gamepad = vrWebGLRenderingContexts[0].getGamepad();
+				if (gamepad) {
+					var freeIndex = -1;
+					for (var i = 0; i < originalGamepads.length; i++) {
+						gamepads[i] = originalGamepads[i];
+						if (freeIndex === -1 && gamepads[i] === null) {
+							// Even though we have found a free index, keep going to copy all the originalGamepads to the gamepads array.
+							freeIndex = i; 
+						}
+					}
+					if (freeIndex < 0 ) {
+						gamepads.push(gamepad);
+					}
+					else {
+						gamepads[freeIndex] = gamepad;
+					}
+				}
+			}
+			return gamepads;
+		}
+
 		// Store the original requestAnimationFrame function as we want to inject ours.
 		// We need to have control over the requestAnimationFrame to identify the webGL calls that should be performes in the native render loop/function.
 		var originalRequestAnimationFrame = window.requestAnimationFrame;
@@ -940,6 +970,12 @@
 
 			for (var i = 0; i < vrWebGLRenderingContexts.length; i++) {
 				vrWebGLRenderingContexts[i].startFrame();
+			}
+
+			// Update the gamepad in each frame
+			// TODO: Notify the corresponding events.
+			if (vrWebGLRenderingContexts.length > 0) {
+				vrWebGLRenderingContexts[0].getGamepad();
 			}
 			
 			var argumentsArray = Array.prototype.slice.apply(arguments);

@@ -9,5 +9,6 @@
 void VRWebGL_multiplyMatrices4(const GLfloat* m, const GLfloat* n, GLfloat* o);
 void VRWebGL_transposeMatrix4(const GLfloat* m, GLfloat* o);
 void VRWebGL_inverseMatrix4(const GLfloat* m, GLfloat* o);
+void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* quat);
 
 #endif

@@ -37,12 +37,10 @@ void VREyeParameters::update(const VRWebGLEyeParameters& eyeParameters)
     m_offset->data()[1] = 0;
     m_offset->data()[2] = 0;
 
-    GLfloat halfXFOV = eyeParameters.xFOV / 2.0;
-    GLfloat halfYFOV = eyeParameters.yFOV / 2.0;
-    m_fieldOfView->setUpDegrees(halfYFOV);
-    m_fieldOfView->setDownDegrees(halfYFOV);
-    m_fieldOfView->setLeftDegrees(halfXFOV);
-    m_fieldOfView->setRightDegrees(halfXFOV);
+    m_fieldOfView->setUpDegrees(eyeParameters.upDegrees);
+    m_fieldOfView->setDownDegrees(eyeParameters.downDegrees);
+    m_fieldOfView->setLeftDegrees(eyeParameters.leftDegrees);
+    m_fieldOfView->setRightDegrees(eyeParameters.rightDegrees);
 
     m_renderWidth = eyeParameters.width;
     m_renderHeight = eyeParameters.height;

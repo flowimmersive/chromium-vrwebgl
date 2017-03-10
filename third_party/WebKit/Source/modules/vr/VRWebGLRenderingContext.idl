@@ -694,4 +694,5 @@ typedef unrestricted float GLclampf;
     void setCameraProjectionMatrix(Float32Array array);
     void setCameraProjectionMatrix(sequence<GLfloat> array);
     void setRenderEnabled(boolean flag);
+    Gamepad getGamepad();
 };

@@ -1,5 +1,6 @@
 #include "VRWebGLMath.h"
 #include <cassert>
+#include <cmath>
 
 void VRWebGL_multiplyMatrices4(const GLfloat* m, const GLfloat* n, GLfloat* o)
 {
@@ -147,3 +148,76 @@ void VRWebGL_transposeMatrix4(const GLfloat* m, GLfloat* o)
     o[10] = m[10];
     o[15] = m[15];
 }
+
+void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* o)
+{
+    assert(m != o);
+
+    GLfloat fTrace = m[0] + m[5] + m[10];
+    GLfloat fRoot;
+
+    if ( fTrace > 0.0 ) 
+    {
+        // |w| > 1/2, may as well choose w > 1/2
+        fRoot = sqrt(fTrace + 1.0);  // 2w
+        o[3] = 0.5 * fRoot;
+        fRoot = 0.5 / fRoot;  // 1/(4w)
+        o[0] = (m[6] - m[9]) * fRoot;
+        o[1] = (m[8] - m[2]) * fRoot;
+        o[2] = (m[1] - m[4]) * fRoot;
+    } 
+    else 
+    {
+        // |w| <= 1/2
+        int i = 0;
+        if ( m[5] > m[0] )
+          i = 1;
+        if ( m[10] > m[i*4+i] )
+          i = 2;
+        int j = (i+1)%4;
+        int k = (i+2)%4;
+        
+        fRoot = sqrt(m[i*4+i]-m[j*4+j]-m[k*4+k] + 1.0);
+        o[i] = 0.5 * fRoot;
+        fRoot = 0.5 / fRoot;
+        o[3] = (m[j*4+k] - m[k*4+j]) * fRoot;
+        o[j] = (m[j*4+i] + m[i*4+j]) * fRoot;
+        o[k] = (m[k*4+i] + m[i*4+k]) * fRoot;
+    }
+
+
+    // assert(m != o);
+
+    // GLfloat fTrace = m[0] + m[4] + m[8];
+    // GLfloat fRoot;
+
+    // if ( fTrace > 0.0 ) 
+    // {
+    //     // |w| > 1/2, may as well choose w > 1/2
+    //     fRoot = sqrt(fTrace + 1.0);  // 2w
+    //     o[3] = 0.5 * fRoot;
+    //     fRoot = 0.5 / fRoot;  // 1/(4w)
+    //     o[0] = (m[5] - m[7]) * fRoot;
+    //     o[1] = (m[6] - m[2]) * fRoot;
+    //     o[2] = (m[1] - m[3]) * fRoot;
+    // } 
+    // else 
+    // {
+    //     // |w| <= 1/2
+    //     int i = 0;
+    //     if ( m[4] > m[0] )
+    //       i = 1;
+    //     if ( m[8] > m[i*3+i] )
+    //       i = 2;
+    //     int j = (i+1)%3;
+    //     int k = (i+2)%3;
+        
+    //     fRoot = sqrt(m[i*3+i]-m[j*3+j]-m[k*3+k] + 1.0);
+    //     o[i] = 0.5 * fRoot;
+    //     fRoot = 0.5 / fRoot;
+    //     o[3] = (m[j*3+k] - m[k*3+j]) * fRoot;
+    //     o[j] = (m[j*3+i] + m[i*3+j]) * fRoot;
+    //     o[k] = (m[k*3+i] + m[i*3+k]) * fRoot;
+    // }
+
+};

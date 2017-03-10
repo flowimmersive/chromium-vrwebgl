@@ -16,6 +16,11 @@ class VRWebGLCommand;
 class VRWebGLPose;
 class VRWebGLEyeParameters;
 
+namespace blink
+{
+    class WebGamepad;
+}
+
 class VRWebGLCommandProcessor
 {
 public:
@@ -91,6 +96,7 @@ public:
     int getVideoHeight(GLuint videoTextureId);
     bool checkVideoPrepared(GLuint videoTextureId);
     bool checkVideoEnded(GLuint videoTextureId);
+    std::shared_ptr<blink::WebGamepad> getGamepad();
 };
 
 class VRWebGLCommandProcessorImpl final: public VRWebGLCommandProcessor

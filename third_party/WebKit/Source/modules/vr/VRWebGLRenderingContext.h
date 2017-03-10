@@ -41,6 +41,7 @@ class ImageData;
 
 class VRPose;
 class VREyeParameters;
+class Gamepad;
 
 class VRWebGLRenderingContext : public GarbageCollectedFinalized<VRWebGLRenderingContext>, public ScriptWrappable 
 {
@@ -180,6 +181,7 @@ public:
     void setCameraProjectionMatrix(DOMFloat32Array* value);
     void setCameraProjectionMatrix(Vector<GLfloat>& value);
     void setRenderEnabled(bool flag);
+    Gamepad* getGamepad();
 
     DECLARE_VIRTUAL_TRACE();
 
@@ -358,6 +360,7 @@ private:
     VRWebGLEyeParameters m_vrWebGLEyeParameters;
     Member<VRPose> m_vrPose;
     Member<VREyeParameters> m_vrEyeParameters;
+    Member<Gamepad> m_gamepad;
 };
 
 } // namespace blink

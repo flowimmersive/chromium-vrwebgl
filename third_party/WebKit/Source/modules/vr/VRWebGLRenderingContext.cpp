@@ -29,6 +29,8 @@
 #include "modules/vr/VRPose.h"
 #include "modules/vr/VREyeParameters.h"
 
+#include "modules/gamepad/Gamepad.h"
+
 namespace blink 
 {
 
@@ -2169,6 +2171,26 @@ void VRWebGLRenderingContext::setRenderEnabled(bool flag)
     VRWebGLCommandProcessor::getInstance()->setRenderEnabled(flag);    
 }
 
+Gamepad* VRWebGLRenderingContext::getGamepad()
+{
+    std::shared_ptr<blink::WebGamepad> gamepad = VRWebGLCommandProcessor::getInstance()->getGamepad();
+    if (gamepad)
+    {
+        // Create the gamepad instance the first time.
+        if (!m_gamepad)
+        {
+            m_gamepad = Gamepad::create();
+            // TODO: Fix this. We should be able to use the real 16 bit type for the id string.
+            m_gamepad->setId((const char*)gamepad->id);
+        }
+        m_gamepad->setButtons(gamepad->buttonsLength, gamepad->buttons);
+        m_gamepad->setAxes(gamepad->axesLength, gamepad->axes);
+        m_gamepad->setPose(gamepad->pose);
+        m_gamepad->setHand(gamepad->hand);
+    }
+    return m_gamepad;
+} 
+
 // VRWebGLRenderingContext::VRWebGLRenderingContext(HTMLCanvasElement* canvas): m_canvas(canvas)
 // {
 
@@ -2178,7 +2200,8 @@ VRWebGLRenderingContext::VRWebGLRenderingContext():
 	// m_canvas(nullptr),
 	m_unpackFlipY(false),
 	m_generatedImageCache(4),
-	m_modelViewMatrix(16)
+	m_modelViewMatrix(16),
+    m_gamepad(nullptr)
 {
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::VRWebGLRenderingContext begin";
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_getString::newInstance(GL_EXTENSIONS);

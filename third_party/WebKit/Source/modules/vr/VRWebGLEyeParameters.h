@@ -9,8 +9,10 @@
 class VRWebGLEyeParameters
 {
 public:
-	GLfloat xFOV;
-	GLfloat yFOV;
+	GLfloat upDegrees;
+	GLfloat downDegrees;
+	GLfloat rightDegrees;
+	GLfloat leftDegrees;
 	GLint width;
 	GLint height;
 	GLfloat interpupillaryDistance;
