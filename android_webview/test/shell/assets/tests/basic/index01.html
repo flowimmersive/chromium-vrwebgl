@@ -47,7 +47,6 @@
     }
 </script>
 
-
 <script type="text/javascript">
     var gl;
 
@@ -159,8 +158,25 @@
 
     var crateTextures = Array();
 
+    function randomColorComponent() {
+        return Math.floor(Math.random() * 256);
+    }
+
     function initTexture() {
-        var crateImage = new Image();
+
+        var canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 256;
+        var ctx = canvas.getContext("2d");
+        for (var x = 0; x < canvas.width; x++) {
+            for (var y = 0; y < canvas.height; y++) {
+                var s = "rgb(" + randomColorComponent() + ", " + randomColorComponent() + ", " + randomColorComponent() + ")";
+                ctx.fillStyle = s;
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+
+        // var crateImage = new Image();
+        crateImage = canvas;
 
         for (var i=0; i < 3; i++) {
             var texture = gl.createTexture();
@@ -171,7 +187,9 @@
         crateImage.onload = function () {
             handleLoadedTexture(crateTextures)
         }
-        crateImage.src = "crate.gif";
+
+        handleLoadedTexture(crateTextures)
+        // crateImage.src = "crate.gif";
     }
 
 
