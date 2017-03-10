@@ -22,7 +22,8 @@ LOCAL_MODULE := VRWebGL_GVRMobileSDK
 LOCAL_C_INCLUDES := \
 	. \
 	./3rdparty/gvr_sdk_mobile_1.20.0/include \
-	../../../../../third_party/WebKit/Source
+	../../../../../third_party/WebKit/Source \
+	../../../../../third_party/WebKit
 #	../../../../../third_party/gvr-android-sdk/src/libraries/headers
 LOCAL_SRC_FILES := \
 	./VRWebGL_GVRMobileSDK.cpp \
