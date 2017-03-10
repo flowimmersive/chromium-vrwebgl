@@ -919,13 +919,13 @@
 		navigator.getGamepads = function() {
 			var argumentsArray = Array.prototype.slice.apply(arguments);
 			var originalGamepads = originalNavigatorGetGamepads.apply(navigator, argumentsArray);
-			// The originalGamepads cannot be modified so we will create a proper array :).
-			var gamepads = new Array(originalGamepads.length);
 
 			// TODO: Maybe even remove/replace the DD controller if it exists.
 			if (vrWebGLRenderingContexts.length > 0) {
 				var gamepad = vrWebGLRenderingContexts[0].getGamepad();
 				if (gamepad) {
+					// The originalGamepads cannot be modified so we will create a proper array :).
+					var gamepads = new Array(originalGamepads.length);
 					var freeIndex = -1;
 					for (var i = 0; i < originalGamepads.length; i++) {
 						gamepads[i] = originalGamepads[i];
@@ -934,15 +934,18 @@
 							freeIndex = i; 
 						}
 					}
+					// If all the slots were taken, add the gamepad to the end.
 					if (freeIndex < 0 ) {
 						gamepads.push(gamepad);
 					}
 					else {
 						gamepads[freeIndex] = gamepad;
 					}
+					// As we are always returning the original gamepads variable, make sure that it points to the new structure.
+					originalGamepads = gamepads;
 				}
 			}
-			return gamepads;
+			return originalGamepads;
 		}
 
 		// Store the original requestAnimationFrame function as we want to inject ours.
