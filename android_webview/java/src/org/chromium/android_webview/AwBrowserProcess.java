@@ -41,7 +41,7 @@ import java.nio.channels.FileLock;
  * Wrapper for the steps needed to initialize the java and native sides of webview chromium.
  */
 public abstract class AwBrowserProcess {
-    public static final String PRIVATE_DATA_DIRECTORY_SUFFIX = "webview";
+    public static final String PRIVATE_DATA_DIRECTORY_SUFFIX = "vrwebglwebview";
 
     private static final String TAG = "AwBrowserProcess";
     private static final String EXCLUSIVE_LOCK_FILE = "webview_data.lock";
