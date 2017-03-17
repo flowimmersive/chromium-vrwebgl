@@ -39,7 +39,7 @@
   <uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
   <application android:name="org.chromium.android_webview.shell.AwShellApplication"
-      android:label="Flow Dev App"
+      android:label="VRWebGL Dev App"
       android:hardwareAccelerated="true">
 
     <meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only"/>
