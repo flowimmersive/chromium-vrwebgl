@@ -107,20 +107,21 @@ class VRWebGL_GVRMobileSDK {
 
   gvr::Mat4f head_view_;
   GLfloat head_view_orientation_[4];
-  gvr::Mat4f projectionMatrixTransposed;
-  gvr::Mat4f viewMatrixTransposed;
+  gvr::Mat4f projectionMatrixTransposed_;
+  gvr::Mat4f viewMatrixTransposed_;
   gvr::Sizei render_size_;
   gvr::Rectf fov_;
   GLfloat viewportWidth_;
   GLfloat viewportHeight_;
+  GLfloat interpupillaryDistance_;
 
   std::unique_ptr<gvr::ControllerApi> gvr_controller_api_;
   gvr::ControllerState gvr_controller_state_;
-  std::shared_ptr<blink::WebGamepad> gamepad;
-  std::shared_ptr<blink::WebGamepad> gamepadCopy;
-  std::mutex gamepadMutex;
-  std::mutex poseMutex;
-  std::mutex eyeParametersMutex;
+  std::shared_ptr<blink::WebGamepad> gamepad_;
+  std::shared_ptr<blink::WebGamepad> gamepadCopy_;
+  std::mutex gamepadMutex_;
+  std::mutex poseMutex_;
+  std::mutex eyeParametersMutex_;
 
   gvr::ViewerType gvr_viewer_type_;
 };
@@ -322,15 +323,15 @@ VRWebGL_GVRMobileSDK::VRWebGL_GVRMobileSDK(
   instance = this;
   if (gvr_viewer_type_ == GVR_VIEWER_TYPE_DAYDREAM) {
     LOGD("Viewer type: DAYDREAM");
-    gamepad.reset(new blink::WebGamepad());
+    gamepad_.reset(new blink::WebGamepad());
     // TODO: Fix this. We should be able to use the real 16 bit type for the id string.
-    strcpy((char*)gamepad->id, "Daydream Controller");
-    gamepad->buttonsLength = 2;
-    gamepad->axesLength = 2;
-    gamepad->pose.notNull = true;
-    gamepad->pose.orientation.notNull = true;
-    gamepad->pose.hasOrientation = true;
-    gamepad->pose.hasPosition = false;
+    strcpy((char*)gamepad_->id, "Daydream Controller");
+    gamepad_->buttonsLength = 2;
+    gamepad_->axesLength = 2;
+    gamepad_->pose.notNull = true;
+    gamepad_->pose.orientation.notNull = true;
+    gamepad_->pose.hasOrientation = true;
+    gamepad_->pose.hasPosition = false;
   } else {
     LOGE("Unexpected viewer type.");
   }
@@ -400,55 +401,57 @@ void VRWebGL_GVRMobileSDK::ProcessControllerInput() {
              gvr_controller_state_.GetConnectionState()));
   }
 
-  gamepadMutex.lock();
+  gamepadMutex_.lock();
   {
     gvr::ControllerQuat controllerPose = gvr_controller_state_.GetOrientation();
-    gamepad->pose.orientation.x = controllerPose.qx;
-    gamepad->pose.orientation.y = controllerPose.qy;
-    gamepad->pose.orientation.z = controllerPose.qz;
-    gamepad->pose.orientation.w = controllerPose.qw;
-    gamepad->buttons[0].pressed = gvr_controller_state_.GetButtonState(GVR_CONTROLLER_BUTTON_CLICK);
-    gamepad->buttons[0].value = gamepad->buttons[0].pressed ? 1 : 0;
-    gamepad->buttons[1].pressed = gvr_controller_state_.GetButtonState(GVR_CONTROLLER_BUTTON_APP);
-    gamepad->buttons[1].value = gamepad->buttons[1].pressed ? 1 : 0;
+    gamepad_->pose.orientation.x = controllerPose.qx;
+    gamepad_->pose.orientation.y = controllerPose.qy;
+    gamepad_->pose.orientation.z = controllerPose.qz;
+    gamepad_->pose.orientation.w = controllerPose.qw;
+    gamepad_->buttons[0].pressed = gvr_controller_state_.GetButtonState(GVR_CONTROLLER_BUTTON_CLICK);
+
+    gamepad_->buttons[0].value = gamepad_->buttons[0].pressed ? 1 : 0;
+    gamepad_->buttons[1].pressed = gvr_controller_state_.GetButtonState(GVR_CONTROLLER_BUTTON_APP);
+    gamepad_->buttons[1].value = gamepad_->buttons[1].pressed ? 1 : 0;
+    gamepad_->buttons[0].touched = gvr_controller_state_.IsTouching();
     gvr::ControllerVec2 controllerTouchPos = gvr_controller_state_.GetTouchPos();
-    gamepad->axes[0] = controllerTouchPos.x;
-    gamepad->axes[1] = controllerTouchPos.y;
-    gamepad->hand = hand == GVR_CONTROLLER_RIGHT_HANDED ? blink::GamepadHandRight : blink::GamepadHandLeft;
-    // LOGD("gamepad: pose(%f, %f, %f, %f), button0(%f, %s), button1(%f, %s), x(%f), y(%f)", gamepad->pose.orientation.x, gamepad->pose.orientation.y, gamepad->pose.orientation.z, gamepad->pose.orientation.w, gamepad->buttons[0].value, (gamepad->buttons[0].pressed ? "YES" : "NO"), gamepad->buttons[1].value, (gamepad->buttons[1].pressed ? "YES" : "NO"), gamepad->axes[0], gamepad->axes[1]);
+    gamepad_->axes[0] = controllerTouchPos.x;
+    gamepad_->axes[1] = controllerTouchPos.y;
+    gamepad_->hand = hand == GVR_CONTROLLER_RIGHT_HANDED ? blink::GamepadHandRight : blink::GamepadHandLeft;
+    // LOGD("gamepad_: pose(%f, %f, %f, %f), button0(%f, %s), button1(%f, %s), x(%f), y(%f)", gamepad_->pose.orientation.x, gamepad_->pose.orientation.y, gamepad_->pose.orientation.z, gamepad_->pose.orientation.w, gamepad_->buttons[0].value, (gamepad_->buttons[0].pressed ? "YES" : "NO"), gamepad_->buttons[1].value, (gamepad_->buttons[1].pressed ? "YES" : "NO"), gamepad_->axes[0], gamepad_->axes[1]);
   }
-  gamepadMutex.unlock();
+  gamepadMutex_.unlock();
 }
 
 std::shared_ptr<blink::WebGamepad> VRWebGL_GVRMobileSDK::getGamepadCopy()
 {
-  gamepadMutex.lock();
+  gamepadMutex_.lock();
   {
-    if (!gamepadCopy)
+    if (!gamepadCopy_)
     {
-      gamepadCopy.reset(new blink::WebGamepad(*gamepad.get()));
+      gamepadCopy_.reset(new blink::WebGamepad(*gamepad_.get()));
     }
     else
     {
-      *(gamepadCopy.get()) = *(gamepad.get());
+      *(gamepadCopy_.get()) = *(gamepad_.get());
     }
   }
-  gamepadMutex.unlock();
-  return gamepadCopy;
+  gamepadMutex_.unlock();
+  return gamepadCopy_;
 }
 
 void VRWebGL_GVRMobileSDK::getPose(VRWebGLPose& pose)
 {
-  poseMutex.lock();
+  poseMutex_.lock();
   {
     memcpy(pose.orientation, head_view_orientation_, sizeof(GLfloat) * 4);
   }
-  poseMutex.unlock();
+  poseMutex_.unlock();
 }
 
 void VRWebGL_GVRMobileSDK::getEyeParameters(VRWebGLEyeParameters& eyeParameters)
 {
-  eyeParametersMutex.lock();
+  eyeParametersMutex_.lock();
   {
     eyeParameters.upDegrees = fov_.top;
     eyeParameters.downDegrees = fov_.bottom;
@@ -456,9 +459,9 @@ void VRWebGL_GVRMobileSDK::getEyeParameters(VRWebGLEyeParameters& eyeParameters)
     eyeParameters.rightDegrees = fov_.right;
     eyeParameters.width = viewportWidth_;
     eyeParameters.height = viewportHeight_;
-    // eyeParameters.interpupillaryDistance = ovrApp::EyeParameters.interpupillaryDistance;
+    eyeParameters.interpupillaryDistance = interpupillaryDistance_;
   }
-  eyeParametersMutex.unlock();
+  eyeParametersMutex_.unlock();
 }
 
 void VRWebGL_GVRMobileSDK::DrawFrame() {
@@ -486,27 +489,33 @@ void VRWebGL_GVRMobileSDK::DrawFrame() {
   head_view_ = gvr_api_->GetHeadSpaceFromStartSpaceRotation(target_time);
 
   // Calculate the pose quaternion from the head matrix.
-  poseMutex.lock();
+  poseMutex_.lock();
   {
     VRWebGL_quaternionFromMatrix4(&(head_view_.m[0][0]), head_view_orientation_);
   }
-  poseMutex.unlock();
+  poseMutex_.unlock();
 
   gvr::Mat4f left_eye_matrix = gvr_api_->GetEyeFromHeadMatrix(GVR_LEFT_EYE);
   gvr::Mat4f right_eye_matrix = gvr_api_->GetEyeFromHeadMatrix(GVR_RIGHT_EYE);
 
-  LOGD("%s: %f, %f, %f", "left", left_eye_matrix.m[0][3], left_eye_matrix.m[1][3], left_eye_matrix.m[2][3]);
-  LOGD("%s: %f, %f, %f", "right", right_eye_matrix.m[0][3], right_eye_matrix.m[1][3], right_eye_matrix.m[2][3]);
+  eyeParametersMutex_.lock();
+  {
+    // Not ideal way of calculating the interpupillary distance as only X is taken into account.
+    // LOGD("%s: %f, %f, %f", "left", left_eye_matrix.m[0][3], left_eye_matrix.m[1][3], left_eye_matrix.m[2][3]);
+    // LOGD("%s: %f, %f, %f", "right", right_eye_matrix.m[0][3], right_eye_matrix.m[1][3], right_eye_matrix.m[2][3]);
+    interpupillaryDistance_ = fabs(left_eye_matrix.m[0][3]) + fabs(right_eye_matrix.m[0][3]);
+  }
+  eyeParametersMutex_.unlock();
 
   gvr::Mat4f left_eye_view = MatrixMul(left_eye_matrix, head_view_);
   gvr::Mat4f right_eye_view = MatrixMul(right_eye_matrix, head_view_);
 
   viewport_list_->SetToRecommendedBufferViewports();
 
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  glDisable(GL_SCISSOR_TEST);
-  glDisable(GL_BLEND);
+  // glEnable(GL_DEPTH_TEST);
+  // glEnable(GL_CULL_FACE);
+  // glDisable(GL_SCISSOR_TEST);
+  // glDisable(GL_BLEND);
 
   // Draw the world.
   frame.BindBuffer(0);
@@ -565,24 +574,24 @@ void VRWebGL_GVRMobileSDK::DrawWorld(const gvr::Mat4f& view_matrix,
   // We only need the information from one of the eyes for now to be able to pass it along when asked for.
   if (eye == GVR_LEFT_EYE) {
     // We only need the fov of one eye.
-    eyeParametersMutex.lock();
+    eyeParametersMutex_.lock();
     {
       fov_ = fov;
       viewportWidth_ = viewportWidth;
       viewportHeight_ = viewportHeight_;
     }
-    eyeParametersMutex.unlock();
+    eyeParametersMutex_.unlock();
   }
   
   const gvr::Mat4f perspective =
       PerspectiveMatrixFromView(fov, kZNear, kZFar);
   
   // Transpose oculus projection and view matrices to be opengl compatible.
-  VRWebGL_transposeMatrix4((const GLfloat*)perspective.m[0], (GLfloat*)projectionMatrixTransposed.m[0]);
-  VRWebGL_transposeMatrix4((const GLfloat*)view_matrix.m[0], (GLfloat*)viewMatrixTransposed.m[0]);
+  VRWebGL_transposeMatrix4((const GLfloat*)perspective.m[0], (GLfloat*)projectionMatrixTransposed_.m[0]);
+  VRWebGL_transposeMatrix4((const GLfloat*)view_matrix.m[0], (GLfloat*)viewMatrixTransposed_.m[0]);
   
   // Setup the information before rendering current eye's frame
-  VRWebGLCommandProcessor::getInstance()->setViewAndProjectionMatrices((const GLfloat*)projectionMatrixTransposed.m[0], (const GLfloat*)viewMatrixTransposed.m[0]);  
+  VRWebGLCommandProcessor::getInstance()->setViewAndProjectionMatrices((const GLfloat*)projectionMatrixTransposed_.m[0], (const GLfloat*)viewMatrixTransposed_.m[0]);  
   // VRWebGLCommandProcessor::getInstance()->setFramebuffer(ovrFramebuffer_GetCurrent(frameBuffer));
   VRWebGLCommandProcessor::getInstance()->setViewport(pixel_rect.left, pixel_rect.bottom, viewportWidth, viewportHeight);
   // Render current eye's frame
@@ -815,12 +824,12 @@ bool VRWebGLCommandProcessor::checkVideoEnded(GLuint videoTextureId)
 
 std::shared_ptr<blink::WebGamepad> VRWebGLCommandProcessor::getGamepad()
 {
-  std::shared_ptr<blink::WebGamepad> gamepad;
+  std::shared_ptr<blink::WebGamepad> gamepad_;
   if (VRWebGL_GVRMobileSDK::instance != 0)
   {
-    gamepad = VRWebGL_GVRMobileSDK::instance->getGamepadCopy();
+    gamepad_ = VRWebGL_GVRMobileSDK::instance->getGamepadCopy();
   }
-  return gamepad;
+  return gamepad_;
 }
 
 // ===============================================================================================
@@ -873,6 +882,7 @@ JNI_METHOD(void, nativeOnDestroy)
 
 JNI_METHOD(void, nativeOnSurfaceCreated)
 (JNIEnv *env, jobject obj, jlong handle) {
+  VRWebGLCommandProcessor::getInstance()->setupJNI(env, obj);
   native(handle)->InitializeGl();
 }
 
