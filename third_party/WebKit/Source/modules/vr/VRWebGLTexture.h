@@ -8,12 +8,12 @@ namespace blink {
 
 class VRWebGLTexture final : public VRWebGLObject {
 public:
-	void setVideoTextureId(GLuint videoTextureId);
-	GLuint videoTextureId() const;
+	void setTextureId(GLuint videoTextureId);
+	GLuint textureId() const;
 	
     DEFINE_WRAPPERTYPEINFO();
 private:
-	GLuint m_videoTextureId = 0;
+	GLuint m_textureId = 0;
 };
 
 } // namespace blink

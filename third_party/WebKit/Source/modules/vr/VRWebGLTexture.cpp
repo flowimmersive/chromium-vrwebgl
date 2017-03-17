@@ -2,14 +2,14 @@
 
 namespace blink {
 
-void VRWebGLTexture::setVideoTextureId(GLuint videoTextureId)
+void VRWebGLTexture::setTextureId(GLuint textureId)
 {
-	m_videoTextureId = videoTextureId;
+	m_textureId = textureId;
 }
 
-GLuint VRWebGLTexture::videoTextureId() const
+GLuint VRWebGLTexture::textureId() const
 {
-	return m_videoTextureId;
+	return m_textureId;
 }
 
 } // namespace blink
