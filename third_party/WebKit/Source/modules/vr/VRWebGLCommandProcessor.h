@@ -3,16 +3,15 @@
 
 #include <pthread.h>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 #include <GLES3/gl3.h>
-// // #include <GLES3/gl3ext.h>
 
 #include <string>
 #include <deque>
 #include <memory>
 
-class VRWebGLCommand;
+#include "modules/vr/VRWebGLCommand.h"
+#include "modules/vr/VRWebGLSurfaceTexture.h"
+
 class VRWebGLPose;
 class VRWebGLEyeParameters;
 
@@ -77,7 +76,30 @@ public:
 
     virtual bool m_synchronousVRWebGLCommandBeenProcessedInUpdate() const = 0;
 
+    virtual void setupJNI(JNIEnv* jniEnv, jobject mainActivityJObject) = 0;
+
+    virtual JNIEnv* getJNIEnv() const = 0;
+
+    virtual const jobject getMainActivityJObject() const = 0;
+
+    virtual std::shared_ptr<VRWebGLSurfaceTexture> newSurfaceTexture() = 0;
+
+    virtual void deleteSurfaceTexture(const std::shared_ptr<VRWebGLSurfaceTexture>& surfaceTexture) = 0;
+
+    virtual std::shared_ptr<VRWebGLSurfaceTexture> findSurfaceTextureByTextureId(unsigned textureId) = 0;
+
+    virtual jmethodID getNewWebViewMethodID() const = 0;
+
+    virtual jmethodID getDeleteWebViewMethodID() const = 0;
+
+    virtual jmethodID getSetWebViewSrcMethodID() const = 0;
+
+    virtual jmethodID getDispatchWebViewTouchEventMethodID() const = 0;
+
+    virtual jmethodID getDispatchWebViewNavigationEventMethodID() const = 0;
+
     // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
+    // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
     void getPose(VRWebGLPose& pose);
     void getEyeParameters(VRWebGLEyeParameters& eyeParameters);
     void setCameraProjectionMatrix(GLfloat* cameraProjectionMatrix);
@@ -149,6 +171,17 @@ private:
     GLsizei m_width;
     GLsizei m_height;
 
+    JNIEnv* m_jniEnv;
+    JavaVM* m_javaVM;
+    VRWebGLSurfaceTextures m_surfaceTextures;
+    jobject m_mainActivityJObject;
+    jclass m_mainActivityJClass;
+    jmethodID m_newWebViewMethodID;
+    jmethodID m_deleteWebViewMethodID;
+    jmethodID m_setWebViewSrcMethodID;
+    jmethodID m_dispatchWebViewTouchEventMethodID;
+    jmethodID m_dispatchWebViewNavigationEventMethodID;
+
     // Do not allow copy of instances.
     VRWebGLCommandProcessorImpl(const VRWebGLCommandProcessorImpl&) = delete;
     VRWebGLCommandProcessorImpl& operator=(const VRWebGLCommandProcessorImpl&) = delete;
@@ -209,6 +242,162 @@ public:
     virtual void reset() override;  
 
     virtual bool m_synchronousVRWebGLCommandBeenProcessedInUpdate() const override;
+
+    virtual void setupJNI(JNIEnv* jniEnv, jobject mainActivityJObject) override;
+
+    virtual JNIEnv* getJNIEnv() const override;
+
+    virtual const jobject getMainActivityJObject() const override;
+
+    virtual std::shared_ptr<VRWebGLSurfaceTexture> newSurfaceTexture() override;
+
+    virtual void deleteSurfaceTexture(const std::shared_ptr<VRWebGLSurfaceTexture>& surfaceTexture) override;
+
+    virtual std::shared_ptr<VRWebGLSurfaceTexture> findSurfaceTextureByTextureId(unsigned textureId) override;   
+
+    virtual jmethodID getNewWebViewMethodID() const override;
+
+    virtual jmethodID getDeleteWebViewMethodID() const override;
+
+    virtual jmethodID getSetWebViewSrcMethodID() const override;
+
+    virtual jmethodID getDispatchWebViewTouchEventMethodID() const override;
+
+    virtual jmethodID getDispatchWebViewNavigationEventMethodID() const override;
 };
+
+// =====================================================================================
+// =====================================================================================
+
+class VRWebGLCommand_newWebView: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+
+    VRWebGLCommand_newWebView();
+
+public:
+    static std::shared_ptr<VRWebGLCommand_newWebView> newInstance();
+
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_deleteWebView: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+
+    VRWebGLCommand_deleteWebView(GLuint textureId);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_deleteWebView> newInstance(GLuint textureId);
+
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+class VRWebGLCommand_setWebViewSrc: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    std::string src;
+
+    VRWebGLCommand_setWebViewSrc(GLuint textureId, const std::string& src);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_setWebViewSrc> newInstance(GLuint textureId, const std::string& src);
+
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+class VRWebGLCommand_checkWebViewLoaded: public VRWebGLCommand
+{
+public:
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+class VRWebGLCommand_dispatchWebViewTouchEvent: public VRWebGLCommand
+{
+public:
+    enum Event
+    {
+        TOUCH_START = 1,
+        TOUCH_MOVE = 2,
+        TOUCH_END = 3
+    };
+
+private:
+    GLuint textureId;
+    Event event;
+    float x;
+    float y;
+
+    VRWebGLCommand_dispatchWebViewTouchEvent(GLuint textureId, Event event, float x, float y);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_dispatchWebViewTouchEvent> newInstance(GLuint textureId, Event event, float x, float y);
+
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+class VRWebGLCommand_dispatchWebViewNavigationEvent: public VRWebGLCommand
+{
+public:
+    enum Event
+    {
+        NAVIGATION_BACK = 1,
+        NAVIGATION_FORWARD = 2,
+        NAVIGATION_RELOAD = 3
+    };
+
+private:
+    GLuint textureId;
+    Event event;
+
+    VRWebGLCommand_dispatchWebViewNavigationEvent(GLuint textureId, Event event);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_dispatchWebViewNavigationEvent> newInstance(GLuint textureId, Event event);
+
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
 
 #endif // VRWebGLCommandProcessor_h
