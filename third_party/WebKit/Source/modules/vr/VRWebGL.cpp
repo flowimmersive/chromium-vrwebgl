@@ -271,9 +271,9 @@ bool VRWebGLCommand_bindTexture::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_bindTexture::process() 
 {
-    GLuint videoTextureId = m_texture != 0 ? m_texture->videoTextureId() : 0;
-    GLuint texture = m_texture != 0 ? videoTextureId != 0 ? videoTextureId : m_texture->id() : 0;
-    VRWebGL_glBindTexture(videoTextureId != 0 ? GL_TEXTURE_EXTERNAL_OES : m_target, texture);
+    GLuint textureId = m_texture != 0 ? m_texture->textureId() : 0;
+    GLuint texture = m_texture != 0 ? textureId != 0 ? textureId : m_texture->id() : 0;
+    VRWebGL_glBindTexture(textureId != 0 ? GL_TEXTURE_EXTERNAL_OES : m_target, texture);
 #ifdef VRWEBGL_SHOW_LOG  
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = << " << m_target << " texture = " << texture;
 #endif
