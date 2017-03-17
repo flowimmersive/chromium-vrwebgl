@@ -30,6 +30,7 @@ LOCAL_SRC_FILES := \
 	../../../../../third_party/WebKit/Source/modules/vr/VRWebGLCommandProcessor.cpp \
 	../../../../../third_party/WebKit/Source/modules/vr/VRWebGLCommand.cpp \
 	../../../../../third_party/WebKit/Source/modules/vr/VRWebGLMath.cpp \
+	../../../../../third_party/WebKit/Source/modules/vr/VRWebGLSurfaceTexture.cpp \
 	../../../../../third_party/WebKit/Source/modules/vr/VRWebGL_gl.cpp 	
 LOCAL_CFLAGS := -std=gnu++11 -Werror 
 # LOCAL_STATIC_LIBRARIES := 
