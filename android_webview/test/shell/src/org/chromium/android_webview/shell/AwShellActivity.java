@@ -29,6 +29,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -83,6 +84,7 @@ import org.json.JSONObject;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.graphics.SurfaceTexture;
+import android.graphics.Canvas;
 
 import com.google.vr.ndk.base.AndroidCompat;
 import com.google.vr.ndk.base.GvrLayout;
@@ -128,9 +130,88 @@ public class AwShellActivity extends Activity implements
         public MediaPlayer mediaPlayer = null;
         public int nativeTextureId = -1;
     }
-
-    ArrayList<Video> videos = new ArrayList<Video>();
+    private ArrayList<Video> videos = new ArrayList<Video>();
     private AudioManager audioManager = null;
+
+    class WebView extends android.webkit.WebView 
+    {
+        public static final int WEBVIEW_TEXTURE_WIDTH = 1024;
+        public static final int WEBVIEW_TEXTURE_HEIGHT = 1024;
+        private Surface surface = null;
+        private SurfaceTexture surfaceTexture = null; 
+        private int nativeTextureId = -1;
+
+        public static final int TOUCH_START = 1;
+        public static final int TOUCH_MOVE = 2;
+        public static final int TOUCH_END = 3;
+
+        public static final int NAVIGATION_BACK = 1;
+        public static final int NAVIGATION_FORWARD = 2;
+        public static final int NAVIGATION_RELOAD = 3;
+        
+        public WebView( Context context, SurfaceTexture surfaceTexture, int nativeTextureId ) 
+        {
+            super( context );
+
+            this.surfaceTexture = surfaceTexture;
+            this.surfaceTexture.setDefaultBufferSize(WEBVIEW_TEXTURE_WIDTH, WEBVIEW_TEXTURE_HEIGHT);
+            this.surface = new Surface(this.surfaceTexture);
+            this.nativeTextureId = nativeTextureId;
+
+            // setBackgroundColor(Color.TRANSPARENT);
+            getSettings().setJavaScriptEnabled(true);
+            // getSettings().setAllowFileAccess(true);
+            // getSettings().setLoadsImagesAutomatically(true);
+            // getSettings().setBlockNetworkImage(false);
+            // getSettings().setBlockNetworkLoads(false);
+            // getSettings().setBuiltInZoomControls(false);
+            // getSettings().setLoadWithOverviewMode(true);
+            // getSettings().setUseWideViewPort(true);
+            // getSettings().setDomStorageEnabled(true);
+            clearCache(true);
+            setScrollbarFadingEnabled(true);
+            // setScrollBarStyle(android.webkit.WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+            setVerticalScrollBarEnabled(false);
+            setHorizontalScrollBarEnabled(false);
+            setNetworkAvailable(true);
+            setWebViewClient(new WebViewClient());
+            setWebChromeClient(new WebChromeClient());
+            // addJavascriptInterface(jsCallbackObject, "CocoonJSWebViewCallbackObject");
+
+            setLayoutParams( new ViewGroup.LayoutParams( WEBVIEW_TEXTURE_WIDTH, WEBVIEW_TEXTURE_WIDTH ) );
+        }
+
+        @Override
+        protected void onDraw( Canvas canvas ) 
+        {
+            if ( surface != null ) 
+            {
+                try 
+                {                    
+                    // final Canvas surfaceCanvas = surface.lockHardwareCanvas();
+                    final Canvas surfaceCanvas = surface.lockCanvas( null );
+
+                    surfaceCanvas.save();
+                    surfaceCanvas.translate(-getScrollX(), -getScrollY());
+                    super.onDraw(surfaceCanvas);
+                    surfaceCanvas.restore();
+
+                    surface.unlockCanvasAndPost( surfaceCanvas );
+                } 
+                catch ( Surface.OutOfResourcesException e ) 
+                {
+                    e.printStackTrace();
+                }    
+            }
+            // super.onDraw( canvas ); // Uncomment this to render the webview as a 2d view on top of everything.
+        }
+
+        public SurfaceTexture getSurfaceTexture()
+        {
+            return surfaceTexture;
+        }
+    }
+    private ArrayList<WebView> webviews = new ArrayList<WebView>();
 
     private String vrWebGLJSCode; 
     private String url;
@@ -673,7 +754,13 @@ public class AwShellActivity extends Activity implements
             }
             // nativeOnTouchEvent( nativePointer, action, x, y );
         }
-        return mAwTestContainerView.dispatchTouchEvent(event);
+
+        // for (WebView webview: webviews)
+        // {
+        //     webview.dispatchTouchEvent(event);
+        // }
+
+        return false; // mAwTestContainerView.dispatchTouchEvent(event);
     }
 
     @Override
@@ -1017,6 +1104,121 @@ public class AwShellActivity extends Activity implements
             }
         }
         return video;
+    }
+
+    private synchronized WebView findWebViewBySurfaceTexture(SurfaceTexture surfaceTexture)
+    {
+        WebView webview = null;
+        for (int i = 0; i < webviews.size() && webview == null; i++)
+        {
+            webview = webviews.get(i);
+            if (webview.getSurfaceTexture() != surfaceTexture)
+            {
+                webview = null;
+            }
+        }
+        return webview;
+    }
+
+    private void newWebView(final SurfaceTexture surfaceTexture, final int nativeTextureId)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = new WebView(AwShellActivity.this, surfaceTexture, nativeTextureId);
+                // webview.surfaceTexture.setOnFrameAvailableListener(this);
+                synchronized(AwShellActivity.this)
+                {
+                    webviews.add(webview);
+                }
+                addContentView(webview, new ViewGroup.LayoutParams( WebView.WEBVIEW_TEXTURE_WIDTH, WebView.WEBVIEW_TEXTURE_HEIGHT ));
+                // webview.loadUrl("http://www.drodd.com/images14/red16.png");
+                webview.loadUrl("http://www.airbnb.com");
+                // webview.loadUrl("http://judax.github.io/vrwebgl/tests/hover/");
+            }
+        });
+    }
+
+    public synchronized void deleteWebView(SurfaceTexture surfaceTexture) 
+    {
+        WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+        ((ViewGroup)webview.getParent()).removeView(webview);
+        webviews.remove(webview);
+    }
+
+    private void setWebViewSrc(final SurfaceTexture surfaceTexture, final String src)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+                if (webview != null)
+                {
+                    webview.loadUrl(src);
+                }
+            }
+        });
+    }
+
+    private void dispatchWebViewTouchEvent(final SurfaceTexture surfaceTexture, final int action, final float x, final float y)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+                if (webview != null)
+                {
+                    float realX = x * WebView.WEBVIEW_TEXTURE_WIDTH;
+                    float realY = y * WebView.WEBVIEW_TEXTURE_HEIGHT;
+                    int motionEventAction = 0;
+                    switch(action)
+                    {
+                        case WebView.TOUCH_START:
+                            motionEventAction = MotionEvent.ACTION_DOWN;
+                            break;
+                        case WebView.TOUCH_MOVE:
+                            motionEventAction = MotionEvent.ACTION_MOVE;
+                            break;
+                        case WebView.TOUCH_END:
+                            motionEventAction = MotionEvent.ACTION_UP;
+                            break;
+                        default:
+                            throw new IllegalArgumentException("The action '" + action + "' to be dispatched as a touch event could not be identified.");
+                    }
+                    long downTime = android.os.SystemClock.uptimeMillis();
+                    long eventTime = android.os.SystemClock.uptimeMillis();
+                    MotionEvent motionEvent = MotionEvent.obtain(downTime, eventTime, motionEventAction, realX, realY, 0);
+                    webview.dispatchTouchEvent(motionEvent);
+                }
+            }
+        });
+    }
+
+    private void dispatchWebViewNavigationEvent(final SurfaceTexture surfaceTexture, final int action)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+                if (webview != null)
+                {
+                    switch(action)
+                    {
+                        case WebView.NAVIGATION_BACK:
+                            webview.goBack();
+                            break;
+                        case WebView.NAVIGATION_FORWARD:
+                            webview.goForward();
+                            break;
+                        case WebView.NAVIGATION_RELOAD:
+                            webview.reload();
+                            break;
+                        default:
+                            throw new IllegalArgumentException("The action '" + action + "' to be dispatched as a navigation event could not be identified.");
+                    }
+                }
+            }
+        });
     }
 
 
