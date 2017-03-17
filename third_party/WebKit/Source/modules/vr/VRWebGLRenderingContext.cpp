@@ -9,6 +9,7 @@
 #include "modules/vr/VRWebGLFramebuffer.h"
 #include "modules/vr/VRWebGLRenderbuffer.h"
 #include "modules/vr/VRWebGLVideo.h"
+#include "modules/vr/VRWebGLWebView.h"
 
 #include "modules/vr/VRWebGLCommand.h"
 #include "modules/vr/VRWebGLCommandProcessor.h"
@@ -1765,9 +1766,21 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
     // If it does not have it (== 0), assign the video texture id to it.
     if (m_textureCurrentlyBound)
     {
-        if (m_textureCurrentlyBound->videoTextureId() != video->videoTextureId()) 
+        if (m_textureCurrentlyBound->textureId() != video->videoTextureId()) 
         {
-            m_textureCurrentlyBound->setVideoTextureId(video->videoTextureId());
+            m_textureCurrentlyBound->setTextureId(video->videoTextureId());
+        }
+    }
+}
+
+void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
+    GLenum format, GLenum type, VRWebGLWebView* webview, ExceptionState& exceptionState)
+{
+    if (m_textureCurrentlyBound)
+    {
+        if (m_textureCurrentlyBound->textureId() != webview->textureId()) 
+        {
+            m_textureCurrentlyBound->setTextureId(webview->textureId());
         }
     }
 }
