@@ -50,6 +50,8 @@ blink_modules_sources("vr") {
     "VRWebGLUniformLocation.h",
     "VRWebGLVideo.cpp",
     "VRWebGLVideo.h",
+    "VRWebGLWebView.cpp",
+    "VRWebGLWebView.h",
     "VRWebGL.cpp",
     "VRWebGL.h"
   ]

@@ -282,6 +282,7 @@ modules_idl_files =
                     "vr/VRWebGLTexture.idl",
                     "vr/VRWebGLUniformLocation.idl",
                     "vr/VRWebGLVideo.idl",
+                    "vr/VRWebGLWebView.idl",
                     "webaudio/AnalyserNode.idl",
                     "webaudio/AudioBuffer.idl",
                     "webaudio/AudioBufferCallback.idl",
