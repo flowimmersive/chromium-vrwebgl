@@ -609,6 +609,9 @@ typedef unrestricted float GLclampf;
         GLenum format, GLenum type, VRWebGLVideo video);
     [RaisesException] void texImage2D(
         GLenum target, GLint level, GLint internalformat,
+        GLenum format, GLenum type, VRWebGLWebView webview);
+    [RaisesException] void texImage2D(
+        GLenum target, GLint level, GLint internalformat,
         GLenum format, GLenum type, ImageBitmap bitmap);
 
     // void texSubImage2D(

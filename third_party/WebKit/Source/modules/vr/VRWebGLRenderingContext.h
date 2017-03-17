@@ -31,6 +31,7 @@ class VRWebGLActiveInfo;
 class VRWebGLFramebuffer;
 class VRWebGLRenderbuffer;
 class VRWebGLVideo;
+class VRWebGLWebView;
 
 class HTMLFormElement;
 class HTMLImageElement;
@@ -136,6 +137,7 @@ public:
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, HTMLCanvasElement* canvas, ExceptionState& exceptionState);
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, HTMLVideoElement* video, ExceptionState& exceptionState);
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, VRWebGLVideo* video, ExceptionState& exceptionState);
+    void texImage2D(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, VRWebGLWebView* webview, ExceptionState& exceptionState);
     void texImage2D(GLenum target, GLint level, GLint internalformat, GLenum format, GLenum type, ImageBitmap* bitmap, ExceptionState& exceptionState);
     void uniform1f(const VRWebGLUniformLocation* location, GLfloat x);
     void uniform1fv(const VRWebGLUniformLocation* location, const FlexibleFloat32ArrayView& v);
