@@ -26,12 +26,6 @@ void VRWebGLProgram::addActiveAttribute(const std::string& name, GLenum type, GL
 
 void VRWebGLProgram::addAttributeLocation(const std::string& name, GLint location)
 {
-	std::string names;
-	for (std::map<std::string, GLint>::iterator it = m_attributeLocations.begin(); it != m_attributeLocations.end(); it++)
-	{
-		names += it->first + ", ";
-	}
-	VLOG(0) << "VRWebGLProgram::addAttributeLocation('" << name.c_str() << "') Vs " << names.c_str() << std::endl;
 	m_attributeLocations[name] = location;
 }
 
@@ -92,12 +86,6 @@ std::shared_ptr<VRWebGLProgram::ActiveInfo> VRWebGLProgram::getActiveAttribute(u
 
 GLint VRWebGLProgram::getAttributeLocation(const std::string& name)
 {
-	std::string names;
-	for (std::map<std::string, GLint>::iterator it = m_attributeLocations.begin(); it != m_attributeLocations.end(); it++)
-	{
-		names += it->first + ", ";
-	}
-	VLOG(0) << "VRWebGLProgram::getAttributeLocation('" << name.c_str() << "') Vs " << names.c_str() << std::endl;
 	return m_attributeLocations.find(name) == m_attributeLocations.end() ? -1 : m_attributeLocations[name];
 }
 
