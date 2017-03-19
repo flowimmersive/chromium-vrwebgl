@@ -135,8 +135,8 @@ public class AwShellActivity extends Activity implements
 
     class WebView extends android.webkit.WebView 
     {
-        public static final int WEBVIEW_TEXTURE_WIDTH = 1024;
-        public static final int WEBVIEW_TEXTURE_HEIGHT = 1024;
+        public static final int WEBVIEW_TEXTURE_WIDTH = 960;
+        public static final int WEBVIEW_TEXTURE_HEIGHT = 640;
         private Surface surface = null;
         private SurfaceTexture surfaceTexture = null; 
         private int nativeTextureId = -1;
@@ -178,6 +178,14 @@ public class AwShellActivity extends Activity implements
             setWebChromeClient(new WebChromeClient());
             // addJavascriptInterface(jsCallbackObject, "CocoonJSWebViewCallbackObject");
 
+            // Disable long click for text selection
+            // setLongClickable(false);
+            setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    return true;
+                }
+            });
             setLayoutParams( new ViewGroup.LayoutParams( WEBVIEW_TEXTURE_WIDTH, WEBVIEW_TEXTURE_WIDTH ) );
         }
 
@@ -1132,9 +1140,7 @@ public class AwShellActivity extends Activity implements
                     webviews.add(webview);
                 }
                 addContentView(webview, new ViewGroup.LayoutParams( WebView.WEBVIEW_TEXTURE_WIDTH, WebView.WEBVIEW_TEXTURE_HEIGHT ));
-                // webview.loadUrl("http://www.drodd.com/images14/red16.png");
-                webview.loadUrl("http://www.airbnb.com");
-                // webview.loadUrl("http://judax.github.io/vrwebgl/tests/hover/");
+                webview.loadUrl("http://www.google.com");
             }
         });
     }
