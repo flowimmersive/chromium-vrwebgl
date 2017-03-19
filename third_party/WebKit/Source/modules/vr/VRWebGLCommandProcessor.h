@@ -273,6 +273,7 @@ class VRWebGLCommand_newWebView: public VRWebGLCommand
 {
 private:
     GLuint textureId;
+    bool processed = false;
 
     VRWebGLCommand_newWebView();
 
@@ -294,6 +295,7 @@ class VRWebGLCommand_deleteWebView: public VRWebGLCommand
 {
 private:
     GLuint textureId;
+    bool processed = false;
 
     VRWebGLCommand_deleteWebView(GLuint textureId);
 
@@ -314,6 +316,7 @@ class VRWebGLCommand_setWebViewSrc: public VRWebGLCommand
 private:
     GLuint textureId;
     std::string src;
+    bool processed = false;
 
     VRWebGLCommand_setWebViewSrc(GLuint textureId, const std::string& src);
 
@@ -356,6 +359,7 @@ private:
     Event event;
     float x;
     float y;
+    bool processed = false;
 
     VRWebGLCommand_dispatchWebViewTouchEvent(GLuint textureId, Event event, float x, float y);
 
@@ -384,6 +388,7 @@ public:
 private:
     GLuint textureId;
     Event event;
+    bool processed = false;
 
     VRWebGLCommand_dispatchWebViewNavigationEvent(GLuint textureId, Event event);
 
