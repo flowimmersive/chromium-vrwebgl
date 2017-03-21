@@ -177,7 +177,7 @@ public:
     void endFrame();
     Vector<GLfloat> getModelViewMatrix();
     VRPose* getPose();
-    VREyeParameters* getEyeParameters();
+    VREyeParameters* getEyeParameters(const String& eye);
     void setCameraWorldMatrix(DOMFloat32Array* value);
     void setCameraWorldMatrix(Vector<GLfloat>& value);
     void setCameraProjectionMatrix(DOMFloat32Array* value);
@@ -361,7 +361,8 @@ private:
     VRWebGLPose m_vrWebGLPose;
     VRWebGLEyeParameters m_vrWebGLEyeParameters;
     Member<VRPose> m_vrPose;
-    Member<VREyeParameters> m_vrEyeParameters;
+    Member<VREyeParameters> m_vrEyeParametersLeft;
+    Member<VREyeParameters> m_vrEyeParametersRight;
     Member<Gamepad> m_gamepad;
 };
 

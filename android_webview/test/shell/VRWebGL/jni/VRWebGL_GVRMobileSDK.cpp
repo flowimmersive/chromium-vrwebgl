@@ -83,7 +83,7 @@ class VRWebGL_GVRMobileSDK {
 
   void getPose(VRWebGLPose& pose);
 
-  void getEyeParameters(VRWebGLEyeParameters& eyeParameters);
+  void getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters);
 
  private:
   /*
@@ -110,7 +110,8 @@ class VRWebGL_GVRMobileSDK {
   gvr::Mat4f projectionMatrixTransposed_;
   gvr::Mat4f viewMatrixTransposed_;
   gvr::Sizei render_size_;
-  gvr::Rectf fov_;
+  gvr::Rectf fovLeft_;
+  gvr::Rectf fovRight_;
   GLfloat viewportWidth_;
   GLfloat viewportHeight_;
   GLfloat interpupillaryDistance_;
@@ -322,7 +323,7 @@ VRWebGL_GVRMobileSDK::VRWebGL_GVRMobileSDK(
   }
   instance = this;
   if (gvr_viewer_type_ == GVR_VIEWER_TYPE_DAYDREAM) {
-    LOGD("Viewer type: DAYDREAM");
+    LOGD("VRWebGL_GVRMobileSDK: DAYDREAM");
     gamepad_.reset(new blink::WebGamepad());
     // TODO: Fix this. We should be able to use the real 16 bit type for the id string.
     strcpy((char*)gamepad_->id, "Daydream Controller");
@@ -394,7 +395,7 @@ void VRWebGL_GVRMobileSDK::ProcessControllerInput() {
   // Print new API status and connection state, if they changed.
   if (gvr_controller_state_.GetApiStatus() != old_status ||
       gvr_controller_state_.GetConnectionState() != old_connection_state) {
-    LOGD("TreasureHuntApp: controller API status: %s, connection state: %s",
+    LOGD("VRWebGL_GVRMobileSDK: controller API status: %s, connection state: %s",
          gvr_controller_api_status_to_string(
              gvr_controller_state_.GetApiStatus()),
          gvr_controller_connection_state_to_string(
@@ -449,14 +450,24 @@ void VRWebGL_GVRMobileSDK::getPose(VRWebGLPose& pose)
   poseMutex_.unlock();
 }
 
-void VRWebGL_GVRMobileSDK::getEyeParameters(VRWebGLEyeParameters& eyeParameters)
+void VRWebGL_GVRMobileSDK::getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters)
 {
   eyeParametersMutex_.lock();
   {
-    eyeParameters.upDegrees = fov_.top;
-    eyeParameters.downDegrees = fov_.bottom;
-    eyeParameters.leftDegrees = fov_.left;
-    eyeParameters.rightDegrees = fov_.right;
+    if (eye == "left")
+    {
+      eyeParameters.upDegrees = fovLeft_.top;
+      eyeParameters.downDegrees = fovLeft_.bottom;
+      eyeParameters.leftDegrees = fovLeft_.left;
+      eyeParameters.rightDegrees = fovLeft_.right;
+    }
+    else if (eye == "right")
+    {
+      eyeParameters.upDegrees = fovRight_.top;
+      eyeParameters.downDegrees = fovRight_.bottom;
+      eyeParameters.leftDegrees = fovRight_.left;
+      eyeParameters.rightDegrees = fovRight_.right;
+    }
     eyeParameters.width = viewportWidth_;
     eyeParameters.height = viewportHeight_;
     eyeParameters.interpupillaryDistance = interpupillaryDistance_;
@@ -571,17 +582,20 @@ void VRWebGL_GVRMobileSDK::DrawWorld(const gvr::Mat4f& view_matrix,
 
   gvr::Rectf fov = viewport.GetSourceFov();
 
-  // We only need the information from one of the eyes for now to be able to pass it along when asked for.
-  if (eye == GVR_LEFT_EYE) {
-    // We only need the fov of one eye.
-    eyeParametersMutex_.lock();
+  eyeParametersMutex_.lock();
+  {
+    if (eye == GVR_LEFT_EYE)
     {
-      fov_ = fov;
-      viewportWidth_ = viewportWidth;
-      viewportHeight_ = viewportHeight_;
+      fovLeft_ = fov;
     }
-    eyeParametersMutex_.unlock();
+    else if (eye == GVR_RIGHT_EYE)
+    {
+      fovRight_ = fov;
+    }
+    viewportWidth_ = viewportWidth;
+    viewportHeight_ = viewportHeight_;
   }
+  eyeParametersMutex_.unlock();
   
   const gvr::Mat4f perspective =
       PerspectiveMatrixFromView(fov, kZNear, kZFar);
@@ -651,11 +665,11 @@ void VRWebGLCommandProcessor::getPose(VRWebGLPose& pose)
   }
 }
 
-void VRWebGLCommandProcessor::getEyeParameters(VRWebGLEyeParameters& eyeParameters)
+void VRWebGLCommandProcessor::getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters)
 {
   if (VRWebGL_GVRMobileSDK::instance != 0)
   {
-    VRWebGL_GVRMobileSDK::instance->getEyeParameters(eyeParameters);
+    VRWebGL_GVRMobileSDK::instance->getEyeParameters(eye, eyeParameters);
   }
 }
 

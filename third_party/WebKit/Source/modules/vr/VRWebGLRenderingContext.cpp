@@ -2143,12 +2143,22 @@ VRPose* VRWebGLRenderingContext::getPose()
 	return m_vrPose;
 }
 
-VREyeParameters* VRWebGLRenderingContext::getEyeParameters()
+VREyeParameters* VRWebGLRenderingContext::getEyeParameters(const String& eye)
 {
-    VRWebGLCommandProcessor::getInstance()->getEyeParameters(m_vrWebGLEyeParameters);
-    m_vrEyeParameters->update(m_vrWebGLEyeParameters);
+    VRWebGLCommandProcessor::getInstance()->getEyeParameters(eye.utf8().data(), m_vrWebGLEyeParameters);
+    VREyeParameters* vrEyeParameters;
+    if (eye == "left")
+    {
+        m_vrEyeParametersLeft->update(m_vrWebGLEyeParameters);
+        vrEyeParameters = m_vrEyeParametersLeft;
+    }
+    else if (eye == "right")
+    {
+        m_vrEyeParametersRight->update(m_vrWebGLEyeParameters);
+        vrEyeParameters = m_vrEyeParametersRight;
+    }
     // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::getEyeParameters: " << m_vrWebGLEyeParameters.offset << ", " << m_vrWebGLEyeParameters.xFOV << ", " << m_vrWebGLEyeParameters.yFOV << ", " << m_vrWebGLEyeParameters.width << ", " << m_vrWebGLEyeParameters.height];
-    return m_vrEyeParameters;
+    return vrEyeParameters;
 }
 
 void VRWebGLRenderingContext::setCameraWorldMatrix(DOMFloat32Array* value)
@@ -2241,7 +2251,8 @@ VRWebGLRenderingContext::VRWebGLRenderingContext():
 	}
 
     m_vrPose = VRPose::create();
-    m_vrEyeParameters = new VREyeParameters();
+    m_vrEyeParametersLeft = new VREyeParameters();
+    m_vrEyeParametersRight = new VREyeParameters();
 }
 
 void VRWebGLRenderingContext::resetUnpackParameters()
@@ -2608,7 +2619,8 @@ DEFINE_TRACE(VRWebGLRenderingContext)
 {
     // visitor->trace(m_canvas);
     visitor->trace(m_vrPose);
-    visitor->trace(m_vrEyeParameters);
+    visitor->trace(m_vrEyeParametersLeft);
+    visitor->trace(m_vrEyeParametersRight);
     visitor->trace(m_programCurrentlyInUse);
     visitor->trace(m_framebufferCurrentlyBound);
     visitor->trace(m_textureCurrentlyBound);

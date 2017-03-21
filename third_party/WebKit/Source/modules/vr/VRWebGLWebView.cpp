@@ -78,6 +78,11 @@ void VRWebGLWebView::reload()
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewNavigationEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewNavigationEvent::NAVIGATION_RELOAD));
 }
 
+void VRWebGLWebView::voiceSearch()
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewNavigationEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewNavigationEvent::NAVIGATION_VOICE_SEARCH));
+}
+
 VRWebGLWebView::VRWebGLWebView()
 {
 	m_textureId = *(GLuint*)VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_newWebView::newInstance());

@@ -153,42 +153,54 @@ void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* o)
 {
     assert(m != o);
 
-    GLfloat fTrace = m[0] + m[5] + m[10];
-    GLfloat fRoot;
+    // Code from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 
-    if ( fTrace > 0.0 ) 
-    {
-        // |w| > 1/2, may as well choose w > 1/2
-        fRoot = sqrt(fTrace + 1.0);  // 2w
-        o[3] = 0.5 * fRoot;
-        fRoot = 0.5 / fRoot;  // 1/(4w)
-        o[0] = (m[6] - m[9]) * fRoot;
-        o[1] = (m[8] - m[2]) * fRoot;
-        o[2] = (m[1] - m[4]) * fRoot;
-    } 
-    else 
-    {
-        // |w| <= 1/2
-        int i = 0;
-        if ( m[5] > m[0] )
-          i = 1;
-        if ( m[10] > m[i*4+i] )
-          i = 2;
-        int j = (i+1)%4;
-        int k = (i+2)%4;
-        
-        fRoot = sqrt(m[i*4+i]-m[j*4+j]-m[k*4+k] + 1.0);
-        o[i] = 0.5 * fRoot;
-        fRoot = 0.5 / fRoot;
-        o[3] = (m[j*4+k] - m[k*4+j]) * fRoot;
-        o[j] = (m[j*4+i] + m[i*4+j]) * fRoot;
-        o[k] = (m[k*4+i] + m[i*4+k]) * fRoot;
+    // 2 dimensional matrix conversion:
+
+    // FROM
+
+    // 0,0  1,0  2,0
+    // 0,1  1,1  2,1
+    // 0,2  1,2  2,2
+
+    // TO
+
+    // 0    1    2
+    // 4    5    6
+    // 8    9    10
+
+    GLfloat trace = m[0] + m[5] + m[10]; // I removed + 1.0f; see discussion with Ethan
+    if( trace > 0 ) {// I changed M_EPSILON to 0
+        GLfloat s = 0.5f / sqrtf(trace+ 1.0f);
+        o[3] = 0.25f / s;
+        o[0] = ( m[6] - m[9] ) * s;
+        o[1] = ( m[8] - m[2] ) * s;
+        o[2] = ( m[1] - m[4] ) * s;
+    } else {
+        if ( m[0] > m[5] && m[0] > m[10] ) {
+            GLfloat s = 2.0f * sqrtf( 1.0f + m[0] - m[5] - m[10]);
+            o[3] = (m[6] - m[9] ) / s;
+            o[0] = 0.25f * s;
+            o[1] = (m[4] + m[1] ) / s;
+            o[2] = (m[8] + m[2] ) / s;
+        } else if (m[5] > m[10]) {
+            GLfloat s = 2.0f * sqrtf( 1.0f + m[5] - m[0] - m[10]);
+            o[3] = (m[8] - m[2] ) / s;
+            o[0] = (m[4] + m[1] ) / s;
+            o[1] = 0.25f * s;
+            o[2] = (m[9] + m[6] ) / s;
+        } else {
+            GLfloat s = 2.0f * sqrtf( 1.0f + m[10] - m[0] - m[5] );
+            o[3] = (m[1] - m[4] ) / s;
+            o[0] = (m[8] + m[2] ) / s;
+            o[1] = (m[9] + m[6] ) / s;
+            o[2] = 0.25f * s;
+        }
     }
 
+    // This algorithm does not seem to work properly.
 
-    // assert(m != o);
-
-    // GLfloat fTrace = m[0] + m[4] + m[8];
+    // GLfloat fTrace = m[0] + m[5] + m[10];
     // GLfloat fRoot;
 
     // if ( fTrace > 0.0 ) 
@@ -197,27 +209,27 @@ void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* o)
     //     fRoot = sqrt(fTrace + 1.0);  // 2w
     //     o[3] = 0.5 * fRoot;
     //     fRoot = 0.5 / fRoot;  // 1/(4w)
-    //     o[0] = (m[5] - m[7]) * fRoot;
-    //     o[1] = (m[6] - m[2]) * fRoot;
-    //     o[2] = (m[1] - m[3]) * fRoot;
+    //     o[0] = (m[6] - m[9]) * fRoot;
+    //     o[1] = (m[8] - m[2]) * fRoot;
+    //     o[2] = (m[1] - m[4]) * fRoot;
     // } 
     // else 
     // {
     //     // |w| <= 1/2
     //     int i = 0;
-    //     if ( m[4] > m[0] )
+    //     if ( m[5] > m[0] )
     //       i = 1;
-    //     if ( m[8] > m[i*3+i] )
+    //     if ( m[10] > m[i*4+i] )
     //       i = 2;
-    //     int j = (i+1)%3;
-    //     int k = (i+2)%3;
+    //     int j = (i+1)%4;
+    //     int k = (i+2)%4;
         
-    //     fRoot = sqrt(m[i*3+i]-m[j*3+j]-m[k*3+k] + 1.0);
+    //     fRoot = sqrt(m[i*4+i]-m[j*4+j]-m[k*4+k] + 1.0);
     //     o[i] = 0.5 * fRoot;
     //     fRoot = 0.5 / fRoot;
-    //     o[3] = (m[j*3+k] - m[k*3+j]) * fRoot;
-    //     o[j] = (m[j*3+i] + m[i*3+j]) * fRoot;
-    //     o[k] = (m[k*3+i] + m[i*3+k]) * fRoot;
+    //     o[3] = (m[j*4+k] - m[k*4+j]) * fRoot;
+    //     o[j] = (m[j*4+i] + m[i*4+j]) * fRoot;
+    //     o[k] = (m[k*4+i] + m[i*4+k]) * fRoot;
     // }
 
 };

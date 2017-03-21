@@ -691,7 +691,7 @@ typedef unrestricted float GLclampf;
     void endFrame();
     sequence<GLfloat> getModelViewMatrix();
     VRPose getPose();
-    VREyeParameters getEyeParameters();
+    VREyeParameters getEyeParameters(DOMString eye);
     void setCameraWorldMatrix(Float32Array array);
     void setCameraWorldMatrix(sequence<GLfloat> array);
     void setCameraProjectionMatrix(Float32Array array);

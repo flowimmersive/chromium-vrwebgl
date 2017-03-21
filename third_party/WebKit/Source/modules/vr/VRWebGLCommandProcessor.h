@@ -101,7 +101,7 @@ public:
     // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
     // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
     void getPose(VRWebGLPose& pose);
-    void getEyeParameters(VRWebGLEyeParameters& eyeParameters);
+    void getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters);
     void setCameraProjectionMatrix(GLfloat* cameraProjectionMatrix);
     void setRenderEnabled(bool flag);
     GLuint newVideoTexture();
@@ -382,7 +382,8 @@ public:
     {
         NAVIGATION_BACK = 1,
         NAVIGATION_FORWARD = 2,
-        NAVIGATION_RELOAD = 3
+        NAVIGATION_RELOAD = 3,
+        NAVIGATION_VOICE_SEARCH = 4
     };
 
 private:
@@ -403,6 +404,5 @@ public:
     
     virtual std::string name() const override;
 };
-
 
 #endif // VRWebGLCommandProcessor_h

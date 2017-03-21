@@ -33,6 +33,7 @@ public:
     void back();
     void forward();
     void reload();
+    void voiceSearch();
 
     DECLARE_TRACE()
 

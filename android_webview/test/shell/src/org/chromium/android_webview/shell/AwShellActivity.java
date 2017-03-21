@@ -68,11 +68,13 @@ import android.view.Surface;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import android.widget.FrameLayout;
 import java.text.DecimalFormat;
 
@@ -92,6 +94,10 @@ import com.google.vr.ndk.base.GvrLayout;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.speech.SpeechRecognizer;
+import android.speech.RecognizerIntent;
+import android.speech.RecognitionListener;
+
 /**
  * This is a lightweight activity for tests that only require WebView functionality.
  */
@@ -108,9 +114,15 @@ public class AwShellActivity extends Activity implements
     private static final String INITIAL_URL = "No URL provided either in the intent nor in the config.json";
     private static final String LAST_USED_URL_KEY = "url";
     private static final int READ_EXTERNAL_STORAGE_PERMISSION_ID = 3;
+    private static final int RECORD_AUDIO_PERMISSION_ID = 4;
     private AwBrowserContext mBrowserContext;
     private AwDevToolsServer mDevToolsServer;
     private AwTestContainerView mAwTestContainerView;
+
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechRecognizerIntent;
+    private boolean recognizingSpeech = false;
+    private SpeechRecognitionListener speechRecognizerListener;
 
     private GLSurfaceView surfaceView;
     private GvrLayout gvrLayout;
@@ -148,6 +160,7 @@ public class AwShellActivity extends Activity implements
         public static final int NAVIGATION_BACK = 1;
         public static final int NAVIGATION_FORWARD = 2;
         public static final int NAVIGATION_RELOAD = 3;
+        public static final int NAVIGATION_VOICE_SEARCH = 4;
         
         public WebView( Context context, SurfaceTexture surfaceTexture, int nativeTextureId ) 
         {
@@ -179,13 +192,13 @@ public class AwShellActivity extends Activity implements
             // addJavascriptInterface(jsCallbackObject, "CocoonJSWebViewCallbackObject");
 
             // Disable long click for text selection
-            // setLongClickable(false);
             setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
                     return true;
                 }
             });
+
             setLayoutParams( new ViewGroup.LayoutParams( WEBVIEW_TEXTURE_WIDTH, WEBVIEW_TEXTURE_WIDTH ) );
         }
 
@@ -220,6 +233,89 @@ public class AwShellActivity extends Activity implements
         }
     }
     private ArrayList<WebView> webviews = new ArrayList<WebView>();
+
+    private class SpeechRecognitionListener implements RecognitionListener
+    {
+        private WebView webview = null;
+
+        public void setWebView(WebView webview)
+        {
+            this.webview = webview;
+        }
+
+        @Override
+        public void onBeginningOfSpeech()
+        {               
+            System.out.println("SpeechRecognitionListener.onBeginningOfSpeech");
+        }
+
+        @Override
+        public void onBufferReceived(byte[] buffer)
+        {
+            System.out.println("SpeechRecognitionListener.onBufferReceived");
+        }
+
+        @Override
+        public void onEndOfSpeech()
+        {
+            System.out.println("SpeechRecognitionListener.onEndOfSpeech");
+         }
+
+        @Override
+        public void onError(int error)
+        {
+             // speechRecognizer.startListening(speechRecognizerIntent);
+            System.out.println("SpeechRecognitionListener.onError: " + error);
+        }
+
+        @Override
+        public void onEvent(int eventType, Bundle params)
+        {
+            System.out.println("SpeechRecognitionListener.onEvent");
+        }
+
+        @Override
+        public void onPartialResults(Bundle partialResults)
+        {
+            System.out.println("SpeechRecognitionListener.onPartialResults");
+        }
+
+        @Override
+        public void onReadyForSpeech(Bundle params)
+        {
+            System.out.println("SpeechRecognitionListener.onReadyForSpeech");
+        }
+
+        @Override
+        public void onResults(Bundle results)
+        {
+            System.out.println("SpeechRecognitionListener.onResults");
+            ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            for (String match: matches)
+            {
+                System.out.println("match: " + match);
+            }
+            if (webview != null && !matches.isEmpty())
+            {
+                try
+                {
+                    String encodedMatch = URLEncoder.encode(matches.get(0), "UTF-8");
+                    System.out.println(encodedMatch);
+                    webview.loadUrl("http://www.google.com/search?q=" + encodedMatch);
+                }
+                catch(UnsupportedEncodingException e)
+                {
+
+                }
+            }
+        }
+
+        @Override
+        public void onRmsChanged(float rmsdB)
+        {
+            System.out.println("SpeechRecognitionListener.onRmsChanged");
+        }
+    }
 
     private String vrWebGLJSCode; 
     private String url;
@@ -271,11 +367,37 @@ public class AwShellActivity extends Activity implements
         }
     }    
 
+    private void requestRecordAudioPermission() 
+    {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) 
+        {
+            // Should we show an explanation?
+            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) 
+            // {
+
+            //     // Show an expanation to the user *asynchronously* -- don't block
+            //     // this thread waiting for the user's response! After the user
+            //     // sees the explanation, try again to request the permission.
+
+            // } 
+            // else 
+            {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        RECORD_AUDIO_PERMISSION_ID);
+            }
+        }
+    }    
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         requestExternalStorageReadPermission();
+        requestRecordAudioPermission();
 
         CommandLine.init(new String[] { "chrome", "--ignore-gpu-blacklist", "--enable-webvr" });
 
@@ -429,12 +551,15 @@ public class AwShellActivity extends Activity implements
 
         audioManager = (AudioManager) getSystemService( Context.AUDIO_SERVICE );
 
-        System.out.println("VRWebGL: onCreate before calling nativeOnCreate");
-
         // Create the native side
         nativePointer = nativeOnCreate( gvrLayout.getGvrApi().getNativeGvrContext() );        
 
-        System.out.println("VRWebGL: onCreate after calling nativeOnCreate");
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+        speechRecognizerListener = new SpeechRecognitionListener();
+        speechRecognizer.setRecognitionListener(speechRecognizerListener);
 
     }
 
@@ -505,6 +630,11 @@ public class AwShellActivity extends Activity implements
 
         nativeOnDestroy( nativePointer );
         nativePointer = 0;
+
+        if (speechRecognizer != null)
+        {
+            speechRecognizer.destroy();
+        }
 
         System.out.println("VRWebGL: onDestroy");
     }
@@ -1219,6 +1349,10 @@ public class AwShellActivity extends Activity implements
                         case WebView.NAVIGATION_RELOAD:
                             webview.reload();
                             break;
+                        case WebView.NAVIGATION_VOICE_SEARCH:
+                            speechRecognizerListener.setWebView(webview);
+                            speechRecognizer.startListening(speechRecognizerIntent);
+                            break;
                         default:
                             throw new IllegalArgumentException("The action '" + action + "' to be dispatched as a navigation event could not be identified.");
                     }
@@ -1226,7 +1360,6 @@ public class AwShellActivity extends Activity implements
             }
         });
     }
-
 
     // Native calls
     
