@@ -101,44 +101,12 @@ android_assets("android_webview_apk_assets") {
     "shell/assets/visual_state_waits_for_js_detached_test.html",
     "shell/assets/visual_state_waits_for_js_test.html",
   ]
-  renaming_sources = [
-    "shell/assets/tests/basic/index01.html",
-    "shell/assets/tests/basic/index02.html",
-    "shell/assets/tests/basic/crate.gif",
-    "shell/assets/tests/basic/webgl-utils.js",
-    "shell/assets/tests/basic/glMatrix-0.9.5.min.js",
-
-    "shell/assets/tests/video/index.html",
-    "shell/assets/tests/video/video.mp4",
-    "shell/assets/tests/video/glMatrix-0.9.5.min.js",
-
-    "shell/assets/tests/cubes/index.html",
-    "shell/assets/tests/cubes/three.min.js",
-    "shell/assets/tests/cubes/VRControls.js",
-    "shell/assets/tests/cubes/VREffect.js",
-    "shell/assets/tests/cubes/WebVR.js",
-
-    "shell/assets/tests/gamepad/index.html",
-  ]
-  renaming_destinations = [
-    "tests/basic/index01.html",
-    "tests/basic/index02.html",
-    "tests/basic/crate.gif",
-    "tests/basic/webgl-utils.js",
-    "tests/basic/glMatrix-0.9.5.min.js",
-
-    "tests/video/index.html",
-    "tests/video/video.mp4",
-    "tests/video/glMatrix-0.9.5.min.js",
-
-    "tests/cubes/index.html",
-    "tests/cubes/three.min.js",
-    "tests/cubes/VRControls.js",
-    "tests/cubes/VREffect.js",
-    "tests/cubes/WebVR.js",
-
-    "tests/gamepad/index.html",
-  ]
+#  renaming_sources = [
+#    "shell/assets/tests/gamepad/index.html",
+#  ]
+#  renaming_destinations = [
+#    "tests/gamepad/index.html",
+#  ]
 }
 
 shared_library("libstandalonelibwebviewchromium") {
