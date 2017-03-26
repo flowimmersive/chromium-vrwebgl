@@ -18,6 +18,11 @@ GLuint VRWebGLWebView::textureId() const
 	return m_textureId;
 }
 
+long VRWebGLWebView::id() const
+{
+	return m_textureId;
+}
+
 String VRWebGLWebView::src() const
 {
 	return m_src;
@@ -81,6 +86,16 @@ void VRWebGLWebView::reload()
 void VRWebGLWebView::voiceSearch()
 {
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewNavigationEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewNavigationEvent::NAVIGATION_VOICE_SEARCH));
+}
+
+void VRWebGLWebView::keydown(int keycode)
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewKeyboardEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewKeyboardEvent::KEY_DOWN, keycode));
+}
+
+void VRWebGLWebView::keyup(int keycode)
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewKeyboardEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewKeyboardEvent::KEY_UP, keycode));
 }
 
 VRWebGLWebView::VRWebGLWebView()

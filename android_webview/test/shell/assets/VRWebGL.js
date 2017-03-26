@@ -1099,8 +1099,9 @@
 				}
 				return this;
 			};
-		   object.callEventListeners = function(eventType) {
-		    	var event = { target : this };
+		   object.callEventListeners = function(eventType, event) {
+		    	if (!event) event = { target : this };
+		    	if (!event.target) event.target = this;
 		    	var onEventType = 'on' + eventType;
 		    	if (typeof(this[onEventType]) === 'function') {
 		    		this[onEventType](event)
@@ -1180,6 +1181,28 @@
 				return found ? this : originalDocumentDeleteElement.apply(this, argumentsArray);
 			};
 		})();
+
+		function findWebViewById(id) {
+			var vrWebGLWebView = null;
+			for (var i = 0; !vrWebGLWebView && i < vrWebGLWebViews.length; i++) {
+				vrWebGLWebView = vrWebGLWebViews[i];
+				if (vrWebGLWebView.id !== id) {
+					vrWebGLWebView = null;
+				}
+			}
+			return vrWebGLWebView;
+		}
+
+		// Expose the vrbrowser API so webpages can call the VR browser to send events UI
+		window.vrbrowser = {
+			dispatchEvent: function(webviewId, eventName, event) {
+				webview = findWebViewById(webviewId);
+				if (webview) {
+					webview.callEventListeners(eventName, event);
+				}
+				return this;
+			}
+		};
 
 	}
 })();

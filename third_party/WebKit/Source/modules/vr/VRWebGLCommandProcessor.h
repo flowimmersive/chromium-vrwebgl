@@ -8,6 +8,7 @@
 #include <string>
 #include <deque>
 #include <memory>
+#include <map>
 
 #include "modules/vr/VRWebGLCommand.h"
 #include "modules/vr/VRWebGLSurfaceTexture.h"
@@ -98,6 +99,8 @@ public:
 
     virtual jmethodID getDispatchWebViewNavigationEventMethodID() const = 0;
 
+    virtual jmethodID getDispatchWebViewKeyboardEventMethodID() const = 0;
+
     // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
     // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
     void getPose(VRWebGLPose& pose);
@@ -181,6 +184,7 @@ private:
     jmethodID m_setWebViewSrcMethodID;
     jmethodID m_dispatchWebViewTouchEventMethodID;
     jmethodID m_dispatchWebViewNavigationEventMethodID;
+    jmethodID m_dispatchWebViewKeyboardEventMethodID;
 
     // Do not allow copy of instances.
     VRWebGLCommandProcessorImpl(const VRWebGLCommandProcessorImpl&) = delete;
@@ -264,6 +268,8 @@ public:
     virtual jmethodID getDispatchWebViewTouchEventMethodID() const override;
 
     virtual jmethodID getDispatchWebViewNavigationEventMethodID() const override;
+
+    virtual jmethodID getDispatchWebViewKeyboardEventMethodID() const override;
 };
 
 // =====================================================================================
@@ -395,6 +401,36 @@ private:
 
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewNavigationEvent> newInstance(GLuint textureId, Event event);
+
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+class VRWebGLCommand_dispatchWebViewKeyboardEvent: public VRWebGLCommand
+{
+public:
+    enum Event
+    {
+        KEY_DOWN = 1,
+        KEY_UP = 2
+    };
+
+private:
+    GLuint textureId;
+    Event event;
+    int keycode;
+    bool processed = false;
+    static std::map<int, int> jsKeyCodeToJavaKeyCode;
+
+    VRWebGLCommand_dispatchWebViewKeyboardEvent(GLuint textureId, Event event, int keycode);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent> newInstance(GLuint textureId, Event event, int keycode);
 
     virtual bool isSynchronous() const override;
 

@@ -485,6 +485,7 @@ void VRWebGLCommandProcessorImpl::setupJNI(JNIEnv* jniEnv, jobject mainActivityJ
     m_setWebViewSrcMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setWebViewSrc", "(Landroid/graphics/SurfaceTexture;Ljava/lang/String;)V");
     m_dispatchWebViewTouchEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewTouchEvent", "(Landroid/graphics/SurfaceTexture;IFF)V");
     m_dispatchWebViewNavigationEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewNavigationEvent", "(Landroid/graphics/SurfaceTexture;I)V");
+    m_dispatchWebViewKeyboardEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewKeyboardEvent", "(Landroid/graphics/SurfaceTexture;II)V");
 
     // appThread->logHeapUsageMethodID = env->GetMethodID(appThread->activityObjectJClass, "logHeapUsageFromNative", "()V");    
     // appThread->seekToMethodId = env->GetMethodID(appThread->activityObjectJClass, "seekTo", "(Landroid/graphics/SurfaceTexture;I)V");
@@ -552,6 +553,11 @@ jmethodID VRWebGLCommandProcessorImpl::getDispatchWebViewTouchEventMethodID() co
 jmethodID VRWebGLCommandProcessorImpl::getDispatchWebViewNavigationEventMethodID() const
 {
     return m_dispatchWebViewNavigationEventMethodID;
+}
+
+jmethodID VRWebGLCommandProcessorImpl::getDispatchWebViewKeyboardEventMethodID() const
+{
+    return m_dispatchWebViewKeyboardEventMethodID;
 }
 
 // =====================================================================================
@@ -756,4 +762,155 @@ void* VRWebGLCommand_dispatchWebViewNavigationEvent::process()
 std::string VRWebGLCommand_dispatchWebViewNavigationEvent::name() const
 {
     return "dispatchWebViewNavigationEvent";
+}
+
+// =====================================================================================
+
+std::pair<int, int> jsKeyCodeToJavaKeyCode_[] =
+{
+    std::pair<int, int>(  8,   0), // backspace
+    std::pair<int, int>(  9,   0), // tab
+    std::pair<int, int>( 13,   0), // enter
+    std::pair<int, int>( 16,  59), // shift
+    std::pair<int, int>( 17,   0), // ctrl
+    std::pair<int, int>( 18,   0), // alt
+    std::pair<int, int>( 19,   0), // pause/break
+    std::pair<int, int>( 20,   0), // caps lock
+    std::pair<int, int>( 27,   0), // escape
+    std::pair<int, int>( 33,   0), // page up
+    std::pair<int, int>( 34,   0), // page down
+    std::pair<int, int>( 35,   0), // end
+    std::pair<int, int>( 36,   0), // home 
+    std::pair<int, int>( 37,   0), // left arrow
+    std::pair<int, int>( 38,   0), // up arrow
+    std::pair<int, int>( 39,   0), // right arrow
+    std::pair<int, int>( 40,   0), // down arrow
+    std::pair<int, int>( 45,   0), // insert
+    std::pair<int, int>( 46,   0), // delete
+    std::pair<int, int>( 48,   0), // 0 
+    std::pair<int, int>( 49,   0), // 1
+    std::pair<int, int>( 50,   0), // 1
+    std::pair<int, int>( 51,   0), // 1
+    std::pair<int, int>( 52,   0), // 1
+    std::pair<int, int>( 53,   0), // 1
+    std::pair<int, int>( 54,   0), // 1
+    std::pair<int, int>( 55,   0), // 1
+    std::pair<int, int>( 56,   0), // 1
+    std::pair<int, int>( 57,   0), // 1
+    std::pair<int, int>( 65,  29), // a
+    std::pair<int, int>( 66,   0), // b
+    std::pair<int, int>( 67,   0), // c
+    std::pair<int, int>( 68,   0), // d 
+    std::pair<int, int>( 69,   0), // e
+    std::pair<int, int>( 70,   0), // f
+    std::pair<int, int>( 71,   0), // g
+    std::pair<int, int>( 72,   0), // h
+    std::pair<int, int>( 73,   0), // i
+    std::pair<int, int>( 74,   0), // j
+    std::pair<int, int>( 75,   0), // k
+    std::pair<int, int>( 76,   0), // l
+    std::pair<int, int>( 77,   0), // m
+    std::pair<int, int>( 78,   0), // n
+    std::pair<int, int>( 79,   0), // o
+    std::pair<int, int>( 80,   0), // p
+    std::pair<int, int>( 81,   0), // q
+    std::pair<int, int>( 82,   0), // r
+    std::pair<int, int>( 83,   0), // s
+    std::pair<int, int>( 84,   0), // t
+    std::pair<int, int>( 85,   0), // u
+    std::pair<int, int>( 86,   0), // v
+    std::pair<int, int>( 87,   0), // w
+    std::pair<int, int>( 88,   0), // x
+    std::pair<int, int>( 89,   0), // y
+    std::pair<int, int>( 90,   0), // z
+    std::pair<int, int>( 91,   0), // left window key
+    std::pair<int, int>( 92,   0), // right window key
+    std::pair<int, int>( 93,   0), // select key
+    std::pair<int, int>( 96,   0), // numpad 0
+    std::pair<int, int>( 97,   0), // numpad 1
+    std::pair<int, int>( 98,   0), // numpad 2
+    std::pair<int, int>( 99,   0), // numpad 3
+    std::pair<int, int>(100,   0), // numpad 4
+    std::pair<int, int>(101,   0), // numpad 5
+    std::pair<int, int>(102,   0), // numpad 6
+    std::pair<int, int>(103,   0), // numpad 7
+    std::pair<int, int>(104,   0), // numpad 8
+    std::pair<int, int>(105,   0), // numpad 9
+    std::pair<int, int>(106,   0), // multiply
+    std::pair<int, int>(107,   0), // add
+    std::pair<int, int>(109,   0), // substract
+    std::pair<int, int>(110,   0), // decimal point
+    std::pair<int, int>(111,   0), // divide
+    std::pair<int, int>(112,   0), // f1
+    std::pair<int, int>(113,   0), // f2
+    std::pair<int, int>(114,   0), // f3
+    std::pair<int, int>(115,   0), // f4
+    std::pair<int, int>(116,   0), // f5
+    std::pair<int, int>(117,   0), // f6
+    std::pair<int, int>(118,   0), // f7
+    std::pair<int, int>(119,   0), // f8
+    std::pair<int, int>(120,   0), // f9
+    std::pair<int, int>(121,   0), // f10
+    std::pair<int, int>(122,   0), // f11
+    std::pair<int, int>(123,   0), // f12
+    std::pair<int, int>(144,   0), // num lock
+    std::pair<int, int>(145,   0), // scroll lock
+    std::pair<int, int>(186,   0), // semi-colon
+    std::pair<int, int>(187,   0), // equal sign
+    std::pair<int, int>(188,   0), // comma
+    std::pair<int, int>(189,   0), // dash
+    std::pair<int, int>(190,   0), // period
+    std::pair<int, int>(191,   0), // forward slash
+    std::pair<int, int>(192,   0), // grvae accent
+    std::pair<int, int>(219,   0), // open bracket
+    std::pair<int, int>(220,   0), // back slash
+    std::pair<int, int>(221,   0), // close bracket
+    std::pair<int, int>(222,   0) // single quote
+};
+
+std::map<int, int> VRWebGLCommand_dispatchWebViewKeyboardEvent::jsKeyCodeToJavaKeyCode(&jsKeyCodeToJavaKeyCode_[0], &jsKeyCodeToJavaKeyCode_[sizeof(jsKeyCodeToJavaKeyCode_) / sizeof(jsKeyCodeToJavaKeyCode_[0])]);
+
+VRWebGLCommand_dispatchWebViewKeyboardEvent::VRWebGLCommand_dispatchWebViewKeyboardEvent(GLuint textureId, Event event, int keycode): textureId(textureId), event(event), keycode(keycode)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent> VRWebGLCommand_dispatchWebViewKeyboardEvent::newInstance(GLuint textureId, Event event, int keycode)
+{
+    return std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent>(new VRWebGLCommand_dispatchWebViewKeyboardEvent(textureId, event, keycode));
+}
+
+bool VRWebGLCommand_dispatchWebViewKeyboardEvent::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_dispatchWebViewKeyboardEvent::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_dispatchWebViewKeyboardEvent::process()
+{
+    if (!processed)
+    {
+        if (jsKeyCodeToJavaKeyCode.find(keycode) != jsKeyCodeToJavaKeyCode.end())
+        {
+            std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+            jmethodID dispatchWebViewKeyboardEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewKeyboardEventMethodID();
+            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewKeyboardEventMethodID, surfaceTexture->getJavaObject(), (jint)event, jsKeyCodeToJavaKeyCode[keycode]);
+        }
+        else 
+        {
+            ALOGE("ERROR: The provided keycode '%d' has not been found in the js to java keycode conversion table.", keycode);
+        }
+        processed = true;
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_dispatchWebViewKeyboardEvent::name() const
+{
+    return "dispatchWebViewKeyboardEvent";
 }

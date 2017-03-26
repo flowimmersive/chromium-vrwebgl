@@ -17,6 +17,7 @@ public:
     ~VRWebGLWebView();
 
     GLuint textureId() const;
+    long id() const;
 
     String src() const;
     void setSrc(const String&);
@@ -34,6 +35,9 @@ public:
     void forward();
     void reload();
     void voiceSearch();
+
+    void keydown(int keycode);
+    void keyup(int keycode);
 
     DECLARE_TRACE()
 

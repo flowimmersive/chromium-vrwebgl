@@ -2,6 +2,7 @@
     Constructor
 ] interface VRWebGLWebView {
     attribute DOMString src;
+    readonly attribute long id;
 
     readonly attribute long width;
     readonly attribute long height;
@@ -16,4 +17,7 @@
     void forward();
     void reload();
     void voiceSearch();
+
+    void keydown(long keycode);
+    void keyup(long keycode);
 };

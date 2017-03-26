@@ -20,6 +20,7 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
 import android.webkit.WebViewClient;
+import android.webkit.JavascriptInterface;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -87,6 +89,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.graphics.SurfaceTexture;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 
 import com.google.vr.ndk.base.AndroidCompat;
 import com.google.vr.ndk.base.GvrLayout;
@@ -161,6 +164,11 @@ public class AwShellActivity extends Activity implements
         public static final int NAVIGATION_FORWARD = 2;
         public static final int NAVIGATION_RELOAD = 3;
         public static final int NAVIGATION_VOICE_SEARCH = 4;
+
+        public static final int KEYBOARD_KEY_DOWN = 1;
+        public static final int KEYBOARD_KEY_UP = 2;
+ 
+        public VRBrowserJSInterface vrbrowser = null;
         
         public WebView( Context context, SurfaceTexture surfaceTexture, int nativeTextureId ) 
         {
@@ -189,15 +197,19 @@ public class AwShellActivity extends Activity implements
             setNetworkAvailable(true);
             setWebViewClient(new WebViewClient());
             setWebChromeClient(new WebChromeClient());
-            // addJavascriptInterface(jsCallbackObject, "CocoonJSWebViewCallbackObject");
 
-            // Disable long click for text selection
+            // Disable long click for text selection.
+            // TODO: Disable the vibration too.
             setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
                     return true;
                 }
             });
+
+            // Inject the vrbrowser instance to allow the webivew content to call/use it.
+            vrbrowser = new VRBrowserJSInterface(this);
+            addJavascriptInterface(vrbrowser, "vrbrowser");
 
             setLayoutParams( new ViewGroup.LayoutParams( WEBVIEW_TEXTURE_WIDTH, WEBVIEW_TEXTURE_WIDTH ) );
         }
@@ -224,13 +236,18 @@ public class AwShellActivity extends Activity implements
                     e.printStackTrace();
                 }    
             }
-            // super.onDraw( canvas ); // Uncomment this to render the webview as a 2d view on top of everything.
+            super.onDraw( canvas ); // Uncomment this to render the webview as a 2d view on top of everything.
         }
 
         public SurfaceTexture getSurfaceTexture()
         {
             return surfaceTexture;
         }
+
+        public int getTextureId()
+        {
+            return nativeTextureId;
+        } 
     }
     private ArrayList<WebView> webviews = new ArrayList<WebView>();
 
@@ -314,6 +331,23 @@ public class AwShellActivity extends Activity implements
         public void onRmsChanged(float rmsdB)
         {
             System.out.println("SpeechRecognitionListener.onRmsChanged");
+        }
+    }
+
+    private class VRBrowserJSInterface
+    {
+        private WebView webview = null;
+
+        public VRBrowserJSInterface(WebView webview)
+        {
+            this.webview = webview;
+        }
+
+        @JavascriptInterface
+        public void dispatchEvent(String jsonString)
+        {
+            String jsCode = "if (window.vrbrowser) window.vrbrowser.dispatchEvent(" + webview.getTextureId() + ", 'eventfrompage', " + jsonString + ");";
+            mAwTestContainerView.getAwContents().evaluateJavaScript(jsCode, null);
         }
     }
 
@@ -417,6 +451,33 @@ public class AwShellActivity extends Activity implements
         }
 
         layout = new FrameLayout(this); 
+
+        // HACK: Try to identify when the keyboard is shown to be able to hide it and also start sending key events to it.
+        layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+
+            Rect r = new Rect();
+            layout.getWindowVisibleDisplayFrame(r);
+            int screenHeight = layout.getRootView().getHeight();
+
+            // r.bottom is the position above soft keypad or device button.
+            // if keypad is shown, the r.bottom is smaller than that before.
+            int keypadHeight = screenHeight - r.bottom;
+
+            if (keypadHeight > screenHeight * 0.10) { // 0.15 ratio is perhaps enough to determine keypad height.
+                // Utils.createAlertDialog(AwShellActivity.this, "Keyboard Shown", "The keyboard has been shown!", null, 1, "Ok", null, null).show();
+                View view = getCurrentFocus();
+                if (view != null) {  
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
+            }
+            else {
+                // Utils.createAlertDialog(AwShellActivity.this, "Keyboard Hidden", "The keyboard has been hidden!", null, 1, "Ok", null, null).show();
+            }
+        }
+        });        
 
         setContentView(layout);       
 
@@ -1356,6 +1417,34 @@ public class AwShellActivity extends Activity implements
                         default:
                             throw new IllegalArgumentException("The action '" + action + "' to be dispatched as a navigation event could not be identified.");
                     }
+                }
+            }
+        });
+    }
+
+    private void dispatchWebViewKeyboardEvent(final SurfaceTexture surfaceTexture, final int action, final int keycode)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+                if (webview != null)
+                {
+                    int keyEventAction = 0;
+                    switch(action)
+                    {
+                        case WebView.KEYBOARD_KEY_DOWN:
+                            keyEventAction = KeyEvent.ACTION_DOWN;
+                            break;
+                        case WebView.KEYBOARD_KEY_UP:
+                            keyEventAction = KeyEvent.ACTION_UP;
+                            break;
+                        default:
+                            throw new IllegalArgumentException("The action '" + action + "' to be dispatched as a keyboard event could not be identified.");
+                    }
+                    long downTime = android.os.SystemClock.uptimeMillis();
+                    long eventTime = android.os.SystemClock.uptimeMillis();
+                    webview.dispatchKeyEvent(new KeyEvent(downTime, eventTime, keyEventAction, keycode, 0));
                 }
             }
         });
