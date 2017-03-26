@@ -492,7 +492,7 @@ GLenum VRWebGLRenderingContext::checkFramebufferStatus(GLenum target)
 
 void VRWebGLRenderingContext::clear(GLbitfield mask)
 {
-	if (m_framebufferCurrentlyBound != 0 || ((mask & GL_COLOR_BUFFER_BIT) == 0))
+	// if (m_framebufferCurrentlyBound != 0 || ((mask & GL_COLOR_BUFFER_BIT) == 0))
 	{
 		// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::clear begin";
 		std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_clear::newInstance(mask);

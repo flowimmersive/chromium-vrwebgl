@@ -530,8 +530,8 @@ void VRWebGL_GVRMobileSDK::DrawFrame() {
 
   // Draw the world.
   frame.BindBuffer(0);
-  glClearColor(0.1f, 0.1f, 0.1f, 0.5f);  // Dark background so text shows up.
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  // glClearColor(0.1f, 0.1f, 0.1f, 0.5f);  // Dark background so text shows up.
+  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   viewport_list_->GetBufferViewport(0, &scratch_viewport_);
   DrawWorld(left_eye_view, scratch_viewport_, GVR_LEFT_EYE);
   viewport_list_->GetBufferViewport(1, &scratch_viewport_);

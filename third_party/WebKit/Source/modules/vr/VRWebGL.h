@@ -491,6 +491,7 @@ class VRWebGLCommand_clear final: public VRWebGLCommand
 {
 private:
     GLbitfield m_mask;
+    bool m_processed = false;
 
     VRWebGLCommand_clear(GLbitfield mask);
     
@@ -513,6 +514,7 @@ class VRWebGLCommand_clearColor final: public VRWebGLCommand
 {
 private:
     GLfloat m_red, m_green, m_blue, m_alpha;
+    bool m_processed = false;
 
     VRWebGLCommand_clearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
     

@@ -617,10 +617,18 @@ bool VRWebGLCommand_clear::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_clear::process() 
 {
-    VRWebGL_glClear(m_mask);
+    if (!m_processed)
+    {
+        VRWebGL_glClear(m_mask);
 #ifdef VRWEBGL_SHOW_LOG  
-    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mask = " << m_mask;
+        VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mask = " << m_mask;
 #endif    
+        m_processed = true;
+    }
+    else 
+    {
+        m_processed = false;
+    }
     return 0;
 }
 
@@ -653,10 +661,14 @@ bool VRWebGLCommand_clearColor::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_clearColor::process() 
 {
-    VRWebGL_glClearColor(m_red, m_green, m_blue, m_alpha);
+    if (!m_processed)
+    {
+        VRWebGL_glClearColor(m_red, m_green, m_blue, m_alpha);
 #ifdef VRWEBGL_SHOW_LOG  
-    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " red = " << m_red << " green = " << m_green << " blue = " << m_blue << " alpha = " << m_alpha;
-#endif    
+        VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " red = " << m_red << " green = " << m_green << " blue = " << m_blue << " alpha = " << m_alpha;
+#endif
+        m_processed = true;    
+    }
     return 0;
 }
 
