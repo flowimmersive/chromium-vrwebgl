@@ -486,23 +486,7 @@ void VRWebGLCommandProcessorImpl::setupJNI(JNIEnv* jniEnv, jobject mainActivityJ
     m_dispatchWebViewTouchEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewTouchEvent", "(Landroid/graphics/SurfaceTexture;IFF)V");
     m_dispatchWebViewNavigationEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewNavigationEvent", "(Landroid/graphics/SurfaceTexture;I)V");
     m_dispatchWebViewKeyboardEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewKeyboardEvent", "(Landroid/graphics/SurfaceTexture;II)V");
-
-    // appThread->logHeapUsageMethodID = env->GetMethodID(appThread->activityObjectJClass, "logHeapUsageFromNative", "()V");    
-    // appThread->seekToMethodId = env->GetMethodID(appThread->activityObjectJClass, "seekTo", "(Landroid/graphics/SurfaceTexture;I)V");
-    // appThread->pauseVideoMethodId = env->GetMethodID(appThread->activityObjectJClass, "pauseVideo", "(Landroid/graphics/SurfaceTexture;)V");
-    // appThread->stopVideoMethodId = env->GetMethodID(appThread->activityObjectJClass, "stopVideo", "(Landroid/graphics/SurfaceTexture;)V");
-    // appThread->playVideoOnUIThreadMethodId = env->GetMethodID(appThread->activityObjectJClass, "playVideoOnUIThread", "(Landroid/graphics/SurfaceTexture;FZ)V");
-    // appThread->setVideoSrcOnUIThreadMethodId = env->GetMethodID(appThread->activityObjectJClass, "setVideoSrcOnUIThread", "(Landroid/graphics/SurfaceTexture;Ljava/lang/String;)V");
-    // appThread->newVideoMethodId = env->GetMethodID(appThread->activityObjectJClass, "newVideo", "(Landroid/graphics/SurfaceTexture;I)V");
-    // appThread->deleteVideoMethodId = env->GetMethodID(appThread->activityObjectJClass, "deleteVideo", "(Landroid/graphics/SurfaceTexture;)V");
-    // appThread->setVideoVolumeMethodId = env->GetMethodID(appThread->activityObjectJClass, "setVideoVolume", "(Landroid/graphics/SurfaceTexture;F)V");
-    // appThread->setVideoLoopMethodId = env->GetMethodID(appThread->activityObjectJClass, "setVideoLoop", "(Landroid/graphics/SurfaceTexture;Z)V");
-    // appThread->getVideoDurationMethodId = env->GetMethodID(appThread->activityObjectJClass, "getVideoDuration", "(Landroid/graphics/SurfaceTexture;)I");
-    // appThread->getVideoWidthMethodId = env->GetMethodID(appThread->activityObjectJClass, "getVideoWidth", "(Landroid/graphics/SurfaceTexture;)I");
-    // appThread->getVideoHeightMethodId = env->GetMethodID(appThread->activityObjectJClass, "getVideoHeight", "(Landroid/graphics/SurfaceTexture;)I");
-    // appThread->getVideoCurrentTimeMethodId = env->GetMethodID(appThread->activityObjectJClass, "getVideoCurrentTime", "(Landroid/graphics/SurfaceTexture;)I");
-
-    // TODO: When to destroy all this? It should be during     
+    m_dispatchWebViewCursorEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewCursorEvent", "(Landroid/graphics/SurfaceTexture;IFF)V");
 }
 
 JNIEnv* VRWebGLCommandProcessorImpl::getJNIEnv() const
@@ -558,6 +542,11 @@ jmethodID VRWebGLCommandProcessorImpl::getDispatchWebViewNavigationEventMethodID
 jmethodID VRWebGLCommandProcessorImpl::getDispatchWebViewKeyboardEventMethodID() const
 {
     return m_dispatchWebViewKeyboardEventMethodID;
+}
+
+jmethodID VRWebGLCommandProcessorImpl::getDispatchWebViewCursorEventMethodID() const
+{
+    return m_dispatchWebViewCursorEventMethodID;
 }
 
 // =====================================================================================
@@ -775,7 +764,7 @@ std::pair<int, int> jsKeyCodeToJavaKeyCode_[] =
     std::pair<int, int>( 17,   0), // ctrl
     std::pair<int, int>( 18,   0), // alt
     std::pair<int, int>( 19,   0), // pause/break
-    std::pair<int, int>( 20,   0), // caps lock
+    std::pair<int, int>( 20, 115), // caps lock
     std::pair<int, int>( 27,   0), // escape
     std::pair<int, int>( 33,   0), // page up
     std::pair<int, int>( 34,   0), // page down
@@ -914,3 +903,44 @@ std::string VRWebGLCommand_dispatchWebViewKeyboardEvent::name() const
 {
     return "dispatchWebViewKeyboardEvent";
 }
+
+// =====================================================================================
+
+VRWebGLCommand_dispatchWebViewCursorEvent::VRWebGLCommand_dispatchWebViewCursorEvent(GLuint textureId, Event event, float x, float y): textureId(textureId), event(event), x(x), y(y)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_dispatchWebViewCursorEvent> VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(GLuint textureId, Event event, float x, float y)
+{
+    return std::shared_ptr<VRWebGLCommand_dispatchWebViewCursorEvent>(new VRWebGLCommand_dispatchWebViewCursorEvent(textureId, event, x, y));
+}
+
+bool VRWebGLCommand_dispatchWebViewCursorEvent::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_dispatchWebViewCursorEvent::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_dispatchWebViewCursorEvent::process()
+{
+    if (!processed)
+    {
+        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+        jmethodID dispatchWebViewCursorEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewCursorEventMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewCursorEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
+        processed = true;
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_dispatchWebViewCursorEvent::name() const
+{
+    return "dispatchWebViewCursorEvent";
+}
+

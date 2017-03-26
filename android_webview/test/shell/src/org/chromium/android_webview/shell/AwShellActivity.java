@@ -152,9 +152,6 @@ public class AwShellActivity extends Activity implements
     {
         public static final int WEBVIEW_TEXTURE_WIDTH = 960;
         public static final int WEBVIEW_TEXTURE_HEIGHT = 640;
-        private Surface surface = null;
-        private SurfaceTexture surfaceTexture = null; 
-        private int nativeTextureId = -1;
 
         public static final int TOUCH_START = 1;
         public static final int TOUCH_MOVE = 2;
@@ -167,7 +164,16 @@ public class AwShellActivity extends Activity implements
 
         public static final int KEYBOARD_KEY_DOWN = 1;
         public static final int KEYBOARD_KEY_UP = 2;
+
+        public static final int CURSOR_ENTER = 1;
+        public static final int CURSOR_MOVE = 2;
+        public static final int CURSOR_EXIT = 3;
  
+        private Surface surface = null;
+        private SurfaceTexture surfaceTexture = null; 
+        private int nativeTextureId = -1;
+        public MotionEvent.PointerProperties[] pointerProperties = { new MotionEvent.PointerProperties() };
+        public MotionEvent.PointerCoords[] pointerCoords = { new MotionEvent.PointerCoords() };
         public VRBrowserJSInterface vrbrowser = null;
         
         public WebView( Context context, SurfaceTexture surfaceTexture, int nativeTextureId ) 
@@ -236,7 +242,7 @@ public class AwShellActivity extends Activity implements
                     e.printStackTrace();
                 }    
             }
-            super.onDraw( canvas ); // Uncomment this to render the webview as a 2d view on top of everything.
+            // super.onDraw( canvas ); // Uncomment this to render the webview as a 2d view on top of everything.
         }
 
         public SurfaceTexture getSurfaceTexture()
@@ -1445,6 +1451,44 @@ public class AwShellActivity extends Activity implements
                     long downTime = android.os.SystemClock.uptimeMillis();
                     long eventTime = android.os.SystemClock.uptimeMillis();
                     webview.dispatchKeyEvent(new KeyEvent(downTime, eventTime, keyEventAction, keycode, 0));
+                }
+            }
+        });
+    }
+
+    private void dispatchWebViewCursorEvent(final SurfaceTexture surfaceTexture, final int action, final float x, final float y)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+                if (webview != null)
+                {
+                    float realX = x * WebView.WEBVIEW_TEXTURE_WIDTH;
+                    float realY = y * WebView.WEBVIEW_TEXTURE_HEIGHT;
+                    int motionEventAction = 0;
+                    switch(action)
+                    {
+                        case WebView.CURSOR_ENTER:
+                            motionEventAction = MotionEvent.ACTION_HOVER_ENTER;
+                            break;
+                        case WebView.CURSOR_MOVE:
+                            motionEventAction = MotionEvent.ACTION_HOVER_MOVE;
+                            break;
+                        case WebView.CURSOR_EXIT:
+                            motionEventAction = MotionEvent.ACTION_HOVER_EXIT;
+                            break;
+                        default:
+                            throw new IllegalArgumentException("The action '" + action + "' to be dispatched as a touch event could not be identified.");
+                    }
+                    long downTime = android.os.SystemClock.uptimeMillis();
+                    long eventTime = android.os.SystemClock.uptimeMillis();
+                    webview.pointerProperties[0].id = 0;
+                    webview.pointerProperties[0].toolType = MotionEvent.TOOL_TYPE_MOUSE;
+                    webview.pointerCoords[0].x = realX;
+                    webview.pointerCoords[0].y = realY;
+                    MotionEvent motionEvent = MotionEvent.obtain(downTime, eventTime, motionEventAction, 1, webview.pointerProperties, webview.pointerCoords, 0, 0, 1.0f, 1.0f, 0, 0, android.view.InputDevice.SOURCE_CLASS_POINTER, 0);
+                    webview.dispatchGenericMotionEvent(motionEvent);
                 }
             }
         });

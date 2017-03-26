@@ -101,6 +101,8 @@ public:
 
     virtual jmethodID getDispatchWebViewKeyboardEventMethodID() const = 0;
 
+    virtual jmethodID getDispatchWebViewCursorEventMethodID() const = 0;
+
     // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
     // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
     void getPose(VRWebGLPose& pose);
@@ -185,6 +187,7 @@ private:
     jmethodID m_dispatchWebViewTouchEventMethodID;
     jmethodID m_dispatchWebViewNavigationEventMethodID;
     jmethodID m_dispatchWebViewKeyboardEventMethodID;
+    jmethodID m_dispatchWebViewCursorEventMethodID;
 
     // Do not allow copy of instances.
     VRWebGLCommandProcessorImpl(const VRWebGLCommandProcessorImpl&) = delete;
@@ -270,6 +273,8 @@ public:
     virtual jmethodID getDispatchWebViewNavigationEventMethodID() const override;
 
     virtual jmethodID getDispatchWebViewKeyboardEventMethodID() const override;
+
+    virtual jmethodID getDispatchWebViewCursorEventMethodID() const override;
 };
 
 // =====================================================================================
@@ -431,6 +436,37 @@ private:
 
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent> newInstance(GLuint textureId, Event event, int keycode);
+
+    virtual bool isSynchronous() const override;
+
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+class VRWebGLCommand_dispatchWebViewCursorEvent: public VRWebGLCommand
+{
+public:
+    enum Event
+    {
+        CURSOR_ENTER = 1,
+        CURSOR_MOVE = 2,
+        CURSOR_EXIT = 3
+    };
+
+private:
+    GLuint textureId;
+    Event event;
+    float x;
+    float y;
+    bool processed = false;
+
+    VRWebGLCommand_dispatchWebViewCursorEvent(GLuint textureId, Event event, float x, float y);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_dispatchWebViewCursorEvent> newInstance(GLuint textureId, Event event, float x, float y);
 
     virtual bool isSynchronous() const override;
 

@@ -98,6 +98,21 @@ void VRWebGLWebView::keyup(int keycode)
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewKeyboardEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewKeyboardEvent::KEY_UP, keycode));
 }
 
+void VRWebGLWebView::cursorenter(float x, float y)
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewCursorEvent::CURSOR_ENTER, x, y));
+}
+
+void VRWebGLWebView::cursormove(float x, float y)
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewCursorEvent::CURSOR_MOVE, x, y));
+}
+
+void VRWebGLWebView::cursorexit(float x, float y)
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewCursorEvent::CURSOR_EXIT, x, y));
+}
+
 VRWebGLWebView::VRWebGLWebView()
 {
 	m_textureId = *(GLuint*)VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_newWebView::newInstance());

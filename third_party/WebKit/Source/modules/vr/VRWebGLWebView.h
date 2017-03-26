@@ -39,6 +39,10 @@ public:
     void keydown(int keycode);
     void keyup(int keycode);
 
+    void cursorenter(float x, float y);
+    void cursormove(float x, float y);
+    void cursorexit(float x, float y);
+
     DECLARE_TRACE()
 
 private:
