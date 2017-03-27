@@ -41,7 +41,7 @@ public:
 
     void cursorenter(float x, float y);
     void cursormove(float x, float y);
-    void cursorexit(float x, float y);
+    void cursorexit();
 
     DECLARE_TRACE()
 

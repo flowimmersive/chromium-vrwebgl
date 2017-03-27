@@ -108,9 +108,9 @@ void VRWebGLWebView::cursormove(float x, float y)
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewCursorEvent::CURSOR_MOVE, x, y));
 }
 
-void VRWebGLWebView::cursorexit(float x, float y)
+void VRWebGLWebView::cursorexit()
 {
-	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewCursorEvent::CURSOR_EXIT, x, y));
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewCursorEvent::CURSOR_EXIT, -1, -1));
 }
 
 VRWebGLWebView::VRWebGLWebView()
