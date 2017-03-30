@@ -963,25 +963,6 @@
 		var vrWebGLWebViews = [];
 
 		function vrWebGLequestAnimationFrame() {
-			// Process VRWebGLVideo events
-			for (var i = 0; i < vrWebGLVideos.length; i++) {
-				var vrWebGLVideo = vrWebGLVideos[i];
-				if (!vrWebGLVideo.prepared && vrWebGLVideo.checkPrepared()) {
-					vrWebGLVideo.callEventListeners("canplaythrough");
-				}
-				if (!vrWebGLVideo.ended && vrWebGLVideo.checkEnded()) {
-					vrWebGLVideo.callEventListeners("ended");
-				}
-			}
-
-			// Process VRWebGLWebView events
-			for (var i = 0; i < vrWebGLWebViews.length; i++) {
-				var vrWebGLWebView = vrWebGLWebViews[i];
-				if (!vrWebGLWebView.loaded && vrWebGLWebView.checkLoaded()) {
-					vrWebGLWebView.callEventListeners("load");
-				}
-			}
-
 			// Update the gamepad if the VRWebGLRenderingContext has one by simply retrieving it
 			if (vrWebGLRenderingContexts.length > 0) {
 				vrWebGLRenderingContexts[0].getGamepad();
@@ -1196,7 +1177,7 @@
 		// Expose the vrbrowser API so webpages can call the VR browser to send events UI
 		window.vrbrowser = {
 			dispatchEvent: function(webviewId, eventName, event) {
-				webview = findWebViewById(webviewId);
+				var webview = findWebViewById(webviewId);
 				if (webview) {
 					webview.callEventListeners(eventName, event);
 				}
