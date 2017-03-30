@@ -25,8 +25,6 @@ public:
     long width() const;
     long height() const;
 
-    bool checkLoaded();
-
     void touchstart(float x, float y);
     void touchmove(float x, float y);
     void touchend(float x, float y);

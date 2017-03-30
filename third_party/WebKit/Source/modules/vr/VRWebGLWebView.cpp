@@ -48,11 +48,6 @@ long VRWebGLWebView::height() const
 	return VRWebGLCommandProcessor::getInstance()->getVideoHeight(m_textureId);
 }
 
-bool VRWebGLWebView::checkLoaded()
-{
-	return true;
-}
-
 void VRWebGLWebView::touchstart(float x, float y)
 {
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewTouchEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewTouchEvent::TOUCH_START, x, y));

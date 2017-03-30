@@ -7,8 +7,6 @@
     readonly attribute long width;
     readonly attribute long height;
 
-    boolean checkLoaded();
-
     void touchstart(float x, float y);
     void touchmove(float x, float y);
     void touchend(float x, float y);
