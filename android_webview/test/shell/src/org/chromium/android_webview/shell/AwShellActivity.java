@@ -90,6 +90,7 @@ import android.media.MediaPlayer;
 import android.graphics.SurfaceTexture;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.Bitmap;
 
 import com.google.vr.ndk.base.AndroidCompat;
 import com.google.vr.ndk.base.GvrLayout;
@@ -201,8 +202,28 @@ public class AwShellActivity extends Activity implements
             setVerticalScrollBarEnabled(false);
             setHorizontalScrollBarEnabled(false);
             setNetworkAvailable(true);
-            setWebViewClient(new WebViewClient());
-            setWebChromeClient(new WebChromeClient());
+            setWebViewClient(new WebViewClient()
+            {
+                @Override
+                public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon)
+                {
+                    dispatchEventToVRBrowser("loadstart", "{ url: '" + url + "'}");
+                }
+
+                @Override
+                public void onPageFinished(android.webkit.WebView view, String url)
+                {
+                    dispatchEventToVRBrowser("loadend", "{ url: '" + url + "'}");
+                }
+            });
+            setWebChromeClient(new WebChromeClient() 
+            {
+                @Override
+                public void onProgressChanged(android.webkit.WebView view, int progress) 
+                {
+                    dispatchEventToVRBrowser("loadprogress", "{ url: '" + view.getUrl() + "', progress: " + progress + "}");
+                }
+            });
 
             // Disable long click for text selection.
             // TODO: Disable the vibration too.
@@ -254,6 +275,13 @@ public class AwShellActivity extends Activity implements
         {
             return nativeTextureId;
         } 
+
+        private void dispatchEventToVRBrowser(String eventName, String eventDataJSONString)
+        {
+            String jsCode = "if (window.vrbrowser) window.vrbrowser.dispatchEvent(" + nativeTextureId + ", '" + eventName + "', " + eventDataJSONString + ");";
+            mAwTestContainerView.getAwContents().evaluateJavaScript(jsCode, null);
+        }
+
     }
     private ArrayList<WebView> webviews = new ArrayList<WebView>();
 
@@ -269,61 +297,56 @@ public class AwShellActivity extends Activity implements
         @Override
         public void onBeginningOfSpeech()
         {               
-            System.out.println("SpeechRecognitionListener.onBeginningOfSpeech");
+            // System.out.println("SpeechRecognitionListener.onBeginningOfSpeech");
         }
 
         @Override
         public void onBufferReceived(byte[] buffer)
         {
-            System.out.println("SpeechRecognitionListener.onBufferReceived");
+            // System.out.println("SpeechRecognitionListener.onBufferReceived");
         }
 
         @Override
         public void onEndOfSpeech()
         {
-            System.out.println("SpeechRecognitionListener.onEndOfSpeech");
+            // System.out.println("SpeechRecognitionListener.onEndOfSpeech");
          }
 
         @Override
         public void onError(int error)
         {
              // speechRecognizer.startListening(speechRecognizerIntent);
-            System.out.println("SpeechRecognitionListener.onError: " + error);
+            // System.out.println("SpeechRecognitionListener.onError: " + error);
         }
 
         @Override
         public void onEvent(int eventType, Bundle params)
         {
-            System.out.println("SpeechRecognitionListener.onEvent");
+            // System.out.println("SpeechRecognitionListener.onEvent");
         }
 
         @Override
         public void onPartialResults(Bundle partialResults)
         {
-            System.out.println("SpeechRecognitionListener.onPartialResults");
+            // System.out.println("SpeechRecognitionListener.onPartialResults");
         }
 
         @Override
         public void onReadyForSpeech(Bundle params)
         {
-            System.out.println("SpeechRecognitionListener.onReadyForSpeech");
+            // System.out.println("SpeechRecognitionListener.onReadyForSpeech");
         }
 
         @Override
         public void onResults(Bundle results)
         {
-            System.out.println("SpeechRecognitionListener.onResults");
+            // System.out.println("SpeechRecognitionListener.onResults");
             ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            for (String match: matches)
-            {
-                System.out.println("match: " + match);
-            }
             if (webview != null && !matches.isEmpty())
             {
                 try
                 {
                     String encodedMatch = URLEncoder.encode(matches.get(0), "UTF-8");
-                    System.out.println(encodedMatch);
                     webview.loadUrl("http://www.google.com/search?q=" + encodedMatch);
                 }
                 catch(UnsupportedEncodingException e)
@@ -336,7 +359,7 @@ public class AwShellActivity extends Activity implements
         @Override
         public void onRmsChanged(float rmsdB)
         {
-            System.out.println("SpeechRecognitionListener.onRmsChanged");
+            // System.out.println("SpeechRecognitionListener.onRmsChanged");
         }
     }
 
@@ -352,8 +375,7 @@ public class AwShellActivity extends Activity implements
         @JavascriptInterface
         public void dispatchEvent(String jsonString)
         {
-            String jsCode = "if (window.vrbrowser) window.vrbrowser.dispatchEvent(" + webview.getTextureId() + ", 'eventfrompage', " + jsonString + ");";
-            mAwTestContainerView.getAwContents().evaluateJavaScript(jsCode, null);
+            webview.dispatchEventToVRBrowser("eventfrompage", jsonString);
         }
     }
 
@@ -460,29 +482,33 @@ public class AwShellActivity extends Activity implements
 
         // HACK: Try to identify when the keyboard is shown to be able to hide it and also start sending key events to it.
         layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
+            @Override
+            public void onGlobalLayout() {
 
-            Rect r = new Rect();
-            layout.getWindowVisibleDisplayFrame(r);
-            int screenHeight = layout.getRootView().getHeight();
-
-            // r.bottom is the position above soft keypad or device button.
-            // if keypad is shown, the r.bottom is smaller than that before.
-            int keypadHeight = screenHeight - r.bottom;
-
-            if (keypadHeight > screenHeight * 0.10) { // 0.15 ratio is perhaps enough to determine keypad height.
-                // Utils.createAlertDialog(AwShellActivity.this, "Keyboard Shown", "The keyboard has been shown!", null, 1, "Ok", null, null).show();
+                // Always hide the soft keyboard.
                 View view = getCurrentFocus();
-                if (view != null) {  
+                if (view != null)
+                {
                     InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 }
+
+                // Always hide the soft navigation bar
+                View decorView = getWindow().getDecorView();
+                int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                              | View.SYSTEM_UI_FLAG_FULLSCREEN;
+                decorView.setSystemUiVisibility(uiOptions);
+
+                // Code to detect if the soft keyboard is shown
+                Rect visibleRect = new Rect();
+                layout.getWindowVisibleDisplayFrame(visibleRect);
+                int screenWidth = layout.getRootView().getWidth();
+                if (visibleRect.right < screenWidth && view instanceof WebView) 
+                {
+                    WebView webview = (WebView)view;
+                    webview.dispatchEventToVRBrowser("showkeyboard", "{}");
+                }
             }
-            else {
-                // Utils.createAlertDialog(AwShellActivity.this, "Keyboard Hidden", "The keyboard has been hidden!", null, 1, "Ok", null, null).show();
-            }
-        }
         });        
 
         setContentView(layout);       
@@ -552,24 +578,6 @@ public class AwShellActivity extends Activity implements
 
         // Load the config.json file
         String configString = null;
-        try
-        {
-            configString = Utils.readFromAssets(this, "config.json");
-            try
-            {
-                // If the file was read, try to create the corresponding JSON object
-                config = new JSONObject(configString);
-                System.out.println("VRWebGL: config created from config.json asset file.");
-            }
-            catch(JSONException e) 
-            {
-                System.out.println("VRWebGL: WARNING: JSONException while parsing the config.json content: '" + configString + "': " + e.getCause() + " - " + e.getMessage());
-            }
-        }
-        catch(IOException e)
-        {
-            System.out.println("VRWebGL: WARNING: IOException while loading the 'config.json' asset file: " + e.getCause() + " - " + e.getMessage());
-        }
         // The intent, when provided, has more priority than the config asset file.
         configString = getConfigStringFromIntent(getIntent());
         if (configString != null) 
@@ -584,35 +592,52 @@ public class AwShellActivity extends Activity implements
                 System.out.println("VRWebGL: WARNING: JSONException while parsing the intent config content: '" + configString + "': " + e.getCause() + " - " + e.getMessage());
             }
         }
+        if (config == null)
+        {
+            try
+            {
+                configString = Utils.readFromAssets(this, "config.json");
+                try
+                {
+                    // If the file was read, try to create the corresponding JSON object
+                    config = new JSONObject(configString);
+                    System.out.println("VRWebGL: config created from config.json asset file.");
+                }
+                catch(JSONException e) 
+                {
+                    System.out.println("VRWebGL: WARNING: JSONException while parsing the config.json content: '" + configString + "': " + e.getCause() + " - " + e.getMessage());
+                }
+            }
+            catch(IOException e)
+            {
+                System.out.println("VRWebGL: WARNING: IOException while loading the 'config.json' asset file: " + e.getCause() + " - " + e.getMessage());
+            }
+        }
         // If the configuration was provided, use it.
         boolean clearCache = true;
+        // The intent, when provided, has more priority than the config asset file.
+        String intentURL = getUrlFromIntent(getIntent());
+        if (!TextUtils.isEmpty(intentURL)) {
+            url = intentURL;
+        }
         if (config != null) 
         {
             try
             {
-                url = config.getString("url");
-                clearCache = config.has("clearCache") ? config.getBoolean("clearCache") : true;
+                url = config.has("url") ? config.getString("url") : url;
+                clearCache = config.has("clearCache") ? config.getBoolean("clearCache") : clearCache;
             }
             catch(JSONException e) 
             {
                 System.out.println("VRWebGL: WARNING: JSONException while trying to retrieve the config properties: " + e.getCause() + " - " + e.getMessage());
             }
         }
-        mAwTestContainerView.getAwContents().clearCache(clearCache);
-        System.out.println("VRWebGL: clearCache = " + clearCache);
-
-        // The intent, when provided, has more priority than the config asset file.
-        String intentURL = getUrlFromIntent(getIntent());
-        if (TextUtils.isEmpty(intentURL)) {
-            if (TextUtils.isEmpty(url))
-            {
-                url = INITIAL_URL;
-            }
-        }
-        else 
+        // In case there is not URL, use the default url.
+        if (TextUtils.isEmpty(url))
         {
-            url = intentURL;
+            url = INITIAL_URL;
         }
+        mAwTestContainerView.getAwContents().clearCache(clearCache);
 
         AwContents.setShouldDownloadFavicons();
 
@@ -640,14 +665,10 @@ public class AwShellActivity extends Activity implements
     {
         super.onResume();
 
-        System.out.println("VRWebGL: onResume before calling nativeOnResume");
-
         nativeOnResume( nativePointer );
         gvrLayout.onResume();
         surfaceView.onResume();
         surfaceView.queueEvent(refreshViewerProfileRunnable);
-
-        System.out.println("VRWebGL: onResume url = " + url);
 
         if (!urlLoaded)
         {
@@ -656,23 +677,15 @@ public class AwShellActivity extends Activity implements
         }
 
         surfaceView.setZOrderMediaOverlay(true);
-
-        System.out.println("VRWebGL: onResume after calling nativeOnResume");
-
     }
 
     @Override protected void onPause()
     {
         super.onPause();
 
-        System.out.println("VRWebGL: onPause before calling nativeOnPause");
-
         nativeOnPause( nativePointer );
         gvrLayout.onPause();
         surfaceView.onPause();
-
-        System.out.println("VRWebGL: onPause before calling nativeOnPause");
-
     }
 
     @Override protected void onStop()
@@ -702,8 +715,6 @@ public class AwShellActivity extends Activity implements
         {
             speechRecognizer.destroy();
         }
-
-        System.out.println("VRWebGL: onDestroy");
     }
 
     private AwTestContainerView createAwTestContainerView() {
@@ -715,7 +726,6 @@ public class AwShellActivity extends Activity implements
 
             @Override
             public void onPageStarted(String url) {
-                System.out.println("VRWebGL: onPageStarted url = " + url);
                 // Reset 
                 jsInjected = false;
                 nativeOnPageStarted();
@@ -723,18 +733,15 @@ public class AwShellActivity extends Activity implements
 
             @Override
             public void onPageFinished(String url) {
-                System.out.println("VRWebGL: onPageFinished url = " + url);
             }
 
             @Override
             public void onLoadResource(String url) {
-                System.out.println("VRWebGL: onLoadResource url = " + url);
             }
 
             @Override
             public AwWebResourceResponse shouldInterceptRequest(
                     AwContentsClient.AwWebResourceRequest request) {
-                System.out.println("VRWebGL: shouldInterceptRequest. request.url = " + request.url);        
                 // TODO: This is a dirty hack. As it seems that the evalueJavaScript when the main page is loaded does not work because
                 // the injected JS is wiped out, we will inject it when another resource is requested. This may or may not work in many 
                 // cases depending on when the resource is requested. 
@@ -753,7 +760,6 @@ public class AwShellActivity extends Activity implements
                                         String contentDisposition,
                                         String mimeType,
                                         long contentLength) {
-                System.out.println("VRWebGL: onDownloadStart. url = " + url);
             }
 
             @Override
@@ -977,17 +983,10 @@ public class AwShellActivity extends Activity implements
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) 
     {
-
-        System.out.println("VRWebGL: onSurfaceCreated before calling nativeOnSurfaceCreated");
-
         if ( nativePointer != 0 )
         {
             nativeOnSurfaceCreated( nativePointer );
         }
-
-        System.out.println("VRWebGL: onSurfaceCreated after calling nativeOnSurfaceCreated");
-
-        System.out.println("VRWebGL: surfaceCreated and page loaded: " + layout.getMeasuredWidth() + "x" + layout.getMeasuredHeight());
     }
 
     @Override
@@ -1215,11 +1214,7 @@ public class AwShellActivity extends Activity implements
         
             Video video = findVideoBySurfaceTexture(surfaceTexture);
 
-            System.out.println("VRWebGL: setVideoSrc " + surfaceTexture + ", " + video);
-        
             try {
-                Log.v(TAG, "mediaPlayer.setDataSource()");
-                
                 if (src.contains("file:///android_asset/"))
                 {
                     src = src.replace("file:///android_asset/", "");
@@ -1237,7 +1232,6 @@ public class AwShellActivity extends Activity implements
             }
 
             try {
-                Log.v(TAG, "mediaPlayer.prepare");
                 video.mediaPlayer.prepare();
             } catch (IOException t) {
                 Log.e(TAG, "mediaPlayer.prepare failed:" + t.getMessage());
@@ -1248,8 +1242,6 @@ public class AwShellActivity extends Activity implements
 
     public synchronized void newVideo(SurfaceTexture surfaceTexture, int nativeTextureId) 
     {
-        System.out.println("VRWebGL: newVideo " + surfaceTexture);
-
         Video video = new Video();
         // Have native code pause any playing video,
         // allocate a new external texture,

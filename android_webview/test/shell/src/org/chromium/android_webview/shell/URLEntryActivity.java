@@ -254,8 +254,9 @@ public class URLEntryActivity extends Activity
 				}, 2, "Yes", "No", null).show();
 			}
 		});
-		
+
 		// This is protocol to be followed:
+		// 0.- If a URL is passed in the intent, use it directly.
 		// 1.- Read if the config.json file exists in the assets.
 		// 		1.1.- If it exists, check if the clearCache property exists.
 		//			1.1.1.- If the property exists, it's value is what drives the checkBox and if the user changes the value he/she needs to be notified that the values will only be used in the execution but it won't be stored as the assets file value prevails.
@@ -263,17 +264,35 @@ public class URLEntryActivity extends Activity
 		//		1.2.- If it does not exist, then read the sharedpreferences for the configuration. There will be an initial json by default.
 		//			1.2.1.- If the clearCache property exists, use it and store it in the sharedpreferences everytime the user changes its value.
 		String configString = null;
+
+		// Try to read the config from the received intent (if there is one)
+	    Intent receivedIntent = getIntent();
+	    if (receivedIntent != null)
+	    {
+	    	Bundle receivedExtras = receivedIntent.getExtras();
+	    	if (receivedExtras != null)
+	    	{
+	    		configString = receivedExtras.getString("config");
+	    	}
+	    }
+
+	    // If there is no config string, try to read it from the assets or from the preferences.
 		boolean configFileRead = false;
-		try
+		if (configString == null)
 		{
-			configString = Utils.readFromAssets(this, "config.json");
-			configFileRead = true;
+			try
+			{
+				configString = Utils.readFromAssets(this, "config.json");
+				configFileRead = true;
+			}
+			catch(IOException e) 
+			{
+				System.out.println("WARNING: IOException reading 'config.json'. Using preferences instead.");
+				configString = getPreferences(Activity.MODE_PRIVATE).getString(CONFIG_KEY, "{}");
+			}
 		}
-		catch(IOException e) 
-		{
-			System.out.println("WARNING: IOException reading 'config.json'. Using preferences instead.");
-			configString = getPreferences(Activity.MODE_PRIVATE).getString(CONFIG_KEY, "{}");
-		}
+
+		String url = null;
 		try
 		{
 			config = new JSONObject(configString);
@@ -282,11 +301,18 @@ public class URLEntryActivity extends Activity
 			clearCacheCheckBox.setChecked(config.has("clearCache") ? config.getBoolean("clearCache") : true);
 			config.put("clearCache", clearCacheCheckBox.isChecked());
 			saveStringToPreferences(CONFIG_KEY, config.toString());
+			url = config.has("url") ? config.getString("url") : null;
 
-			// If the config information contains the active skipURLEntryActivity flag, then skit this activity.
+			// If the config information contains the active skipURLEntryActivity flag, then skip this activity.
 			if (config.has("skipURLEntryActivity") && config.getBoolean("skipURLEntryActivity")) {
 				Intent intent = new Intent(getApplicationContext(), AwShellActivity.class);
+				if (url != null)
+				{
+					intent.setData(Uri.parse(url));
+				}
+				intent.putExtra("config", config.toString());
 				startActivity(intent);
+				return;
 			}
 
 			clearCacheCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener()
@@ -317,7 +343,7 @@ public class URLEntryActivity extends Activity
 		}
 		
 		urlEditText = (EditText)this.findViewById(R.id.urlEditText);
-		urlEditText.setText(getPreferences(Activity.MODE_PRIVATE).getString(LAST_USED_URL_KEY, ""));
+		urlEditText.setText(url != null ? url : getPreferences(Activity.MODE_PRIVATE).getString(LAST_USED_URL_KEY, ""));
 		
 		urlHistoryListViewAdapter = new URLHistoryListViewAdapter();
 		ListView urlHistoryListView = (ListView)this.findViewById(R.id.urlHistoryListView); 
