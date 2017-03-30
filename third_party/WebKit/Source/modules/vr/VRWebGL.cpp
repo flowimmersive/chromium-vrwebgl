@@ -2557,8 +2557,6 @@ void* VRWebGLCommand_linkProgram::process()
         VRWebGL_glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
         m_program->setLinkStatus(linkStatus);
 
-        VLOG(0) << "linkStatus = " << linkStatus;
-
         // Cache the info log
         GLint infoLogLength;
         VRWebGL_glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
@@ -2569,21 +2567,15 @@ void* VRWebGLCommand_linkProgram::process()
             m_program->setInfoLog(infoLog);
             delete [] infoLog;
             infoLog = 0;
-
-            VLOG(0) << "infoLog = " << m_program->getInfoLog().c_str();
         }        
         // Cache the active uniforms
         GLint numberOfActiveUniforms;
         VRWebGL_glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numberOfActiveUniforms);
 
-        VLOG(0) << "numberOfActiveUniforms = " << numberOfActiveUniforms;
-
         GLint activeUniformMaxLength;
         VRWebGL_glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &activeUniformMaxLength);
         m_program->setActiveUniformMaxLength(activeUniformMaxLength);
 
-        VLOG(0) << "activeUniformMaxLength = " << activeUniformMaxLength;
-        
         if (numberOfActiveUniforms > 0 && activeUniformMaxLength > 0)
         {
             GLchar* name = new GLchar[activeUniformMaxLength];
@@ -2598,8 +2590,6 @@ void* VRWebGLCommand_linkProgram::process()
                     m_program->addActiveUniform(std::string(name, length), type, size);
 
                     std::shared_ptr<VRWebGLProgram::ActiveInfo> ai = m_program->getActiveUniform(i);
-                    VLOG(0) << "ActiveUniform: name = " << ai->name << ", type = " << ai->type << ", size = " << ai->size;
-
                 }
             }
             delete [] name;
@@ -2609,14 +2599,10 @@ void* VRWebGLCommand_linkProgram::process()
         GLint numberOfActiveAttributes;
         VRWebGL_glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &numberOfActiveAttributes);
 
-        VLOG(0) << "numberOfActiveAttributes = " << numberOfActiveAttributes;
-
         GLint activeAttributeMaxLength;
         VRWebGL_glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &activeAttributeMaxLength);
         m_program->setActiveAttributeMaxLength(activeAttributeMaxLength);
 
-        VLOG(0) << "activeAttributeMaxLength = " << activeAttributeMaxLength;
-        
         if (numberOfActiveAttributes > 0 && activeAttributeMaxLength > 0)
         {
             GLchar* name = new GLchar[activeAttributeMaxLength];
@@ -2636,8 +2622,6 @@ void* VRWebGLCommand_linkProgram::process()
                     m_program->addAttributeLocation(realName, attributeLocation);
 
                     std::shared_ptr<VRWebGLProgram::ActiveInfo> ai = m_program->getActiveAttribute(i);
-                    VLOG(0) << "ActiveAttribute: name = " << ai->name << ", type = " << ai->type << ", size = " << ai->size;
-
                 }
             }
             delete [] name;
