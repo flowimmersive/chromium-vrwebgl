@@ -66,8 +66,6 @@
         android:resizeableActivity="false"
         android:configChanges="orientation|keyboardHidden|keyboard|screenSize">
       <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
         <category android:name="com.google.intent.category.DAYDREAM"/>
       </intent-filter>
     </activity>
