@@ -296,12 +296,6 @@ public class URLEntryActivity extends Activity
 		try
 		{
 			config = new JSONObject(configString);
-			clearCacheFromConfigFile = configFileRead && config.has("clearCache");
-			clearCacheCheckBox = (CheckBox)this.findViewById(R.id.clearCacheCheckBox);
-			clearCacheCheckBox.setChecked(config.has("clearCache") ? config.getBoolean("clearCache") : true);
-			config.put("clearCache", clearCacheCheckBox.isChecked());
-			saveStringToPreferences(CONFIG_KEY, config.toString());
-			url = config.has("url") ? config.getString("url") : null;
 
 			// If the config information contains the active skipURLEntryActivity flag, then skip this activity.
 			if (config.has("skipURLEntryActivity") && config.getBoolean("skipURLEntryActivity")) {
@@ -314,6 +308,13 @@ public class URLEntryActivity extends Activity
 				startActivity(intent);
 				return;
 			}
+
+			clearCacheFromConfigFile = configFileRead && config.has("clearCache");
+			clearCacheCheckBox = (CheckBox)this.findViewById(R.id.clearCacheCheckBox);
+			clearCacheCheckBox.setChecked(config.has("clearCache") ? config.getBoolean("clearCache") : true);
+			config.put("clearCache", clearCacheCheckBox.isChecked());
+			saveStringToPreferences(CONFIG_KEY, config.toString());
+			url = config.has("url") ? config.getString("url") : null;
 
 			clearCacheCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener()
 			{
