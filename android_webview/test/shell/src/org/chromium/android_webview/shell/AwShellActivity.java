@@ -494,16 +494,13 @@ public class AwShellActivity extends Activity implements
                 }
 
                 // Always hide the soft navigation bar
-                View decorView = getWindow().getDecorView();
-                int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                              | View.SYSTEM_UI_FLAG_FULLSCREEN;
-                decorView.setSystemUiVisibility(uiOptions);
+                setImmersiveSticky();
 
                 // Code to detect if the soft keyboard is shown
                 Rect visibleRect = new Rect();
                 layout.getWindowVisibleDisplayFrame(visibleRect);
                 int screenWidth = layout.getRootView().getWidth();
-                if (visibleRect.right < screenWidth && view instanceof WebView) 
+                if (visibleRect.right < screenWidth && view instanceof WebView)
                 {
                     WebView webview = (WebView)view;
                     webview.dispatchEventToVRBrowser("showkeyboard", "{}");
@@ -525,7 +522,9 @@ public class AwShellActivity extends Activity implements
                 new View.OnSystemUiVisibilityChangeListener() {
                   @Override
                   public void onSystemUiVisibilityChange(int visibility) {
-                    if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                    if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0 ||
+                        (visibility & 
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0) {
                       setImmersiveSticky();
                     }
                   }
