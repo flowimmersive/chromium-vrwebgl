@@ -966,7 +966,7 @@
 		var vrWebGLVideos = [];
 		var vrWebGLWebViews = [];
 
-		function vrWebGLequestAnimationFrame() {
+		function vrWebGLRequestAnimationFrame() {
 			// Update the gamepad if the VRWebGLRenderingContext has one by simply retrieving it
 			if (vrWebGLRenderingContexts.length > 0) {
 				vrWebGLRenderingContexts[0].getGamepad();
@@ -995,7 +995,7 @@
 
 		window.requestAnimationFrame = function(callback) {
 			requestAnimationFrameCallbacks.push(callback);
-			originalRequestAnimationFrame.call(this, vrWebGLequestAnimationFrame);
+			originalRequestAnimationFrame.call(this, vrWebGLRequestAnimationFrame);
 		};
 
 		// Replace the original WebGLRenderingContext for the VRWebGLRenderingContext
