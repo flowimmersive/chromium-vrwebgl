@@ -11,7 +11,7 @@
 #define LOG_TAG "VRWebGL"
 
 #define ALOGE(...) __android_log_print( ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__ )
-#if VRWEBGL_SHOW_LOG
+#ifdef VRWEBGL_SHOW_LOG
 #define ALOGV(...) __android_log_print( ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__ )
 #else
 #define ALOGV(...)
@@ -153,4 +153,9 @@ void VRWebGLSurfaceTextures::update()
 	{
 		(*it)->update();
 	}
+}
+
+void VRWebGLSurfaceTextures::clear()
+{
+  surfaceTextures.clear();
 }

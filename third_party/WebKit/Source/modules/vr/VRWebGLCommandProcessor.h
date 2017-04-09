@@ -129,6 +129,8 @@ public:
 class VRWebGLCommandProcessorImpl final: public VRWebGLCommandProcessor
 {
 private:
+    void m_resetEverything();  
+
     class VRWebGLProgramAndUniformLocation
     {
     private:
@@ -188,6 +190,8 @@ private:
     jmethodID m_dispatchWebViewNavigationEventMethodID;
     jmethodID m_dispatchWebViewKeyboardEventMethodID;
     jmethodID m_dispatchWebViewCursorEventMethodID;
+
+    bool m_reset = false;
 
     // Do not allow copy of instances.
     VRWebGLCommandProcessorImpl(const VRWebGLCommandProcessorImpl&) = delete;

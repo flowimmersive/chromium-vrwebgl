@@ -169,6 +169,12 @@ void VRWebGLCommandProcessorImpl::update()
 {
     pthread_mutex_lock( &m_mutex );
 
+    if (m_reset)
+    {
+        m_resetEverything();
+        m_reset = false;
+    }
+
     // Update all the surface textures
     m_surfaceTextures.update();
 
@@ -377,10 +383,8 @@ const GLfloat* VRWebGLCommandProcessorImpl::getCameraWorldMatrixWithTranslationO
     return m_cameraWorldMatrixWithTranslationOnly;
 }
 
-void VRWebGLCommandProcessorImpl::reset() 
+void VRWebGLCommandProcessorImpl::m_resetEverything() 
 {
-    pthread_mutex_lock( &m_mutex );
-
     m_vrWebGLCommandQueue.clear();
     m_vrWebGLCommandQueueBatch.clear();
     m_insideAFrame = false;
@@ -388,6 +392,8 @@ void VRWebGLCommandProcessorImpl::reset()
     m_synchronousVRWebGLCommand.reset();
     m_synchronousVRWebGLCommandResult = 0;
     m_indexOfEyeBeingRendered = -1;
+
+    m_surfaceTextures.clear();
 
     m_projectionMatrixProgramAndUniformLocations.clear();
     m_modelViewMatrixProgramAndUniformLocations.clear();
@@ -463,7 +469,11 @@ void VRWebGLCommandProcessorImpl::reset()
     memcpy(m_projectionMatrix, m_cameraWorldMatrixWithTranslationOnly, sizeof(m_cameraWorldMatrixWithTranslationOnly));
     memcpy(m_viewMatrix, m_cameraWorldMatrixWithTranslationOnly, sizeof(m_cameraWorldMatrixWithTranslationOnly));
     memcpy(m_viewProjectionMatrix, m_cameraWorldMatrixWithTranslationOnly, sizeof(m_cameraWorldMatrixWithTranslationOnly));
+}
 
+void VRWebGLCommandProcessorImpl::reset() {
+    pthread_mutex_lock( &m_mutex );
+    m_reset = true;
     pthread_mutex_unlock( &m_mutex );
 }
 
@@ -617,10 +627,12 @@ void* VRWebGLCommand_deleteWebView::process()
     if (!processed)
     {
         std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        jmethodID deleteWebViewMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteWebViewMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, deleteWebViewMethodID, surfaceTexture->getJavaObject() );
+        if (surfaceTexture) {
+            jmethodID deleteWebViewMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteWebViewMethodID();
+            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+            jniEnv->CallVoidMethod( mainActivityJObject, deleteWebViewMethodID, surfaceTexture->getJavaObject() );
+        }
         processed = true;
     }
     return 0;
@@ -657,12 +669,15 @@ void* VRWebGLCommand_setWebViewSrc::process()
     if (!processed)
     {
         std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        jmethodID setWebViewSrcMethodID = VRWebGLCommandProcessor::getInstance()->getSetWebViewSrcMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jstring srcJString = jniEnv->NewStringUTF( src.c_str() );
-        jniEnv->CallVoidMethod( mainActivityJObject, setWebViewSrcMethodID, surfaceTexture->getJavaObject(), srcJString );
-        jniEnv->DeleteLocalRef( srcJString );
+        if (surfaceTexture)
+        {
+            jmethodID setWebViewSrcMethodID = VRWebGLCommandProcessor::getInstance()->getSetWebViewSrcMethodID();
+            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+            jstring srcJString = jniEnv->NewStringUTF( src.c_str() );
+            jniEnv->CallVoidMethod( mainActivityJObject, setWebViewSrcMethodID, surfaceTexture->getJavaObject(), srcJString );
+            jniEnv->DeleteLocalRef( srcJString );
+        }
         processed = true;
     }
     return 0;
@@ -699,10 +714,13 @@ void* VRWebGLCommand_dispatchWebViewTouchEvent::process()
     if (!processed)
     {
         std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        jmethodID dispatchWebViewTouchEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewTouchEventMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewTouchEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
+        if (surfaceTexture)
+        {
+            jmethodID dispatchWebViewTouchEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewTouchEventMethodID();
+            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewTouchEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
+        }
         processed = true;
     }
     return 0;
@@ -739,10 +757,13 @@ void* VRWebGLCommand_dispatchWebViewNavigationEvent::process()
     if (!processed)
     {
         std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        jmethodID dispatchWebViewNavigationEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewNavigationEventMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewNavigationEventMethodID, surfaceTexture->getJavaObject(), (jint)event);
+        if (surfaceTexture)
+        {
+            jmethodID dispatchWebViewNavigationEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewNavigationEventMethodID();
+            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewNavigationEventMethodID, surfaceTexture->getJavaObject(), (jint)event);
+        }
         processed = true;
     }
     return 0;
@@ -885,10 +906,13 @@ void* VRWebGLCommand_dispatchWebViewKeyboardEvent::process()
         if (jsKeyCodeToJavaKeyCode.find(keycode) != jsKeyCodeToJavaKeyCode.end())
         {
             std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-            jmethodID dispatchWebViewKeyboardEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewKeyboardEventMethodID();
-            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewKeyboardEventMethodID, surfaceTexture->getJavaObject(), (jint)event, jsKeyCodeToJavaKeyCode[keycode]);
+            if (surfaceTexture)
+            {
+                jmethodID dispatchWebViewKeyboardEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewKeyboardEventMethodID();
+                JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+                jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+                jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewKeyboardEventMethodID, surfaceTexture->getJavaObject(), (jint)event, jsKeyCodeToJavaKeyCode[keycode]);
+            }
         }
         else 
         {
@@ -930,10 +954,13 @@ void* VRWebGLCommand_dispatchWebViewCursorEvent::process()
     if (!processed)
     {
         std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        jmethodID dispatchWebViewCursorEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewCursorEventMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewCursorEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
+        if (surfaceTexture)
+        {
+            jmethodID dispatchWebViewCursorEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewCursorEventMethodID();
+            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewCursorEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
+        }
         processed = true;
     }
     return 0;
@@ -943,4 +970,3 @@ std::string VRWebGLCommand_dispatchWebViewCursorEvent::name() const
 {
     return "dispatchWebViewCursorEvent";
 }
-
