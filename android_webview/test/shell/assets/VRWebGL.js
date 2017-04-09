@@ -918,7 +918,11 @@
 
 		var originalNavigatorGetGamepads = navigator.getGamepads;
 		navigator.getGamepads = function() {
-			var argumentsArray = Array.prototype.slice.apply(arguments);
+			// var argumentsArray = Array.prototype.slice.apply(arguments);
+			var argumentsArray = new Array(arguments.length);
+			for (var i = 0; i < arguments.length; i++) {
+				argumentsArray[i] = arguments[i];
+			}
 			var originalGamepads = originalNavigatorGetGamepads.apply(navigator, argumentsArray);
 
 			// TODO: Maybe even remove/replace the DD controller if it exists.
@@ -974,7 +978,12 @@
 			}
 
 			// Call the original raf callbacks
-			var argumentsArray = Array.prototype.slice.apply(arguments);
+			// var argumentsArray = Array.prototype.slice.apply(arguments);
+			var argumentsArray = new Array(arguments.length);
+			for (var i = 0; i < arguments.length; i++) {
+				argumentsArray[i] = arguments[i];
+			}
+
 			requestAnimationFrameCallbacks[0].apply(this, argumentsArray);
 			requestAnimationFrameCallbacks.splice(0, 1);
 
@@ -996,7 +1005,12 @@
 		// Store the original VRWebGL texImage2D function prototype as we will slightly change it but still call it.
 		var originalVRWebGLTexImage2D = window.VRWebGLRenderingContext.prototype.texImage2D;
 		window.VRWebGLRenderingContext.prototype.texImage2D = function() {
-			var argumentsArray = Array.prototype.slice.apply(arguments);
+			// var argumentsArray = Array.prototype.slice.apply(arguments);
+			var argumentsArray = new Array(arguments.length);
+			for (var i = 0; i < arguments.length; i++) {
+				argumentsArray[i] = arguments[i];
+			}
+
 			var result = undefined;
 			// These are all the possible call options according to the WebGL spec
 			// 1.- void gl.texImage2D(target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels);
@@ -1044,7 +1058,12 @@
 		var originalHTMLCanvasElementPrototypeGetContextFunction = HTMLCanvasElement.prototype.getContext;
 		// Replace the HTMLCanvasElement getContext function with out own version
 		HTMLCanvasElement.prototype.getContext = function() {
-			var argumentsArray = Array.prototype.slice.apply(arguments);
+			// var argumentsArray = Array.prototype.slice.apply(arguments);
+			var argumentsArray = new Array(arguments.length);
+			for (var i = 0; i < arguments.length; i++) {
+				argumentsArray[i] = arguments[i];
+			}
+
 			if (typeof(argumentsArray[0]) === "string" && (argumentsArray[0] === "webgl" || argumentsArray[0] === "experimental-webgl")) {
 				if (vrWebGLRenderingContexts.length == 0) {
 					vrWebGLRenderingContexts.push(new VRWebGLRenderingContext());
@@ -1103,7 +1122,12 @@
 				// Replace the original document.createElement function with our own to be able to create the correct video element for VRWebGL
 				var originalDocumentCreateElementFunction = document.createElement;
 				document.createElement = function() {
-					var argumentsArray = Array.prototype.slice.apply(arguments);
+					// var argumentsArray = Array.prototype.slice.apply(arguments);
+					var argumentsArray = new Array(arguments.length);
+					for (var i = 0; i < arguments.length; i++) {
+						argumentsArray[i] = arguments[i];
+					}
+
 					if (typeof(argumentsArray[0]) === "string" && argumentsArray[0] === "video") {
 						var vrWebGLVideo = new VRWebGLVideo();
 						vrWebGLVideos.push(vrWebGLVideo);
@@ -1117,7 +1141,12 @@
 
 				var originalDocumentDeleteElement = document.deleteElement;
 				document.deleteElement = function(obj) {
-					var argumentsArray = Array.prototype.slice.apply(arguments);
+					// var argumentsArray = Array.prototype.slice.apply(arguments);
+					var argumentsArray = new Array(arguments.length);
+					for (var i = 0; i < arguments.length; i++) {
+						argumentsArray[i] = arguments[i];
+					}
+
 					var found = false;
 					for (var i =0; i < vrWebGLVideos.length; i++) {
 						if (vrWebGLVideos[i] === obj) {
@@ -1136,7 +1165,12 @@
 			// Replace the original document.createElement function with our own to be able to create VRWebGLWebView instances
 			var originalDocumentCreateElementFunction = document.createElement;
 			document.createElement = function() {
-				var argumentsArray = Array.prototype.slice.apply(arguments);
+				// var argumentsArray = Array.prototype.slice.apply(arguments);
+				var argumentsArray = new Array(arguments.length);
+				for (var i = 0; i < arguments.length; i++) {
+					argumentsArray[i] = arguments[i];
+				}
+
 				if (typeof(argumentsArray[0]) === "string" && argumentsArray[0] === "webview") {
 					var vrWebGLWebView = new VRWebGLWebView();
 					vrWebGLWebViews.push(vrWebGLWebView);
@@ -1150,7 +1184,12 @@
 
 			var originalDocumentDeleteElement = document.deleteElement;
 			document.deleteElement = function(obj) {
-				var argumentsArray = Array.prototype.slice.apply(arguments);
+				// var argumentsArray = Array.prototype.slice.apply(arguments);
+				var argumentsArray = new Array(arguments.length);
+				for (var i = 0; i < arguments.length; i++) {
+					argumentsArray[i] = arguments[i];
+				}
+
 				var found = false;
 				for (var i =0; i < vrWebGLWebViews.length; i++) {
 					if (vrWebGLWebViews[i] === obj) {
