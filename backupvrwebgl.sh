@@ -33,12 +33,10 @@ if [ $? -ne 0 ]; then exit 1; fi
 # Some additional interesting files related to how the webview should operate
 mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android/lint
 mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/android_webview/java/src/org/chromium/android_webview
-mkdir -p ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/content/public/common
 if [ $? -ne 0 ]; then exit 1; fi
 cp build/android/adb_run_android_webview_shell ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android
 cp build/android/lint/suppressions.xml ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/build/android/lint
 cp android_webview/java/src/org/chromium/android_webview/AwBrowserProcess.java ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/android_webview/java/src/org/chromium/android_webview
-cp content/public/common/content_features.cc ../Backup_VRWebGL/$BRANCH_NAME/chromium/src/content/public/common
 # APK
 mkdir ../Backup_VRWebGL/$BRANCH_NAME/bin
 if [ $? -ne 0 ]; then exit 1; fi

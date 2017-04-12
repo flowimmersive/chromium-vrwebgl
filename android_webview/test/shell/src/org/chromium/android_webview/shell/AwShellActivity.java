@@ -173,10 +173,11 @@ public class AwShellActivity extends Activity implements
         private Surface surface = null;
         private SurfaceTexture surfaceTexture = null; 
         private int nativeTextureId = -1;
+        private boolean transparent = false;
         public MotionEvent.PointerProperties[] pointerProperties = { new MotionEvent.PointerProperties() };
         public MotionEvent.PointerCoords[] pointerCoords = { new MotionEvent.PointerCoords() };
         public VRBrowserJSInterface vrbrowser = null;
-        
+
         public WebView( Context context, SurfaceTexture surfaceTexture, int nativeTextureId ) 
         {
             super( context );
@@ -186,16 +187,19 @@ public class AwShellActivity extends Activity implements
             this.surface = new Surface(this.surfaceTexture);
             this.nativeTextureId = nativeTextureId;
 
-            // setBackgroundColor(Color.TRANSPARENT);
             getSettings().setJavaScriptEnabled(true);
-            // getSettings().setAllowFileAccess(true);
-            // getSettings().setLoadsImagesAutomatically(true);
-            // getSettings().setBlockNetworkImage(false);
-            // getSettings().setBlockNetworkLoads(false);
-            // getSettings().setBuiltInZoomControls(false);
-            // getSettings().setLoadWithOverviewMode(true);
-            // getSettings().setUseWideViewPort(true);
-            // getSettings().setDomStorageEnabled(true);
+            getSettings().setAllowFileAccess(true);
+            getSettings().setLoadsImagesAutomatically(true);
+            getSettings().setBlockNetworkImage(false);
+            getSettings().setBlockNetworkLoads(false);
+            getSettings().setBuiltInZoomControls(false);
+            getSettings().setDomStorageEnabled(true);
+
+            // This combination makes the webview load the content with the correct size.
+            getSettings().setLoadWithOverviewMode(false);
+            getSettings().setUseWideViewPort(false);
+            setInitialScale(100);
+
             clearCache(true);
             setScrollbarFadingEnabled(true);
             // setScrollBarStyle(android.webkit.WebView.SCROLLBARS_OUTSIDE_OVERLAY);
@@ -253,6 +257,10 @@ public class AwShellActivity extends Activity implements
 
                     surfaceCanvas.save();
                     surfaceCanvas.translate(-getScrollX(), -getScrollY());
+                    if (transparent)
+                    {
+                        surfaceCanvas.drawColor(android.graphics.Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR);
+                    }
                     super.onDraw(surfaceCanvas);
                     surfaceCanvas.restore();
 
@@ -275,6 +283,12 @@ public class AwShellActivity extends Activity implements
         {
             return nativeTextureId;
         } 
+
+        public void setTransparent(boolean transparent)
+        {
+            setBackgroundColor(transparent ? android.graphics.Color.TRANSPARENT : android.graphics.Color.WHITE);
+            this.transparent = transparent;
+        }
 
         private void dispatchEventToVRBrowser(String eventName, String eventDataJSONString)
         {
@@ -461,7 +475,7 @@ public class AwShellActivity extends Activity implements
         requestExternalStorageReadPermission();
         requestRecordAudioPermission();
 
-        CommandLine.init(new String[] { "chrome", "--ignore-gpu-blacklist", "--enable-webvr" });
+        CommandLine.init(new String[] { "chrome", "--ignore-gpu-blacklist", "--enable-webvr", "--enable-blink-features=ScriptedSpeech,GamepadExtensions" });
 
         AwShellResourceProvider.registerResources(this);
 
@@ -1480,6 +1494,20 @@ public class AwShellActivity extends Activity implements
                     webview.pointerCoords[0].y = realY;
                     MotionEvent motionEvent = MotionEvent.obtain(downTime, eventTime, motionEventAction, 1, webview.pointerProperties, webview.pointerCoords, 0, 0, 1.0f, 1.0f, 0, 0, android.view.InputDevice.SOURCE_CLASS_POINTER, 0);
                     webview.dispatchGenericMotionEvent(motionEvent);
+                }
+            }
+        });
+    }
+
+    private void setWebViewTransparent(final SurfaceTexture surfaceTexture, final boolean transparent)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+                if (webview != null)
+                {
+                    webview.setTransparent(transparent);
                 }
             }
         });

@@ -23,111 +23,6 @@ namespace blink
 
 class VRWebGLCommandProcessor
 {
-public:
-    static VRWebGLCommandProcessor* getInstance();
-
-    virtual ~VRWebGLCommandProcessor();
-
-    virtual void startFrame() = 0;
-
-    virtual void* queueVRWebGLCommandForProcessing(const std::shared_ptr<VRWebGLCommand>& vrWebGLCommand) = 0;
-    
-    virtual void endFrame() = 0;
-    
-    virtual void update() = 0;
-    
-    virtual void renderFrame(bool process = true) = 0;
-
-    // The following methods should only be called from the OpenGL thread, so no mutex lock is implemented.
-    virtual void setMatrixUniformLocationForName(const GLuint program, const GLint location, const std::string& name) = 0;
-
-    virtual bool isProjectionMatrixUniformLocation(const GLuint program, const GLint location) const = 0;
-
-    virtual bool isModelViewMatrixUniformLocation(const GLuint program, const GLint location) const = 0;
-
-    virtual bool isModelViewProjectionMatrixUniformLocation(const GLuint program, const GLint location) const = 0;
-
-    virtual void setViewAndProjectionMatrices(const GLfloat* projectionMatrix, const GLfloat* modelViewMatrix) = 0;
-
-    virtual const GLfloat* getProjectionMatrix() const = 0;
-
-    virtual const GLfloat* getViewMatrix() const = 0;
-
-    virtual const GLfloat* getViewProjectionMatrix() const = 0;
-
-    virtual void setCurrentThreadName(const std::string& name) = 0;
-
-    virtual const std::string& getCurrentThreadName() const = 0;
-
-    virtual void setFramebuffer(const GLuint framebuffer) = 0;
-
-    virtual GLuint getFramebuffer() const = 0;
-
-    virtual void setViewport(GLint x, GLint y, GLsizei width, GLsizei height) = 0;
-
-    virtual void getViewport(GLint& x, GLint& y, GLsizei& width, GLsizei& height) const = 0;
-
-    virtual void setCameraWorldMatrix(const GLfloat* cameraWorldMatrix) = 0;
-
-    virtual const GLfloat* getCameraWorldMatrix() const = 0;
-
-    virtual const GLfloat* getCameraWorldMatrixWithTranslationOnly() const = 0;
-
-    virtual void reset() = 0;
-
-    virtual bool m_synchronousVRWebGLCommandBeenProcessedInUpdate() const = 0;
-
-    virtual void setupJNI(JNIEnv* jniEnv, jobject mainActivityJObject) = 0;
-
-    virtual JNIEnv* getJNIEnv() const = 0;
-
-    virtual const jobject getMainActivityJObject() const = 0;
-
-    virtual std::shared_ptr<VRWebGLSurfaceTexture> newSurfaceTexture() = 0;
-
-    virtual void deleteSurfaceTexture(const std::shared_ptr<VRWebGLSurfaceTexture>& surfaceTexture) = 0;
-
-    virtual std::shared_ptr<VRWebGLSurfaceTexture> findSurfaceTextureByTextureId(unsigned textureId) = 0;
-
-    virtual jmethodID getNewWebViewMethodID() const = 0;
-
-    virtual jmethodID getDeleteWebViewMethodID() const = 0;
-
-    virtual jmethodID getSetWebViewSrcMethodID() const = 0;
-
-    virtual jmethodID getDispatchWebViewTouchEventMethodID() const = 0;
-
-    virtual jmethodID getDispatchWebViewNavigationEventMethodID() const = 0;
-
-    virtual jmethodID getDispatchWebViewKeyboardEventMethodID() const = 0;
-
-    virtual jmethodID getDispatchWebViewCursorEventMethodID() const = 0;
-
-    // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
-    // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
-    void getPose(VRWebGLPose& pose);
-    void getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters);
-    void setCameraProjectionMatrix(GLfloat* cameraProjectionMatrix);
-    void setRenderEnabled(bool flag);
-    GLuint newVideoTexture();
-    void deleteVideoTexture(GLuint videoTextureId);
-    void setVideoSource(GLuint videoTextureId, const std::string& src);
-    void playVideo(GLuint videoTextureId, double volume, bool loop);
-    void pauseVideo(GLuint videoTextureId);
-    void setVideoVolume(GLuint videoTextureId, double volume);
-    void setVideoLoop(GLuint videoTextureId, bool loop);
-    void setVideoCurrentTime(GLuint videoTextureId, double currentTime);
-    double getVideoCurrentTime(GLuint videoTextureId);
-    double getVideoDuration(GLuint videoTextureId);
-    int getVideoWidth(GLuint videoTextureId);
-    int getVideoHeight(GLuint videoTextureId);
-    bool checkVideoPrepared(GLuint videoTextureId);
-    bool checkVideoEnded(GLuint videoTextureId);
-    std::shared_ptr<blink::WebGamepad> getGamepad();
-};
-
-class VRWebGLCommandProcessorImpl final: public VRWebGLCommandProcessor
-{
 private:
     void m_resetEverything();  
 
@@ -190,95 +85,120 @@ private:
     jmethodID m_dispatchWebViewNavigationEventMethodID;
     jmethodID m_dispatchWebViewKeyboardEventMethodID;
     jmethodID m_dispatchWebViewCursorEventMethodID;
+    jmethodID m_setWebViewTransparentMethodID;
 
     bool m_reset = false;
 
     // Do not allow copy of instances.
-    VRWebGLCommandProcessorImpl(const VRWebGLCommandProcessorImpl&) = delete;
-    VRWebGLCommandProcessorImpl& operator=(const VRWebGLCommandProcessorImpl&) = delete;
+    VRWebGLCommandProcessor(const VRWebGLCommandProcessor&) = delete;
+    VRWebGLCommandProcessor& operator=(const VRWebGLCommandProcessor&) = delete;
 
     // This class is a singleton
-    VRWebGLCommandProcessorImpl();
+    VRWebGLCommandProcessor();
 
 public:
     static VRWebGLCommandProcessor* getInstance();
 
-    virtual ~VRWebGLCommandProcessorImpl() override;
+    ~VRWebGLCommandProcessor();
     
-    virtual void startFrame() override;
+    void startFrame();
 
-    virtual void* queueVRWebGLCommandForProcessing(const std::shared_ptr<VRWebGLCommand>& vrWebGLCommand) override;
+    void* queueVRWebGLCommandForProcessing(const std::shared_ptr<VRWebGLCommand>& vrWebGLCommand);
     
-    virtual void endFrame() override;
+    void endFrame();
     
-    virtual void update() override;
+    void update();
     
-    virtual void renderFrame(bool process = true) override;
+    void renderFrame(bool process = true);
 
     // The following methods should only be called from the OpenGL thread, so no mutex lock is implemented.
-    virtual void setMatrixUniformLocationForName(const GLuint program, const GLint location, const std::string& name) override;
+    void setMatrixUniformLocationForName(const GLuint program, const GLint location, const std::string& name);
 
-    virtual bool isProjectionMatrixUniformLocation(const GLuint program, const GLint location) const override;
+    bool isProjectionMatrixUniformLocation(const GLuint program, const GLint location) const;
 
-    virtual bool isModelViewMatrixUniformLocation(const GLuint program, const GLint location) const override;
+    bool isModelViewMatrixUniformLocation(const GLuint program, const GLint location) const;
 
-    virtual bool isModelViewProjectionMatrixUniformLocation(const GLuint program, const GLint location) const override;
+    bool isModelViewProjectionMatrixUniformLocation(const GLuint program, const GLint location) const;
 
-    virtual void setViewAndProjectionMatrices(const GLfloat* projectionMatrix, const GLfloat* modelViewMatrix) override;
+    void setViewAndProjectionMatrices(const GLfloat* projectionMatrix, const GLfloat* modelViewMatrix);
 
-    virtual const GLfloat* getProjectionMatrix() const override;
+    const GLfloat* getProjectionMatrix() const;
 
-    virtual const GLfloat* getViewMatrix() const override;
+    const GLfloat* getViewMatrix() const;
 
-    virtual const GLfloat* getViewProjectionMatrix() const override;
+    const GLfloat* getViewProjectionMatrix() const;
 
-    virtual void setCurrentThreadName(const std::string& name) override;
+    void setCurrentThreadName(const std::string& name);
 
-    virtual const std::string& getCurrentThreadName() const override;    
+    const std::string& getCurrentThreadName() const;    
 
-    virtual void setFramebuffer(const GLuint framebuffer) override;
+    void setFramebuffer(const GLuint framebuffer);
 
-    virtual GLuint getFramebuffer() const override;
+    GLuint getFramebuffer() const;
 
-    virtual void setViewport(GLint x, GLint y, GLsizei width, GLsizei height) override;
+    void setViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
-    virtual void getViewport(GLint& x, GLint& y, GLsizei& width, GLsizei& height) const override;    
+    void getViewport(GLint& x, GLint& y, GLsizei& width, GLsizei& height) const;    
 
-    virtual void setCameraWorldMatrix(const GLfloat* cameraWorldMatrix) override;
+    void setCameraWorldMatrix(const GLfloat* cameraWorldMatrix);
 
-    virtual const GLfloat* getCameraWorldMatrix() const override;    
+    const GLfloat* getCameraWorldMatrix() const;    
 
-    virtual const GLfloat* getCameraWorldMatrixWithTranslationOnly() const override;
+    const GLfloat* getCameraWorldMatrixWithTranslationOnly() const;
 
-    virtual void reset() override;  
+    void reset();  
 
-    virtual bool m_synchronousVRWebGLCommandBeenProcessedInUpdate() const override;
+    bool m_synchronousVRWebGLCommandBeenProcessedInUpdate() const;
 
-    virtual void setupJNI(JNIEnv* jniEnv, jobject mainActivityJObject) override;
+    void setupJNI(JNIEnv* jniEnv, jobject mainActivityJObject);
 
-    virtual JNIEnv* getJNIEnv() const override;
+    JNIEnv* getJNIEnv() const;
 
-    virtual const jobject getMainActivityJObject() const override;
+    const jobject getMainActivityJObject() const;
 
-    virtual std::shared_ptr<VRWebGLSurfaceTexture> newSurfaceTexture() override;
+    std::shared_ptr<VRWebGLSurfaceTexture> newSurfaceTexture();
 
-    virtual void deleteSurfaceTexture(const std::shared_ptr<VRWebGLSurfaceTexture>& surfaceTexture) override;
+    void deleteSurfaceTexture(const std::shared_ptr<VRWebGLSurfaceTexture>& surfaceTexture);
 
-    virtual std::shared_ptr<VRWebGLSurfaceTexture> findSurfaceTextureByTextureId(unsigned textureId) override;   
+    std::shared_ptr<VRWebGLSurfaceTexture> findSurfaceTextureByTextureId(unsigned textureId);   
 
-    virtual jmethodID getNewWebViewMethodID() const override;
+    jmethodID getNewWebViewMethodID() const;
 
-    virtual jmethodID getDeleteWebViewMethodID() const override;
+    jmethodID getDeleteWebViewMethodID() const;
 
-    virtual jmethodID getSetWebViewSrcMethodID() const override;
+    jmethodID getSetWebViewSrcMethodID() const;
 
-    virtual jmethodID getDispatchWebViewTouchEventMethodID() const override;
+    jmethodID getDispatchWebViewTouchEventMethodID() const;
 
-    virtual jmethodID getDispatchWebViewNavigationEventMethodID() const override;
+    jmethodID getDispatchWebViewNavigationEventMethodID() const;
 
-    virtual jmethodID getDispatchWebViewKeyboardEventMethodID() const override;
+    jmethodID getDispatchWebViewKeyboardEventMethodID() const;
 
-    virtual jmethodID getDispatchWebViewCursorEventMethodID() const override;
+    jmethodID getDispatchWebViewCursorEventMethodID() const;
+
+    jmethodID getSetWebViewTransparentMethodID() const;
+
+    // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
+    // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
+    void getPose(VRWebGLPose& pose);
+    void getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters);
+    void setCameraProjectionMatrix(GLfloat* cameraProjectionMatrix);
+    void setRenderEnabled(bool flag);
+    GLuint newVideoTexture();
+    void deleteVideoTexture(GLuint videoTextureId);
+    void setVideoSource(GLuint videoTextureId, const std::string& src);
+    void playVideo(GLuint videoTextureId, double volume, bool loop);
+    void pauseVideo(GLuint videoTextureId);
+    void setVideoVolume(GLuint videoTextureId, double volume);
+    void setVideoLoop(GLuint videoTextureId, bool loop);
+    void setVideoCurrentTime(GLuint videoTextureId, double currentTime);
+    double getVideoCurrentTime(GLuint videoTextureId);
+    double getVideoDuration(GLuint videoTextureId);
+    int getVideoWidth(GLuint videoTextureId);
+    int getVideoHeight(GLuint videoTextureId);
+    bool checkVideoPrepared(GLuint videoTextureId);
+    bool checkVideoEnded(GLuint videoTextureId);
+    std::shared_ptr<blink::WebGamepad> getGamepad();    
 };
 
 // =====================================================================================
@@ -295,13 +215,13 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_newWebView> newInstance();
 
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
 // =====================================================================================
@@ -317,13 +237,13 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_deleteWebView> newInstance(GLuint textureId);
 
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
 class VRWebGLCommand_setWebViewSrc: public VRWebGLCommand
@@ -338,25 +258,25 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_setWebViewSrc> newInstance(GLuint textureId, const std::string& src);
 
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
 class VRWebGLCommand_checkWebViewLoaded: public VRWebGLCommand
 {
 public:
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
 class VRWebGLCommand_dispatchWebViewTouchEvent: public VRWebGLCommand
@@ -381,13 +301,13 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewTouchEvent> newInstance(GLuint textureId, Event event, float x, float y);
 
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
 class VRWebGLCommand_dispatchWebViewNavigationEvent: public VRWebGLCommand
@@ -411,13 +331,13 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewNavigationEvent> newInstance(GLuint textureId, Event event);
 
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
 class VRWebGLCommand_dispatchWebViewKeyboardEvent: public VRWebGLCommand
@@ -441,13 +361,13 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent> newInstance(GLuint textureId, Event event, int keycode);
 
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
 class VRWebGLCommand_dispatchWebViewCursorEvent: public VRWebGLCommand
@@ -472,13 +392,33 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewCursorEvent> newInstance(GLuint textureId, Event event, float x, float y);
 
-    virtual bool isSynchronous() const override;
+    bool isSynchronous() const;
 
-    virtual bool canBeProcessedImmediately() const override;
+    bool canBeProcessedImmediately() const;
     
-    virtual void* process() override;
+    void* process();
     
-    virtual std::string name() const override;
+    std::string name() const;
 };
 
+class VRWebGLCommand_setWebViewTransparent: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    bool transparent;
+    bool processed = false;
+
+    VRWebGLCommand_setWebViewTransparent(GLuint textureId, bool transparent);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_setWebViewTransparent> newInstance(GLuint textureId, bool transparent);
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
 #endif // VRWebGLCommandProcessor_h

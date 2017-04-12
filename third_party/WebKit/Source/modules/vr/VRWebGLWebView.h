@@ -41,6 +41,9 @@ public:
     void cursormove(float x, float y);
     void cursorexit();
 
+    bool transparent() const;
+    void setTransparent(bool transparent);
+
     DECLARE_TRACE()
 
 private:
@@ -48,7 +51,7 @@ private:
 
     GLuint m_textureId = -1;
     String m_src;
-    bool m_loaded = false;
+    bool m_transparent = false;
 };
 
 } // namespace blink

@@ -93,7 +93,7 @@ const base::Feature kFramebustingNeedsSameOriginOrUserGesture{
 
 // Enables extended Gamepad API features like motion tracking and haptics.
 const base::Feature kGamepadExtensions{"GamepadExtensions",
-                                       base::FEATURE_ENABLED_BY_DEFAULT};
+                                       base::FEATURE_DISABLED_BY_DEFAULT};
 
 // Enables sensors based on Generic Sensor API:
 // https://w3c.github.io/sensors/

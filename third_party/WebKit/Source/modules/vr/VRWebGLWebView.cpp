@@ -35,7 +35,6 @@ void VRWebGLWebView::setSrc(const String& src)
 		VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setWebViewSrc::newInstance(m_textureId, src.utf8().data()));
 	}
 	m_src = src;
-	m_loaded = false;
 }
 
 long VRWebGLWebView::width() const
@@ -106,6 +105,17 @@ void VRWebGLWebView::cursormove(float x, float y)
 void VRWebGLWebView::cursorexit()
 {
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchWebViewCursorEvent::newInstance(m_textureId, VRWebGLCommand_dispatchWebViewCursorEvent::CURSOR_EXIT, -1, -1));
+}
+
+bool VRWebGLWebView::transparent() const
+{
+	return m_transparent;
+}
+
+void VRWebGLWebView::setTransparent(bool transparent)
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setWebViewTransparent::newInstance(m_textureId, transparent));
+	m_transparent = transparent;
 }
 
 VRWebGLWebView::VRWebGLWebView()
