@@ -86,6 +86,9 @@ private:
     jmethodID m_dispatchWebViewKeyboardEventMethodID;
     jmethodID m_dispatchWebViewCursorEventMethodID;
     jmethodID m_setWebViewTransparentMethodID;
+    jmethodID m_newSpeechRecognitionMethodID;
+    jmethodID m_deleteSpeechRecognitionMethodID;
+    jmethodID m_startSpeechRecognitionMethodID;
 
     bool m_reset = false;
 
@@ -177,6 +180,12 @@ public:
     jmethodID getDispatchWebViewCursorEventMethodID() const;
 
     jmethodID getSetWebViewTransparentMethodID() const;
+
+    jmethodID getNewSpeechRecognitionMethodID() const;
+
+    jmethodID getDeleteSpeechRecognitionMethodID() const;
+
+    jmethodID getStartSpeechRecognitionMethodID() const;
 
     // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
     // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
@@ -421,4 +430,71 @@ public:
     
     std::string name() const;
 };
+
+// =====================================================================================
+
+class VRWebGLCommand_newSpeechRecognition: public VRWebGLCommand
+{
+private:
+    long id;
+    bool processed = false;
+
+    VRWebGLCommand_newSpeechRecognition(long id);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_newSpeechRecognition> newInstance(long id);
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_deleteSpeechRecognition: public VRWebGLCommand
+{
+private:
+    long id;
+    bool processed = false;
+
+    VRWebGLCommand_deleteSpeechRecognition(long id);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_deleteSpeechRecognition> newInstance(long id);
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_startSpeechRecognition: public VRWebGLCommand
+{
+private:
+    long id;
+    bool processed = false;
+
+    VRWebGLCommand_startSpeechRecognition(long id);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_startSpeechRecognition> newInstance(long id);
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
 #endif // VRWebGLCommandProcessor_h

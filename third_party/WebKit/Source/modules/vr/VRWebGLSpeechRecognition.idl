@@ -1,0 +1,7 @@
+[
+    Constructor
+] interface VRWebGLSpeechRecognition {
+    readonly attribute long id;
+
+    void start();
+};

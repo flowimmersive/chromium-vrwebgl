@@ -52,6 +52,8 @@ blink_modules_sources("vr") {
     "VRWebGLVideo.h",
     "VRWebGLWebView.cpp",
     "VRWebGLWebView.h",
+    "VRWebGLSpeechRecognition.cpp",
+    "VRWebGLSpeechRecognition.h",
     "VRWebGL.cpp",
     "VRWebGL.h"
   ]

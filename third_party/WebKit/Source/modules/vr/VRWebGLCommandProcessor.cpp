@@ -489,6 +489,9 @@ void VRWebGLCommandProcessor::setupJNI(JNIEnv* jniEnv, jobject mainActivityJObje
     m_dispatchWebViewKeyboardEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewKeyboardEvent", "(Landroid/graphics/SurfaceTexture;II)V");
     m_dispatchWebViewCursorEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewCursorEvent", "(Landroid/graphics/SurfaceTexture;IFF)V");
     m_setWebViewTransparentMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setWebViewTransparent", "(Landroid/graphics/SurfaceTexture;Z)V");
+    m_newSpeechRecognitionMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "newSpeechRecognition", "(J)V");
+    m_deleteSpeechRecognitionMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "deleteSpeechRecognition", "(J)V");
+    m_startSpeechRecognitionMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "startSpeechRecognition", "(J)V");
 }
 
 JNIEnv* VRWebGLCommandProcessor::getJNIEnv() const
@@ -554,6 +557,21 @@ jmethodID VRWebGLCommandProcessor::getDispatchWebViewCursorEventMethodID() const
 jmethodID VRWebGLCommandProcessor::getSetWebViewTransparentMethodID() const
 {
     return m_setWebViewTransparentMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getNewSpeechRecognitionMethodID() const
+{
+    return m_newSpeechRecognitionMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getDeleteSpeechRecognitionMethodID() const
+{
+    return m_deleteSpeechRecognitionMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getStartSpeechRecognitionMethodID() const
+{
+    return m_startSpeechRecognitionMethodID;
 }
 
 // =====================================================================================
@@ -1010,3 +1028,121 @@ std::string VRWebGLCommand_setWebViewTransparent::name() const
 {
     return "setWebViewTransparent";
 }
+
+// =====================================================================================
+
+VRWebGLCommand_newSpeechRecognition::VRWebGLCommand_newSpeechRecognition(long id): id(id)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_newSpeechRecognition> VRWebGLCommand_newSpeechRecognition::newInstance(long id)
+{
+    return std::shared_ptr<VRWebGLCommand_newSpeechRecognition>(new VRWebGLCommand_newSpeechRecognition(id));
+}
+
+bool VRWebGLCommand_newSpeechRecognition::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_newSpeechRecognition::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_newSpeechRecognition::process()
+{
+    if (!processed)
+    {
+        jmethodID newSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getNewSpeechRecognitionMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, newSpeechRecognitionMethodID, (jlong)id );
+        processed = true;
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_newSpeechRecognition::name() const
+{
+    return "newSpeechRecognition";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_deleteSpeechRecognition::VRWebGLCommand_deleteSpeechRecognition(long id): id(id)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_deleteSpeechRecognition> VRWebGLCommand_deleteSpeechRecognition::newInstance(long id)
+{
+    return std::shared_ptr<VRWebGLCommand_deleteSpeechRecognition>(new VRWebGLCommand_deleteSpeechRecognition(id));
+}
+
+bool VRWebGLCommand_deleteSpeechRecognition::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_deleteSpeechRecognition::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_deleteSpeechRecognition::process()
+{
+    if (!processed)
+    {
+        jmethodID deleteSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteSpeechRecognitionMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, deleteSpeechRecognitionMethodID, (jlong)id );
+        processed = true;
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_deleteSpeechRecognition::name() const
+{
+    return "deleteSpeechRecognition";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_startSpeechRecognition::VRWebGLCommand_startSpeechRecognition(long id): id(id)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_startSpeechRecognition> VRWebGLCommand_startSpeechRecognition::newInstance(long id)
+{
+    return std::shared_ptr<VRWebGLCommand_startSpeechRecognition>(new VRWebGLCommand_startSpeechRecognition(id));
+}
+
+bool VRWebGLCommand_startSpeechRecognition::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_startSpeechRecognition::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_startSpeechRecognition::process()
+{
+    if (!processed)
+    {
+        jmethodID startSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getStartSpeechRecognitionMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, startSpeechRecognitionMethodID, (jlong)id );
+        processed = true;
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_startSpeechRecognition::name() const
+{
+    return "startSpeechRecognition";
+}
+
