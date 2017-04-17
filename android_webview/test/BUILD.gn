@@ -56,7 +56,7 @@ android_apk("android_webview_apk") {
 
   loadable_modules = [
     "shell/VRWebGL/libs/armeabi-v7a/libVRWebGL_GVRMobileSDK.so",
-    "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.20.0/armeabi-v7a/libgvr.so"
+    "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.40.0/armeabi-v7a/libgvr.so"
   ]
 
   native_lib_version_rule = "//build/util:chrome_version_json"
@@ -323,8 +323,8 @@ android_java_prebuilt("vrwebgl_zxing_javalib") {
   jar_path = "shell/VRWebGL/zxing-2.3.0/android-integration-2.3.0-supportv4.jar"
 }
 android_aar_prebuilt("vrwebgl_gvr_common_java") {
-  aar_path = "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.20.0/sdk-common-1.20.0.aar"
-  proguard_configs = [ "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.20.0/proguard-gvr.txt" ]
+  aar_path = "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.40.0/sdk-common-1.40.0.aar"
+  proguard_configs = [ "shell/VRWebGL/jni/3rdparty/gvr_sdk_mobile_1.40.0/proguard-gvr.txt" ]
   ignore_manifest = true  # Ignored because manifest merging is not supported (http://crbug.com/643967)
   ignore_native_libraries = true
 }

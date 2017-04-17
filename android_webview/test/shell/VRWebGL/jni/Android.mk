@@ -4,7 +4,7 @@ MY_LOCAL_PATH := $(call my-dir)
 # gvr
 # ==========================================================
 # LOCAL_PATH := ../../../../../third_party/gvr-android-sdk
-LOCAL_PATH := ./3rdparty/gvr_sdk_mobile_1.20.0/armeabi-v7a
+LOCAL_PATH := ./3rdparty/gvr_sdk_mobile_1.40.0/armeabi-v7a
 include $(CLEAR_VARS)
 LOCAL_MODULE := gvr
 LOCAL_SRC_FILES := \
@@ -21,7 +21,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := VRWebGL_GVRMobileSDK
 LOCAL_C_INCLUDES := \
 	. \
-	./3rdparty/gvr_sdk_mobile_1.20.0/include \
+	./3rdparty/gvr_sdk_mobile_1.40.0/include \
 	../../../../../third_party/WebKit/Source \
 	../../../../../third_party/WebKit
 #	../../../../../third_party/gvr-android-sdk/src/libraries/headers
