@@ -1084,6 +1084,7 @@
 		function addEventHandlingToObject(object) {
 			object.listeners = { };
 			object.addEventListener = function(eventType, callback) {
+				if (!callback) return this;
 				var listeners = this.listeners[eventType];
 				if (!listeners) {
 					listeners = [];
@@ -1095,6 +1096,7 @@
 				return this;
 			};
 			object.removeEventListener = function(eventType, callback) {
+				if (!callback) return this;
 				var listeners = this.listeners[eventType];
 				if (listeners) {
 					var i = listeners.indexOf(callback);
@@ -1107,6 +1109,7 @@
 			object.callEventListeners = function(eventType, event) {
 				if (!event) event = { target : this };
 				if (!event.target) event.target = this;
+				event.type = eventType;
 				var onEventType = 'on' + eventType;
 				if (typeof(this[onEventType]) === 'function') {
 					this[onEventType](event)
@@ -1114,7 +1117,13 @@
 				var listeners = this.listeners[eventType];
 				if (listeners) {
 					for (var i = 0; i < listeners.length; i++) {
-						listeners[i](event);
+						var typeofListener = typeof(listeners[i]);
+						if (typeofListener === "object") {
+							listeners[i].handleEvent(event);
+						}
+						else if (typeofListener === "function") {
+							listeners[i](event);
+						}
 					}
 				}
 				return this;
@@ -1207,9 +1216,12 @@
 		// Expose a way so the native side can dispatch events to the event handling objects in the arrays.
 		window.vrwebgl = {
 			dispatchEvent: function(index, id, eventName, event) {
-				console.log("DISPATCHEVENT(" + index + ", " + id + ", " + eventName + ")");
 				var obj = findById(index, id);
 				if (obj) {
+					// NOTE: Very specific handling for the video ended event.
+					if (obj instanceof VRWebGLVideo && eventName === "ended") {
+						obj.ended = true;
+					}
 					obj.callEventListeners(eventName, event);
 				}
 				return this;
