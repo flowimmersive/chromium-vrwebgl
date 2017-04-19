@@ -1,20 +1,28 @@
 [
+    DoNotCheckConstants,
     Constructor
 ] interface VRWebGLVideo {
+
+    const long HAVE_NOTHING = 0;
+    const long HAVE_METADATA = 1;
+    const long HAVE_CURRENT_DATA = 2;
+    const long HAVE_FUTURE_DATA = 3;
+    const long HAVE_ENOUGH_DATA = 4;
+
+    readonly attribute long id;
+
     attribute DOMString src;
     attribute double volume;
     attribute boolean loop;
     attribute double currentTime;
+    attribute long readyState;
 
     readonly attribute boolean paused;
     readonly attribute double duration;
     readonly attribute long videoWidth;
     readonly attribute long videoHeight;
-    readonly attribute boolean prepared;
-    readonly attribute boolean ended;
+    attribute boolean ended;
 
     void play();
     void pause();
-    boolean checkPrepared();
-    boolean checkEnded();
 };

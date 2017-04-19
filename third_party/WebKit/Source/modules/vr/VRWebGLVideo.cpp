@@ -10,12 +10,17 @@ VRWebGLVideo* VRWebGLVideo::create()
 
 VRWebGLVideo::~VRWebGLVideo()
 {
-	VRWebGLCommandProcessor::getInstance()->deleteVideoTexture(m_videoTextureId);
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_deleteVideo::newInstance(m_textureId));
 }
 
-GLuint VRWebGLVideo::videoTextureId() const
+GLuint VRWebGLVideo::textureId() const
 {
-	return m_videoTextureId;
+	return m_textureId;
+}
+
+long VRWebGLVideo::id() const
+{
+	return m_textureId;
 }
 
 String VRWebGLVideo::src() const
@@ -27,11 +32,10 @@ void VRWebGLVideo::setSrc(const String& src)
 {
 	if (m_src != src)
 	{
-		VRWebGLCommandProcessor::getInstance()->setVideoSource(m_videoTextureId, src.utf8().data());
+		VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setVideoSrc::newInstance(m_textureId, src.utf8().data()));
+		m_readyState = 0;
 	}
 	m_src = src;
-	m_prepared = false;
-	m_ended = false;
 }
 
 double VRWebGLVideo::volume() const
@@ -43,7 +47,7 @@ void VRWebGLVideo::setVolume(double volume)
 {
 	if (m_volume != volume)
 	{
-		VRWebGLCommandProcessor::getInstance()->setVideoVolume(m_videoTextureId, volume);
+		VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setVideoVolume::newInstance(m_textureId, (float)volume));
 	}
 	m_volume = volume;
 }
@@ -57,24 +61,30 @@ void VRWebGLVideo::setLoop(bool loop)
 {
 	if (m_loop != loop)
 	{
-		VRWebGLCommandProcessor::getInstance()->setVideoLoop(m_videoTextureId, loop);
+		VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setVideoLoop::newInstance(m_textureId, loop));
 	}
 	m_loop = loop;
 }
 
 double VRWebGLVideo::currentTime() const
 {
-	return VRWebGLCommandProcessor::getInstance()->getVideoCurrentTime(m_videoTextureId);
+	return *(float*)VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_getVideoCurrentTime::newInstance(m_textureId));
 }
 
 void VRWebGLVideo::setCurrentTime(double currentTime)
 {
-	if (m_currentTime != currentTime)
-	{
-		VRWebGLCommandProcessor::getInstance()->setVideoCurrentTime(m_videoTextureId, currentTime);
-	}
-	m_currentTime = currentTime;
-	m_ended = false;
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setVideoCurrentTime::newInstance(m_textureId, (float)currentTime));
+	m_ended = false; // TODO: It this correct?
+}
+
+long VRWebGLVideo::readyState() const
+{
+	return m_readyState;
+}
+
+void VRWebGLVideo::setReadyState(long readyState)
+{
+	m_readyState = readyState;
 }
 
 bool VRWebGLVideo::paused() const
@@ -84,22 +94,17 @@ bool VRWebGLVideo::paused() const
 
 double VRWebGLVideo::duration() const
 {
-	return VRWebGLCommandProcessor::getInstance()->getVideoDuration(m_videoTextureId);
+	return *(float*)VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_getVideoDuration::newInstance(m_textureId));
 }
 
 long VRWebGLVideo::videoWidth() const
 {
-	return VRWebGLCommandProcessor::getInstance()->getVideoWidth(m_videoTextureId);
+	return *(long*)VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_getVideoWidth::newInstance(m_textureId));
 }
 
 long VRWebGLVideo::videoHeight() const
 {
-	return VRWebGLCommandProcessor::getInstance()->getVideoHeight(m_videoTextureId);
-}
-
-bool VRWebGLVideo::prepared() const
-{
-	return m_prepared;
+	return *(long*)VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_getVideoHeight::newInstance(m_textureId));
 }
 
 bool VRWebGLVideo::ended() const
@@ -107,33 +112,26 @@ bool VRWebGLVideo::ended() const
 	return m_ended;
 }
 
+void VRWebGLVideo::setEnded(bool ended)
+{
+	m_ended = ended;
+}
+
 void VRWebGLVideo::play()
 {
-	VRWebGLCommandProcessor::getInstance()->playVideo(m_videoTextureId, m_volume, m_loop);
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchVideoPlaybackEvent::newInstance(m_textureId, VRWebGLCommand_dispatchVideoPlaybackEvent::PLAY, m_volume, m_loop));
 	m_paused = false;
 }
 
 void VRWebGLVideo::pause()
 {
-	VRWebGLCommandProcessor::getInstance()->pauseVideo(m_videoTextureId);
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_dispatchVideoPlaybackEvent::newInstance(m_textureId, VRWebGLCommand_dispatchVideoPlaybackEvent::PAUSE, m_volume, m_loop));
 	m_paused = true;
-}
-
-bool VRWebGLVideo::checkPrepared() 
-{
-	m_prepared = VRWebGLCommandProcessor::getInstance()->checkVideoPrepared(m_videoTextureId);
-	return m_prepared;
-}
-
-bool VRWebGLVideo::checkEnded() 
-{
-	m_ended = VRWebGLCommandProcessor::getInstance()->checkVideoEnded(m_videoTextureId);
-	return m_ended;
 }
 
 VRWebGLVideo::VRWebGLVideo()
 {
-	m_videoTextureId = VRWebGLCommandProcessor::getInstance()->newVideoTexture();
+	m_textureId = *(GLuint*)VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_newVideo::newInstance());
 }
 
 DEFINE_TRACE(VRWebGLVideo)

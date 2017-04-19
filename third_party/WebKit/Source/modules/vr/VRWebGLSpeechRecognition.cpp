@@ -25,6 +25,11 @@ void VRWebGLSpeechRecognition::start()
   VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_startSpeechRecognition::newInstance(m_id));
 }
 
+void VRWebGLSpeechRecognition::stop()
+{
+  VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_stopSpeechRecognition::newInstance(m_id));
+}
+
 VRWebGLSpeechRecognition::VRWebGLSpeechRecognition()
 {
   m_id = ids++;

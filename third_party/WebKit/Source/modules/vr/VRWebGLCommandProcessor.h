@@ -39,6 +39,7 @@ private:
 
     std::deque<std::shared_ptr<VRWebGLCommand>> m_vrWebGLCommandQueue;
     std::deque<std::shared_ptr<VRWebGLCommand>> m_vrWebGLCommandQueueBatch;
+    std::deque<std::shared_ptr<VRWebGLCommand>> m_vrWebGLCommandForUpdateQueue;
     bool m_insideAFrame = false;
     bool m_currentBatchRenderedForBothEyes = true;
     bool m_synchronousVRWebGLCommandProcessedInUpdate = false;
@@ -86,9 +87,22 @@ private:
     jmethodID m_dispatchWebViewKeyboardEventMethodID;
     jmethodID m_dispatchWebViewCursorEventMethodID;
     jmethodID m_setWebViewTransparentMethodID;
+    jmethodID m_setWebViewScaleMethodID;
     jmethodID m_newSpeechRecognitionMethodID;
     jmethodID m_deleteSpeechRecognitionMethodID;
     jmethodID m_startSpeechRecognitionMethodID;
+    jmethodID m_stopSpeechRecognitionMethodID;
+    jmethodID m_newVideoMethodID;
+    jmethodID m_deleteVideoMethodID;
+    jmethodID m_setVideoSrcMethodID;
+    jmethodID m_dispatchVideoPlaybackEventMethodID;
+    jmethodID m_setVideoVolumeMethodID;
+    jmethodID m_setVideoLoopMethodID;
+    jmethodID m_setVideoCurrentTimeMethodID;
+    jmethodID m_getVideoDurationMethodID;
+    jmethodID m_getVideoCurrentTimeMethodID;
+    jmethodID m_getVideoWidthMethodID;
+    jmethodID m_getVideoHeightMethodID;
 
     bool m_reset = false;
 
@@ -111,6 +125,8 @@ public:
     void endFrame();
     
     void update();
+
+    void updateSurfaceTexture(GLuint textureId);
     
     void renderFrame(bool process = true);
 
@@ -181,32 +197,44 @@ public:
 
     jmethodID getSetWebViewTransparentMethodID() const;
 
+    jmethodID getSetWebViewScaleMethodID() const;
+
     jmethodID getNewSpeechRecognitionMethodID() const;
 
     jmethodID getDeleteSpeechRecognitionMethodID() const;
 
     jmethodID getStartSpeechRecognitionMethodID() const;
 
+    jmethodID getStopSpeechRecognitionMethodID() const;
+
+    jmethodID getNewVideoMethodID() const;
+
+    jmethodID getDeleteVideoMethodID() const;
+
+    jmethodID getSetVideoSrcMethodID() const;
+
+    jmethodID getDispatchVideoPlaybackEventMethodID() const;
+
+    jmethodID getSetVideoVolumeMethodID() const;
+
+    jmethodID getSetVideoLoopMethodID() const;
+
+    jmethodID getSetVideoCurrentTimeMethodID() const;
+
+    jmethodID getGetVideoDurationMethodID() const;
+
+    jmethodID getGetVideoCurrentTimeMethodID() const;
+
+    jmethodID getGetVideoWidthMethodID() const;
+    
+    jmethodID getGetVideoHeightMethodID() const;
+    
     // These methods will be implemented where they can provide the requested functionality. Most likely in the Oculus SDK implementation part.
     // TODO: Try to get rid of as many as possible and use VRWebGLCommands instead!
     void getPose(VRWebGLPose& pose);
     void getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters);
     void setCameraProjectionMatrix(GLfloat* cameraProjectionMatrix);
     void setRenderEnabled(bool flag);
-    GLuint newVideoTexture();
-    void deleteVideoTexture(GLuint videoTextureId);
-    void setVideoSource(GLuint videoTextureId, const std::string& src);
-    void playVideo(GLuint videoTextureId, double volume, bool loop);
-    void pauseVideo(GLuint videoTextureId);
-    void setVideoVolume(GLuint videoTextureId, double volume);
-    void setVideoLoop(GLuint videoTextureId, bool loop);
-    void setVideoCurrentTime(GLuint videoTextureId, double currentTime);
-    double getVideoCurrentTime(GLuint videoTextureId);
-    double getVideoDuration(GLuint videoTextureId);
-    int getVideoWidth(GLuint videoTextureId);
-    int getVideoHeight(GLuint videoTextureId);
-    bool checkVideoPrepared(GLuint videoTextureId);
-    bool checkVideoEnded(GLuint videoTextureId);
     std::shared_ptr<blink::WebGamepad> getGamepad();    
 };
 
@@ -217,12 +245,13 @@ class VRWebGLCommand_newWebView: public VRWebGLCommand
 {
 private:
     GLuint textureId;
-    bool processed = false;
-
+    
     VRWebGLCommand_newWebView();
 
 public:
     static std::shared_ptr<VRWebGLCommand_newWebView> newInstance();
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -239,13 +268,14 @@ class VRWebGLCommand_deleteWebView: public VRWebGLCommand
 {
 private:
     GLuint textureId;
-    bool processed = false;
-
+    
     VRWebGLCommand_deleteWebView(GLuint textureId);
 
 public:
     static std::shared_ptr<VRWebGLCommand_deleteWebView> newInstance(GLuint textureId);
 
+    bool isForUpdate() const;
+    
     bool isSynchronous() const;
 
     bool canBeProcessedImmediately() const;
@@ -254,19 +284,22 @@ public:
     
     std::string name() const;
 };
+
+// =====================================================================================
 
 class VRWebGLCommand_setWebViewSrc: public VRWebGLCommand
 {
 private:
     GLuint textureId;
     std::string src;
-    bool processed = false;
-
+    
     VRWebGLCommand_setWebViewSrc(GLuint textureId, const std::string& src);
 
 public:
     static std::shared_ptr<VRWebGLCommand_setWebViewSrc> newInstance(GLuint textureId, const std::string& src);
 
+    bool isForUpdate() const;
+
     bool isSynchronous() const;
 
     bool canBeProcessedImmediately() const;
@@ -276,17 +309,7 @@ public:
     std::string name() const;
 };
 
-class VRWebGLCommand_checkWebViewLoaded: public VRWebGLCommand
-{
-public:
-    bool isSynchronous() const;
-
-    bool canBeProcessedImmediately() const;
-    
-    void* process();
-    
-    std::string name() const;
-};
+// =====================================================================================
 
 class VRWebGLCommand_dispatchWebViewTouchEvent: public VRWebGLCommand
 {
@@ -303,12 +326,13 @@ private:
     Event event;
     float x;
     float y;
-    bool processed = false;
-
+    
     VRWebGLCommand_dispatchWebViewTouchEvent(GLuint textureId, Event event, float x, float y);
 
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewTouchEvent> newInstance(GLuint textureId, Event event, float x, float y);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -318,6 +342,8 @@ public:
     
     std::string name() const;
 };
+
+// =====================================================================================
 
 class VRWebGLCommand_dispatchWebViewNavigationEvent: public VRWebGLCommand
 {
@@ -333,12 +359,13 @@ public:
 private:
     GLuint textureId;
     Event event;
-    bool processed = false;
-
+    
     VRWebGLCommand_dispatchWebViewNavigationEvent(GLuint textureId, Event event);
 
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewNavigationEvent> newInstance(GLuint textureId, Event event);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -348,6 +375,8 @@ public:
     
     std::string name() const;
 };
+
+// =====================================================================================
 
 class VRWebGLCommand_dispatchWebViewKeyboardEvent: public VRWebGLCommand
 {
@@ -362,13 +391,14 @@ private:
     GLuint textureId;
     Event event;
     int keycode;
-    bool processed = false;
-    static std::map<int, int> jsKeyCodeToJavaKeyCode;
+        static std::map<int, int> jsKeyCodeToJavaKeyCode;
 
     VRWebGLCommand_dispatchWebViewKeyboardEvent(GLuint textureId, Event event, int keycode);
 
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent> newInstance(GLuint textureId, Event event, int keycode);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -378,6 +408,8 @@ public:
     
     std::string name() const;
 };
+
+// =====================================================================================
 
 class VRWebGLCommand_dispatchWebViewCursorEvent: public VRWebGLCommand
 {
@@ -394,12 +426,13 @@ private:
     Event event;
     float x;
     float y;
-    bool processed = false;
-
+    
     VRWebGLCommand_dispatchWebViewCursorEvent(GLuint textureId, Event event, float x, float y);
 
 public:
     static std::shared_ptr<VRWebGLCommand_dispatchWebViewCursorEvent> newInstance(GLuint textureId, Event event, float x, float y);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -410,17 +443,46 @@ public:
     std::string name() const;
 };
 
+// =====================================================================================
+
 class VRWebGLCommand_setWebViewTransparent: public VRWebGLCommand
 {
 private:
     GLuint textureId;
     bool transparent;
-    bool processed = false;
-
+    
     VRWebGLCommand_setWebViewTransparent(GLuint textureId, bool transparent);
 
 public:
     static std::shared_ptr<VRWebGLCommand_setWebViewTransparent> newInstance(GLuint textureId, bool transparent);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_setWebViewScale: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    int scale;
+    bool loadWithOverviewMode;
+    bool useWideViewPort;
+    
+    VRWebGLCommand_setWebViewScale(GLuint textureId, int scale, bool loadWithOverviewMode, bool useWideViewPort);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_setWebViewScale> newInstance(GLuint textureId, int scale, bool loadWithOverviewMode, bool useWideViewPort);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -437,12 +499,13 @@ class VRWebGLCommand_newSpeechRecognition: public VRWebGLCommand
 {
 private:
     long id;
-    bool processed = false;
-
+    
     VRWebGLCommand_newSpeechRecognition(long id);
 
 public:
     static std::shared_ptr<VRWebGLCommand_newSpeechRecognition> newInstance(long id);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -459,12 +522,13 @@ class VRWebGLCommand_deleteSpeechRecognition: public VRWebGLCommand
 {
 private:
     long id;
-    bool processed = false;
-
+    
     VRWebGLCommand_deleteSpeechRecognition(long id);
 
 public:
     static std::shared_ptr<VRWebGLCommand_deleteSpeechRecognition> newInstance(long id);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -481,12 +545,13 @@ class VRWebGLCommand_startSpeechRecognition: public VRWebGLCommand
 {
 private:
     long id;
-    bool processed = false;
-
+    
     VRWebGLCommand_startSpeechRecognition(long id);
 
 public:
     static std::shared_ptr<VRWebGLCommand_startSpeechRecognition> newInstance(long id);
+
+    bool isForUpdate() const;
 
     bool isSynchronous() const;
 
@@ -496,5 +561,300 @@ public:
     
     std::string name() const;
 };
+
+// =====================================================================================
+
+class VRWebGLCommand_stopSpeechRecognition: public VRWebGLCommand
+{
+private:
+    long id;
+    
+    VRWebGLCommand_stopSpeechRecognition(long id);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_stopSpeechRecognition> newInstance(long id);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_newVideo: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    
+    VRWebGLCommand_newVideo();
+
+public:
+    static std::shared_ptr<VRWebGLCommand_newVideo> newInstance();
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_deleteVideo: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    
+    VRWebGLCommand_deleteVideo(GLuint textureId);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_deleteVideo> newInstance(GLuint textureId);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_setVideoSrc: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    std::string src;
+    
+    VRWebGLCommand_setVideoSrc(GLuint textureId, const std::string& src);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_setVideoSrc> newInstance(GLuint textureId, const std::string& src);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_dispatchVideoPlaybackEvent: public VRWebGLCommand
+{
+public:
+    enum Event
+    {
+        PLAY = 1,
+        PAUSE = 2
+    };
+
+private:
+    GLuint textureId;
+    Event event;
+    float volume;
+    bool loop;
+    
+    VRWebGLCommand_dispatchVideoPlaybackEvent(GLuint textureId, Event event, float volume, bool loop);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_dispatchVideoPlaybackEvent> newInstance(GLuint textureId, Event event, float volume, bool loop);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_setVideoVolume: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    float volume;
+    
+    VRWebGLCommand_setVideoVolume(GLuint textureId, float volume);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_setVideoVolume> newInstance(GLuint textureId, float volume);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_setVideoLoop: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    bool loop;
+    
+    VRWebGLCommand_setVideoLoop(GLuint textureId, bool loop);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_setVideoLoop> newInstance(GLuint textureId, bool loop);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_setVideoCurrentTime: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    float currentTime;
+    
+    VRWebGLCommand_setVideoCurrentTime(GLuint textureId, float currentTime);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_setVideoCurrentTime> newInstance(GLuint textureId, float currentTime);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_getVideoDuration: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    float duration = 0;
+    
+    VRWebGLCommand_getVideoDuration(GLuint textureId);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_getVideoDuration> newInstance(GLuint textureId);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_getVideoCurrentTime: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    float currentTime = 0;
+    
+    VRWebGLCommand_getVideoCurrentTime(GLuint textureId);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_getVideoCurrentTime> newInstance(GLuint textureId);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_getVideoWidth: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    int width = 0;
+    
+    VRWebGLCommand_getVideoWidth(GLuint textureId);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_getVideoWidth> newInstance(GLuint textureId);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
+// =====================================================================================
+
+class VRWebGLCommand_getVideoHeight: public VRWebGLCommand
+{
+private:
+    GLuint textureId;
+    int height = 0;
+    
+    VRWebGLCommand_getVideoHeight(GLuint textureId);
+
+public:
+    static std::shared_ptr<VRWebGLCommand_getVideoHeight> newInstance(GLuint textureId);
+
+    bool isForUpdate() const;
+
+    bool isSynchronous() const;
+
+    bool canBeProcessedImmediately() const;
+    
+    void* process();
+    
+    std::string name() const;
+};
+
 
 #endif // VRWebGLCommandProcessor_h

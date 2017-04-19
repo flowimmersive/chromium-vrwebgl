@@ -114,8 +114,15 @@ void* VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(const std::share
     }
     else
     {
-        vrWebGLCommand->setInsideAFrame(m_insideAFrame);
-        m_vrWebGLCommandQueue.push_back(vrWebGLCommand);
+        if (vrWebGLCommand->isForUpdate())
+        {
+            m_vrWebGLCommandForUpdateQueue.push_back(vrWebGLCommand);
+        }
+        else
+        {
+            vrWebGLCommand->setInsideAFrame(m_insideAFrame);
+            m_vrWebGLCommandQueue.push_back(vrWebGLCommand);
+        }
     }
     
     ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(%s) ends", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
@@ -160,6 +167,15 @@ void VRWebGLCommandProcessor::update()
 {
     pthread_mutex_lock( &m_mutex );
 
+    // Process all the commands that are for update only.
+    for (std::shared_ptr<VRWebGLCommand> vrWebGLCommandForUpdate: m_vrWebGLCommandForUpdateQueue)
+    {
+        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processing command for update %s", getCurrentThreadName().c_str(), vrWebGLCommandForUpdate->name().c_str());
+        vrWebGLCommandForUpdate->process();
+        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processed command for update %s", getCurrentThreadName().c_str(), vrWebGLCommandForUpdate->name().c_str());
+    }
+    m_vrWebGLCommandForUpdateQueue.clear();
+
     if (m_reset)
     {
         m_resetEverything();
@@ -167,7 +183,8 @@ void VRWebGLCommandProcessor::update()
     }
 
     // Update all the surface textures
-    m_surfaceTextures.update();
+    // No longer done here. Each texImage2D call will update its own surface texture with a command.
+    // m_surfaceTextures.update();
 
     // If there is a synchronous VRWebGLCommand, execute it, store the result and notify the waiting thread
     if (m_synchronousVRWebGLCommand)
@@ -203,8 +220,13 @@ void VRWebGLCommandProcessor::update()
 
         m_synchronousVRWebGLCommandProcessedInUpdate = true;
     }
-    
+
     pthread_mutex_unlock( &m_mutex );
+}
+
+void VRWebGLCommandProcessor::updateSurfaceTexture(GLuint textureId)
+{
+    m_surfaceTextures.update(textureId);
 }
 
 void VRWebGLCommandProcessor::renderFrame(bool process)
@@ -378,6 +400,7 @@ void VRWebGLCommandProcessor::m_resetEverything()
 {
     m_vrWebGLCommandQueue.clear();
     m_vrWebGLCommandQueueBatch.clear();
+    m_vrWebGLCommandForUpdateQueue.clear();
     m_insideAFrame = false;
     m_currentBatchRenderedForBothEyes = true;
     m_synchronousVRWebGLCommand.reset();
@@ -489,9 +512,22 @@ void VRWebGLCommandProcessor::setupJNI(JNIEnv* jniEnv, jobject mainActivityJObje
     m_dispatchWebViewKeyboardEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewKeyboardEvent", "(Landroid/graphics/SurfaceTexture;II)V");
     m_dispatchWebViewCursorEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchWebViewCursorEvent", "(Landroid/graphics/SurfaceTexture;IFF)V");
     m_setWebViewTransparentMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setWebViewTransparent", "(Landroid/graphics/SurfaceTexture;Z)V");
+    m_setWebViewScaleMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setWebViewScale", "(Landroid/graphics/SurfaceTexture;IZZ)V");
     m_newSpeechRecognitionMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "newSpeechRecognition", "(J)V");
     m_deleteSpeechRecognitionMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "deleteSpeechRecognition", "(J)V");
     m_startSpeechRecognitionMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "startSpeechRecognition", "(J)V");
+    m_stopSpeechRecognitionMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "stopSpeechRecognition", "(J)V");
+    m_newVideoMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "newVideo", "(Landroid/graphics/SurfaceTexture;I)V");
+    m_deleteVideoMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "deleteVideo", "(Landroid/graphics/SurfaceTexture;)V");
+    m_setVideoSrcMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setVideoSrcOnUIThread", "(Landroid/graphics/SurfaceTexture;Ljava/lang/String;)V");
+    m_dispatchVideoPlaybackEventMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "dispatchVideoPlaybackEvent", "(Landroid/graphics/SurfaceTexture;IFZ)V");
+    m_setVideoVolumeMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setVideoVolume", "(Landroid/graphics/SurfaceTexture;F)V");
+    m_setVideoLoopMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setVideoLoop", "(Landroid/graphics/SurfaceTexture;Z)V");
+    m_setVideoCurrentTimeMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setVideoCurrentTime", "(Landroid/graphics/SurfaceTexture;I)V");
+    m_getVideoDurationMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "getVideoDuration", "(Landroid/graphics/SurfaceTexture;)I");
+    m_getVideoCurrentTimeMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "getVideoCurrentTime", "(Landroid/graphics/SurfaceTexture;)I");
+    m_getVideoWidthMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "getVideoWidth", "(Landroid/graphics/SurfaceTexture;)I");
+    m_getVideoHeightMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "getVideoHeight", "(Landroid/graphics/SurfaceTexture;)I");
 }
 
 JNIEnv* VRWebGLCommandProcessor::getJNIEnv() const
@@ -559,6 +595,11 @@ jmethodID VRWebGLCommandProcessor::getSetWebViewTransparentMethodID() const
     return m_setWebViewTransparentMethodID;
 }
 
+jmethodID VRWebGLCommandProcessor::getSetWebViewScaleMethodID() const
+{
+    return m_setWebViewScaleMethodID;
+}
+
 jmethodID VRWebGLCommandProcessor::getNewSpeechRecognitionMethodID() const
 {
     return m_newSpeechRecognitionMethodID;
@@ -574,6 +615,67 @@ jmethodID VRWebGLCommandProcessor::getStartSpeechRecognitionMethodID() const
     return m_startSpeechRecognitionMethodID;
 }
 
+jmethodID VRWebGLCommandProcessor::getStopSpeechRecognitionMethodID() const
+{
+    return m_stopSpeechRecognitionMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getNewVideoMethodID() const
+{
+    return m_newVideoMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getDeleteVideoMethodID() const
+{
+    return m_deleteVideoMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getSetVideoSrcMethodID() const
+{
+    return m_setVideoSrcMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getDispatchVideoPlaybackEventMethodID() const
+{
+    return m_dispatchVideoPlaybackEventMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getSetVideoVolumeMethodID() const
+{
+    return m_setVideoVolumeMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getSetVideoLoopMethodID() const
+{
+    return m_setVideoLoopMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getSetVideoCurrentTimeMethodID() const
+{
+    return m_setVideoCurrentTimeMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getGetVideoDurationMethodID() const
+{
+    return m_getVideoDurationMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getGetVideoCurrentTimeMethodID() const
+{
+    return m_getVideoCurrentTimeMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getGetVideoWidthMethodID() const
+{
+    return m_getVideoWidthMethodID;
+}
+
+jmethodID VRWebGLCommandProcessor::getGetVideoHeightMethodID() const
+{
+    return m_getVideoHeightMethodID;
+}
+
+
 // =====================================================================================
 // =====================================================================================
 
@@ -584,6 +686,11 @@ VRWebGLCommand_newWebView::VRWebGLCommand_newWebView(): textureId(0)
 std::shared_ptr<VRWebGLCommand_newWebView> VRWebGLCommand_newWebView::newInstance()
 {
     return std::shared_ptr<VRWebGLCommand_newWebView>(new VRWebGLCommand_newWebView());
+}
+
+bool VRWebGLCommand_newWebView::isForUpdate() const
+{
+    return true;
 }
 
 bool VRWebGLCommand_newWebView::isSynchronous() const
@@ -598,16 +705,12 @@ bool VRWebGLCommand_newWebView::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_newWebView::process()
 {
-    if (!processed)
-    {
-        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->newSurfaceTexture();
-        textureId = surfaceTexture->getTextureId();
-        jmethodID newWebViewMethodID = VRWebGLCommandProcessor::getInstance()->getNewWebViewMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, newWebViewMethodID, surfaceTexture->getJavaObject(), textureId );
-        processed = true;
-    }
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->newSurfaceTexture();
+    textureId = surfaceTexture->getTextureId();
+    jmethodID newWebViewMethodID = VRWebGLCommandProcessor::getInstance()->getNewWebViewMethodID();
+    JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+    jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+    jniEnv->CallVoidMethod( mainActivityJObject, newWebViewMethodID, surfaceTexture->getJavaObject(), textureId );
     return &textureId;
 }
 
@@ -627,6 +730,11 @@ std::shared_ptr<VRWebGLCommand_deleteWebView> VRWebGLCommand_deleteWebView::newI
     return std::shared_ptr<VRWebGLCommand_deleteWebView>(new VRWebGLCommand_deleteWebView(textureId));
 }
 
+bool VRWebGLCommand_deleteWebView::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_deleteWebView::isSynchronous() const
 {
     return false;
@@ -639,16 +747,13 @@ bool VRWebGLCommand_deleteWebView::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_deleteWebView::process()
 {
-    if (!processed)
-    {
-        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        if (surfaceTexture) {
-            jmethodID deleteWebViewMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteWebViewMethodID();
-            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-            jniEnv->CallVoidMethod( mainActivityJObject, deleteWebViewMethodID, surfaceTexture->getJavaObject() );
-        }
-        processed = true;
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture) {
+        jmethodID deleteWebViewMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteWebViewMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, deleteWebViewMethodID, surfaceTexture->getJavaObject() );
+        VRWebGLCommandProcessor::getInstance()->deleteSurfaceTexture(surfaceTexture);
     }
     return 0;
 }
@@ -669,6 +774,11 @@ std::shared_ptr<VRWebGLCommand_setWebViewSrc> VRWebGLCommand_setWebViewSrc::newI
     return std::shared_ptr<VRWebGLCommand_setWebViewSrc>(new VRWebGLCommand_setWebViewSrc(textureId, src));
 }
 
+bool VRWebGLCommand_setWebViewSrc::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_setWebViewSrc::isSynchronous() const
 {
     return false;
@@ -681,19 +791,15 @@ bool VRWebGLCommand_setWebViewSrc::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_setWebViewSrc::process()
 {
-    if (!processed)
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
     {
-        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        if (surfaceTexture)
-        {
-            jmethodID setWebViewSrcMethodID = VRWebGLCommandProcessor::getInstance()->getSetWebViewSrcMethodID();
-            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-            jstring srcJString = jniEnv->NewStringUTF( src.c_str() );
-            jniEnv->CallVoidMethod( mainActivityJObject, setWebViewSrcMethodID, surfaceTexture->getJavaObject(), srcJString );
-            jniEnv->DeleteLocalRef( srcJString );
-        }
-        processed = true;
+        jmethodID setWebViewSrcMethodID = VRWebGLCommandProcessor::getInstance()->getSetWebViewSrcMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jstring srcJString = jniEnv->NewStringUTF( src.c_str() );
+        jniEnv->CallVoidMethod( mainActivityJObject, setWebViewSrcMethodID, surfaceTexture->getJavaObject(), srcJString );
+        jniEnv->DeleteLocalRef( srcJString );
     }
     return 0;
 }
@@ -714,6 +820,11 @@ std::shared_ptr<VRWebGLCommand_dispatchWebViewTouchEvent> VRWebGLCommand_dispatc
     return std::shared_ptr<VRWebGLCommand_dispatchWebViewTouchEvent>(new VRWebGLCommand_dispatchWebViewTouchEvent(textureId, event, x, y));
 }
 
+bool VRWebGLCommand_dispatchWebViewTouchEvent::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_dispatchWebViewTouchEvent::isSynchronous() const
 {
     return false;
@@ -726,17 +837,13 @@ bool VRWebGLCommand_dispatchWebViewTouchEvent::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_dispatchWebViewTouchEvent::process()
 {
-    if (!processed)
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
     {
-        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        if (surfaceTexture)
-        {
-            jmethodID dispatchWebViewTouchEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewTouchEventMethodID();
-            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewTouchEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
-        }
-        processed = true;
+        jmethodID dispatchWebViewTouchEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewTouchEventMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewTouchEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
     }
     return 0;
 }
@@ -757,6 +864,11 @@ std::shared_ptr<VRWebGLCommand_dispatchWebViewNavigationEvent> VRWebGLCommand_di
     return std::shared_ptr<VRWebGLCommand_dispatchWebViewNavigationEvent>(new VRWebGLCommand_dispatchWebViewNavigationEvent(textureId, event));
 }
 
+bool VRWebGLCommand_dispatchWebViewNavigationEvent::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_dispatchWebViewNavigationEvent::isSynchronous() const
 {
     return false;
@@ -769,17 +881,13 @@ bool VRWebGLCommand_dispatchWebViewNavigationEvent::canBeProcessedImmediately() 
 
 void* VRWebGLCommand_dispatchWebViewNavigationEvent::process()
 {
-    if (!processed)
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
     {
-        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        if (surfaceTexture)
-        {
-            jmethodID dispatchWebViewNavigationEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewNavigationEventMethodID();
-            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewNavigationEventMethodID, surfaceTexture->getJavaObject(), (jint)event);
-        }
-        processed = true;
+        jmethodID dispatchWebViewNavigationEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewNavigationEventMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewNavigationEventMethodID, surfaceTexture->getJavaObject(), (jint)event);
     }
     return 0;
 }
@@ -904,6 +1012,11 @@ std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent> VRWebGLCommand_disp
     return std::shared_ptr<VRWebGLCommand_dispatchWebViewKeyboardEvent>(new VRWebGLCommand_dispatchWebViewKeyboardEvent(textureId, event, keycode));
 }
 
+bool VRWebGLCommand_dispatchWebViewKeyboardEvent::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_dispatchWebViewKeyboardEvent::isSynchronous() const
 {
     return false;
@@ -916,24 +1029,20 @@ bool VRWebGLCommand_dispatchWebViewKeyboardEvent::canBeProcessedImmediately() co
 
 void* VRWebGLCommand_dispatchWebViewKeyboardEvent::process()
 {
-    if (!processed)
+    if (jsKeyCodeToJavaKeyCode.find(keycode) != jsKeyCodeToJavaKeyCode.end())
     {
-        if (jsKeyCodeToJavaKeyCode.find(keycode) != jsKeyCodeToJavaKeyCode.end())
+        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+        if (surfaceTexture)
         {
-            std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-            if (surfaceTexture)
-            {
-                jmethodID dispatchWebViewKeyboardEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewKeyboardEventMethodID();
-                JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-                jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-                jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewKeyboardEventMethodID, surfaceTexture->getJavaObject(), (jint)event, jsKeyCodeToJavaKeyCode[keycode]);
-            }
+            jmethodID dispatchWebViewKeyboardEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewKeyboardEventMethodID();
+            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewKeyboardEventMethodID, surfaceTexture->getJavaObject(), (jint)event, jsKeyCodeToJavaKeyCode[keycode]);
         }
-        else 
-        {
-            ALOGE("ERROR: The provided keycode '%d' has not been found in the js to java keycode conversion table.", keycode);
-        }
-        processed = true;
+    }
+    else 
+    {
+        ALOGE("ERROR: The provided keycode '%d' has not been found in the js to java keycode conversion table.", keycode);
     }
     return 0;
 }
@@ -954,6 +1063,11 @@ std::shared_ptr<VRWebGLCommand_dispatchWebViewCursorEvent> VRWebGLCommand_dispat
     return std::shared_ptr<VRWebGLCommand_dispatchWebViewCursorEvent>(new VRWebGLCommand_dispatchWebViewCursorEvent(textureId, event, x, y));
 }
 
+bool VRWebGLCommand_dispatchWebViewCursorEvent::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_dispatchWebViewCursorEvent::isSynchronous() const
 {
     return false;
@@ -966,17 +1080,13 @@ bool VRWebGLCommand_dispatchWebViewCursorEvent::canBeProcessedImmediately() cons
 
 void* VRWebGLCommand_dispatchWebViewCursorEvent::process()
 {
-    if (!processed)
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
     {
-        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        if (surfaceTexture)
-        {
-            jmethodID dispatchWebViewCursorEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewCursorEventMethodID();
-            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-            jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewCursorEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
-        }
-        processed = true;
+        jmethodID dispatchWebViewCursorEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchWebViewCursorEventMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewCursorEventMethodID, surfaceTexture->getJavaObject(), (jint)event, x, y );
     }
     return 0;
 }
@@ -997,6 +1107,11 @@ std::shared_ptr<VRWebGLCommand_setWebViewTransparent> VRWebGLCommand_setWebViewT
     return std::shared_ptr<VRWebGLCommand_setWebViewTransparent>(new VRWebGLCommand_setWebViewTransparent(textureId, transparent));
 }
 
+bool VRWebGLCommand_setWebViewTransparent::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_setWebViewTransparent::isSynchronous() const
 {
     return false;
@@ -1009,17 +1124,13 @@ bool VRWebGLCommand_setWebViewTransparent::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_setWebViewTransparent::process()
 {
-    if (!processed)
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
     {
-        std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
-        if (surfaceTexture)
-        {
-            jmethodID setWebViewTransparentMethodID = VRWebGLCommandProcessor::getInstance()->getSetWebViewTransparentMethodID();
-            JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-            jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-            jniEnv->CallVoidMethod( mainActivityJObject, setWebViewTransparentMethodID, surfaceTexture->getJavaObject(), (jboolean)transparent);
-        }
-        processed = true;
+        jmethodID setWebViewTransparentMethodID = VRWebGLCommandProcessor::getInstance()->getSetWebViewTransparentMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, setWebViewTransparentMethodID, surfaceTexture->getJavaObject(), (jboolean)transparent);
     }
     return 0;
 }
@@ -1031,6 +1142,50 @@ std::string VRWebGLCommand_setWebViewTransparent::name() const
 
 // =====================================================================================
 
+VRWebGLCommand_setWebViewScale::VRWebGLCommand_setWebViewScale(GLuint textureId, int scale, bool loadWithOverviewMode, bool useWideViewPort): textureId(textureId), scale(scale), loadWithOverviewMode(loadWithOverviewMode), useWideViewPort(useWideViewPort)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_setWebViewScale> VRWebGLCommand_setWebViewScale::newInstance(GLuint textureId, int scale, bool loadWithOverviewMode, bool useWideViewPort)
+{
+    return std::shared_ptr<VRWebGLCommand_setWebViewScale>(new VRWebGLCommand_setWebViewScale(textureId, scale, loadWithOverviewMode, useWideViewPort));
+}
+
+bool VRWebGLCommand_setWebViewScale::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_setWebViewScale::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_setWebViewScale::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_setWebViewScale::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID setWebViewScaleMethodID = VRWebGLCommandProcessor::getInstance()->getSetWebViewScaleMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, setWebViewScaleMethodID, surfaceTexture->getJavaObject(), (jint)scale, (jboolean)loadWithOverviewMode, (jboolean)useWideViewPort);
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_setWebViewScale::name() const
+{
+    return "setWebViewScale";
+}
+
+// =====================================================================================
+
 VRWebGLCommand_newSpeechRecognition::VRWebGLCommand_newSpeechRecognition(long id): id(id)
 {
 }
@@ -1038,6 +1193,11 @@ VRWebGLCommand_newSpeechRecognition::VRWebGLCommand_newSpeechRecognition(long id
 std::shared_ptr<VRWebGLCommand_newSpeechRecognition> VRWebGLCommand_newSpeechRecognition::newInstance(long id)
 {
     return std::shared_ptr<VRWebGLCommand_newSpeechRecognition>(new VRWebGLCommand_newSpeechRecognition(id));
+}
+
+bool VRWebGLCommand_newSpeechRecognition::isForUpdate() const
+{
+    return true;
 }
 
 bool VRWebGLCommand_newSpeechRecognition::isSynchronous() const
@@ -1052,14 +1212,10 @@ bool VRWebGLCommand_newSpeechRecognition::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_newSpeechRecognition::process()
 {
-    if (!processed)
-    {
-        jmethodID newSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getNewSpeechRecognitionMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, newSpeechRecognitionMethodID, (jlong)id );
-        processed = true;
-    }
+    jmethodID newSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getNewSpeechRecognitionMethodID();
+    JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+    jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+    jniEnv->CallVoidMethod( mainActivityJObject, newSpeechRecognitionMethodID, (jlong)id );
     return 0;
 }
 
@@ -1079,6 +1235,11 @@ std::shared_ptr<VRWebGLCommand_deleteSpeechRecognition> VRWebGLCommand_deleteSpe
     return std::shared_ptr<VRWebGLCommand_deleteSpeechRecognition>(new VRWebGLCommand_deleteSpeechRecognition(id));
 }
 
+bool VRWebGLCommand_deleteSpeechRecognition::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_deleteSpeechRecognition::isSynchronous() const
 {
     return false;
@@ -1091,14 +1252,10 @@ bool VRWebGLCommand_deleteSpeechRecognition::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_deleteSpeechRecognition::process()
 {
-    if (!processed)
-    {
-        jmethodID deleteSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteSpeechRecognitionMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, deleteSpeechRecognitionMethodID, (jlong)id );
-        processed = true;
-    }
+    jmethodID deleteSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteSpeechRecognitionMethodID();
+    JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+    jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+    jniEnv->CallVoidMethod( mainActivityJObject, deleteSpeechRecognitionMethodID, (jlong)id );
     return 0;
 }
 
@@ -1118,6 +1275,11 @@ std::shared_ptr<VRWebGLCommand_startSpeechRecognition> VRWebGLCommand_startSpeec
     return std::shared_ptr<VRWebGLCommand_startSpeechRecognition>(new VRWebGLCommand_startSpeechRecognition(id));
 }
 
+bool VRWebGLCommand_startSpeechRecognition::isForUpdate() const
+{
+    return true;
+}
+
 bool VRWebGLCommand_startSpeechRecognition::isSynchronous() const
 {
     return false;
@@ -1130,19 +1292,541 @@ bool VRWebGLCommand_startSpeechRecognition::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_startSpeechRecognition::process()
 {
-    if (!processed)
-    {
-        jmethodID startSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getStartSpeechRecognitionMethodID();
-        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
-        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
-        jniEnv->CallVoidMethod( mainActivityJObject, startSpeechRecognitionMethodID, (jlong)id );
-        processed = true;
-    }
+    jmethodID startSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getStartSpeechRecognitionMethodID();
+    JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+    jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+    jniEnv->CallVoidMethod( mainActivityJObject, startSpeechRecognitionMethodID, (jlong)id );
     return 0;
 }
 
 std::string VRWebGLCommand_startSpeechRecognition::name() const
 {
     return "startSpeechRecognition";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_stopSpeechRecognition::VRWebGLCommand_stopSpeechRecognition(long id): id(id)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_stopSpeechRecognition> VRWebGLCommand_stopSpeechRecognition::newInstance(long id)
+{
+    return std::shared_ptr<VRWebGLCommand_stopSpeechRecognition>(new VRWebGLCommand_stopSpeechRecognition(id));
+}
+
+bool VRWebGLCommand_stopSpeechRecognition::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_stopSpeechRecognition::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_stopSpeechRecognition::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_stopSpeechRecognition::process()
+{
+    jmethodID stopSpeechRecognitionMethodID = VRWebGLCommandProcessor::getInstance()->getStopSpeechRecognitionMethodID();
+    JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+    jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+    jniEnv->CallVoidMethod( mainActivityJObject, stopSpeechRecognitionMethodID, (jlong)id );
+    return 0;
+}
+
+std::string VRWebGLCommand_stopSpeechRecognition::name() const
+{
+    return "stopSpeechRecognition";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_newVideo::VRWebGLCommand_newVideo(): textureId(0)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_newVideo> VRWebGLCommand_newVideo::newInstance()
+{
+    return std::shared_ptr<VRWebGLCommand_newVideo>(new VRWebGLCommand_newVideo());
+}
+
+bool VRWebGLCommand_newVideo::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_newVideo::isSynchronous() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_newVideo::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_newVideo::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->newSurfaceTexture();
+    textureId = surfaceTexture->getTextureId();
+    jmethodID newVideoMethodID = VRWebGLCommandProcessor::getInstance()->getNewVideoMethodID();
+    JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+    jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+    jniEnv->CallVoidMethod( mainActivityJObject, newVideoMethodID, surfaceTexture->getJavaObject(), textureId );
+    return &textureId;
+}
+
+std::string VRWebGLCommand_newVideo::name() const
+{
+    return "newVideo";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_deleteVideo::VRWebGLCommand_deleteVideo(GLuint textureId): textureId(textureId)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_deleteVideo> VRWebGLCommand_deleteVideo::newInstance(GLuint textureId)
+{
+    return std::shared_ptr<VRWebGLCommand_deleteVideo>(new VRWebGLCommand_deleteVideo(textureId));
+}
+
+bool VRWebGLCommand_deleteVideo::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_deleteVideo::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_deleteVideo::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_deleteVideo::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture) {
+        jmethodID deleteVideoMethodID = VRWebGLCommandProcessor::getInstance()->getDeleteVideoMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, deleteVideoMethodID, surfaceTexture->getJavaObject() );
+        VRWebGLCommandProcessor::getInstance()->deleteSurfaceTexture(surfaceTexture);
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_deleteVideo::name() const
+{
+    return "deleteVideo";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_setVideoSrc::VRWebGLCommand_setVideoSrc(GLuint textureId, const std::string& src): textureId(textureId), src(src)
+{
+    ALOGE("JudaX: VRWebGLCommand_setVideoSrc::constructor(%d, %s)", textureId, src.c_str());
+}
+
+std::shared_ptr<VRWebGLCommand_setVideoSrc> VRWebGLCommand_setVideoSrc::newInstance(GLuint textureId, const std::string& src)
+{
+    return std::shared_ptr<VRWebGLCommand_setVideoSrc>(new VRWebGLCommand_setVideoSrc(textureId, src));
+}
+
+bool VRWebGLCommand_setVideoSrc::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_setVideoSrc::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_setVideoSrc::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_setVideoSrc::process()
+{
+    ALOGE("JudaX: VRWebGLCommand_setVideoSrc::process(%d, %s)", textureId, src.c_str());
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID setVideoSrcMethodID = VRWebGLCommandProcessor::getInstance()->getSetVideoSrcMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jstring srcJString = jniEnv->NewStringUTF( src.c_str() );
+        jniEnv->CallVoidMethod( mainActivityJObject, setVideoSrcMethodID, surfaceTexture->getJavaObject(), srcJString );
+        jniEnv->DeleteLocalRef( srcJString );
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_setVideoSrc::name() const
+{
+    return "setVideoSrc";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_dispatchVideoPlaybackEvent::VRWebGLCommand_dispatchVideoPlaybackEvent(GLuint textureId, Event event, float volume, bool loop): textureId(textureId), event(event), volume(volume), loop(loop)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_dispatchVideoPlaybackEvent> VRWebGLCommand_dispatchVideoPlaybackEvent::newInstance(GLuint textureId, Event event, float volume, bool loop)
+{
+    return std::shared_ptr<VRWebGLCommand_dispatchVideoPlaybackEvent>(new VRWebGLCommand_dispatchVideoPlaybackEvent(textureId, event, volume, loop));
+}
+
+bool VRWebGLCommand_dispatchVideoPlaybackEvent::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_dispatchVideoPlaybackEvent::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_dispatchVideoPlaybackEvent::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_dispatchVideoPlaybackEvent::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID dispatchVideoPlaybackEventMethodID = VRWebGLCommandProcessor::getInstance()->getDispatchVideoPlaybackEventMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, dispatchVideoPlaybackEventMethodID, surfaceTexture->getJavaObject(), (jint)event, (jfloat)volume, loop);
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_dispatchVideoPlaybackEvent::name() const
+{
+    return "dispatchVideoPlaybackEvent";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_setVideoVolume::VRWebGLCommand_setVideoVolume(GLuint textureId, float volume): textureId(textureId), volume(volume)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_setVideoVolume> VRWebGLCommand_setVideoVolume::newInstance(GLuint textureId, float volume)
+{
+    return std::shared_ptr<VRWebGLCommand_setVideoVolume>(new VRWebGLCommand_setVideoVolume(textureId, volume));
+}
+
+bool VRWebGLCommand_setVideoVolume::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_setVideoVolume::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_setVideoVolume::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_setVideoVolume::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID setVideoVolumeMethodID = VRWebGLCommandProcessor::getInstance()->getSetVideoVolumeMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, setVideoVolumeMethodID, surfaceTexture->getJavaObject(), (jfloat)volume );
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_setVideoVolume::name() const
+{
+    return "setVideoVolume";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_setVideoLoop::VRWebGLCommand_setVideoLoop(GLuint textureId, bool loop): textureId(textureId), loop(loop)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_setVideoLoop> VRWebGLCommand_setVideoLoop::newInstance(GLuint textureId, bool loop)
+{
+    return std::shared_ptr<VRWebGLCommand_setVideoLoop>(new VRWebGLCommand_setVideoLoop(textureId, loop));
+}
+
+bool VRWebGLCommand_setVideoLoop::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_setVideoLoop::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_setVideoLoop::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_setVideoLoop::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID setVideoLoopMethodID = VRWebGLCommandProcessor::getInstance()->getSetVideoLoopMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, setVideoLoopMethodID, surfaceTexture->getJavaObject(), loop );
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_setVideoLoop::name() const
+{
+    return "setVideoLoop";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_setVideoCurrentTime::VRWebGLCommand_setVideoCurrentTime(GLuint textureId, float currentTime): textureId(textureId), currentTime(currentTime)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_setVideoCurrentTime> VRWebGLCommand_setVideoCurrentTime::newInstance(GLuint textureId, float currentTime)
+{
+    return std::shared_ptr<VRWebGLCommand_setVideoCurrentTime>(new VRWebGLCommand_setVideoCurrentTime(textureId, currentTime));
+}
+
+bool VRWebGLCommand_setVideoCurrentTime::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_setVideoCurrentTime::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_setVideoCurrentTime::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_setVideoCurrentTime::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID setVideoCurrentTimeMethodID = VRWebGLCommandProcessor::getInstance()->getSetVideoCurrentTimeMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        jniEnv->CallVoidMethod( mainActivityJObject, setVideoCurrentTimeMethodID, surfaceTexture->getJavaObject(), (jint)(currentTime * 1000.0f) );
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_setVideoCurrentTime::name() const
+{
+    return "setVideoCurrentTime";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_getVideoDuration::VRWebGLCommand_getVideoDuration(GLuint textureId): textureId(textureId)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_getVideoDuration> VRWebGLCommand_getVideoDuration::newInstance(GLuint textureId)
+{
+    return std::shared_ptr<VRWebGLCommand_getVideoDuration>(new VRWebGLCommand_getVideoDuration(textureId));
+}
+
+bool VRWebGLCommand_getVideoDuration::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoDuration::isSynchronous() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoDuration::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_getVideoDuration::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID getVideoDurationMethodID = VRWebGLCommandProcessor::getInstance()->getGetVideoDurationMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        duration = jniEnv->CallIntMethod( mainActivityJObject, getVideoDurationMethodID, surfaceTexture->getJavaObject() ) / 1000.0f;
+    }
+    return &duration;
+}
+
+std::string VRWebGLCommand_getVideoDuration::name() const
+{
+    return "getVideoDuration";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_getVideoCurrentTime::VRWebGLCommand_getVideoCurrentTime(GLuint textureId): textureId(textureId)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_getVideoCurrentTime> VRWebGLCommand_getVideoCurrentTime::newInstance(GLuint textureId)
+{
+    return std::shared_ptr<VRWebGLCommand_getVideoCurrentTime>(new VRWebGLCommand_getVideoCurrentTime(textureId));
+}
+
+bool VRWebGLCommand_getVideoCurrentTime::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoCurrentTime::isSynchronous() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoCurrentTime::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_getVideoCurrentTime::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID getVideoCurrentTimeMethodID = VRWebGLCommandProcessor::getInstance()->getGetVideoCurrentTimeMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        currentTime = jniEnv->CallIntMethod( mainActivityJObject, getVideoCurrentTimeMethodID, surfaceTexture->getJavaObject() ) / 1000.0f;
+    }
+    return &currentTime;
+}
+
+std::string VRWebGLCommand_getVideoCurrentTime::name() const
+{
+    return "getVideoCurrentTime";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_getVideoWidth::VRWebGLCommand_getVideoWidth(GLuint textureId): textureId(textureId)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_getVideoWidth> VRWebGLCommand_getVideoWidth::newInstance(GLuint textureId)
+{
+    return std::shared_ptr<VRWebGLCommand_getVideoWidth>(new VRWebGLCommand_getVideoWidth(textureId));
+}
+
+bool VRWebGLCommand_getVideoWidth::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoWidth::isSynchronous() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoWidth::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_getVideoWidth::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID getVideoWidthMethodID = VRWebGLCommandProcessor::getInstance()->getGetVideoWidthMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        width = jniEnv->CallIntMethod( mainActivityJObject, getVideoWidthMethodID, surfaceTexture->getJavaObject() );
+    }
+    return &width;
+}
+
+std::string VRWebGLCommand_getVideoWidth::name() const
+{
+    return "getVideowidth";
+}
+
+// =====================================================================================
+
+VRWebGLCommand_getVideoHeight::VRWebGLCommand_getVideoHeight(GLuint textureId): textureId(textureId)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_getVideoHeight> VRWebGLCommand_getVideoHeight::newInstance(GLuint textureId)
+{
+    return std::shared_ptr<VRWebGLCommand_getVideoHeight>(new VRWebGLCommand_getVideoHeight(textureId));
+}
+
+bool VRWebGLCommand_getVideoHeight::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoHeight::isSynchronous() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_getVideoHeight::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_getVideoHeight::process()
+{
+    std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
+    if (surfaceTexture)
+    {
+        jmethodID getVideoHeightMethodID = VRWebGLCommandProcessor::getInstance()->getGetVideoHeightMethodID();
+        JNIEnv* jniEnv = VRWebGLCommandProcessor::getInstance()->getJNIEnv();
+        jobject mainActivityJObject = VRWebGLCommandProcessor::getInstance()->getMainActivityJObject();
+        height = jniEnv->CallIntMethod( mainActivityJObject, getVideoHeightMethodID, surfaceTexture->getJavaObject() );
+    }
+    return &height;
+}
+
+std::string VRWebGLCommand_getVideoHeight::name() const
+{
+    return "getVideoHeight";
 }
 

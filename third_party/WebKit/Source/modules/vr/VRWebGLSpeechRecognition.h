@@ -19,6 +19,7 @@ public:
     long id() const;
 
     void start();
+    void stop();
 
     DECLARE_TRACE()
 

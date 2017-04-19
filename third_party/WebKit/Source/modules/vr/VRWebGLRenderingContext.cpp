@@ -1762,13 +1762,19 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, VRWebGLVideo* video, ExceptionState& exceptionState)
 {
-    // Check if the currently bound texture has a video texture id already.
-    // If it does not have it (== 0), assign the video texture id to it.
+    // Queue the command to update the surface texture
+    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D begin";
+    std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_updateSurfaceTexture::newInstance(video->textureId());
+    // VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
+    VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
+    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D end";  
+
+    // Assign the external texture id to the current bound texture.
     if (m_textureCurrentlyBound)
     {
-        if (m_textureCurrentlyBound->textureId() != video->videoTextureId()) 
+        if (m_textureCurrentlyBound->externalTextureId() != video->textureId()) 
         {
-            m_textureCurrentlyBound->setTextureId(video->videoTextureId());
+            m_textureCurrentlyBound->setExternalTextureId(video->textureId());
         }
     }
 }
@@ -1776,11 +1782,18 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, VRWebGLWebView* webview, ExceptionState& exceptionState)
 {
+    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D begin";
+    std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_updateSurfaceTexture::newInstance(webview->textureId());
+    // VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
+    VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
+    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D end";  
+
+
     if (m_textureCurrentlyBound)
     {
-        if (m_textureCurrentlyBound->textureId() != webview->textureId()) 
+        if (m_textureCurrentlyBound->externalTextureId() != webview->textureId()) 
         {
-            m_textureCurrentlyBound->setTextureId(webview->textureId());
+            m_textureCurrentlyBound->setExternalTextureId(webview->textureId());
         }
     }
 }
@@ -2163,6 +2176,9 @@ VREyeParameters* VRWebGLRenderingContext::getEyeParameters(const String& eye)
 
 void VRWebGLRenderingContext::setCameraWorldMatrix(DOMFloat32Array* value)
 {
+    // The camera world matrix is used for getting both the orientation
+    // and the position, so it needs to be a command so it is correctly
+    // processed.
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::setCameraWorldMatrix begin";
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_setCameraWorldMatrix::newInstance(value->data());
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
@@ -2172,6 +2188,9 @@ void VRWebGLRenderingContext::setCameraWorldMatrix(DOMFloat32Array* value)
 
 void VRWebGLRenderingContext::setCameraWorldMatrix(Vector<GLfloat>& value)
 {
+    // The camera world matrix is used for getting both the orientation
+    // and the position, so it needs to be a command so it is correctly
+    // processed.
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::setCameraWorldMatrix begin";
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_setCameraWorldMatrix::newInstance(value.data());
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
@@ -2181,11 +2200,15 @@ void VRWebGLRenderingContext::setCameraWorldMatrix(Vector<GLfloat>& value)
 
 void VRWebGLRenderingContext::setCameraProjectionMatrix(DOMFloat32Array* value)
 {
+    // As the projection matrix is only used to calculate the near and far
+    // planes, there is no need for a VRWebGLCommand.
 	VRWebGLCommandProcessor::getInstance()->setCameraProjectionMatrix(value->data());
 }
 
 void VRWebGLRenderingContext::setCameraProjectionMatrix(Vector<GLfloat>& value)
 {
+    // As the projection matrix is only used to calculate the near and far
+    // planes, there is no need for a VRWebGLCommand.
 	VRWebGLCommandProcessor::getInstance()->setCameraProjectionMatrix(value.data());
 }
 

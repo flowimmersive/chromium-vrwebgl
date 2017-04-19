@@ -16,7 +16,8 @@ public:
     static VRWebGLVideo* create();
     ~VRWebGLVideo();
 
-    GLuint videoTextureId() const;
+    long id() const;
+    GLuint textureId() const;
 
     String src() const;
     void setSrc(const String&);
@@ -30,31 +31,32 @@ public:
     double currentTime() const;
     void setCurrentTime(double);
 
+    long readyState() const;
+    void setReadyState(long);
+
     bool paused() const;
     double duration() const;
     long videoWidth() const;
     long videoHeight() const;
-    bool prepared() const;
+
     bool ended() const;
+    void setEnded(bool ended);
 
     void play();
     void pause();
-    bool checkPrepared();
-    bool checkEnded();
 
     DECLARE_TRACE()
 
 private:
     VRWebGLVideo();
 
-    GLuint m_videoTextureId = -1;
+    GLuint m_textureId = -1;
     String m_src;
     double m_volume = 1.0;
     bool m_loop = false;
-    double m_currentTime = 0;
     bool m_paused = true;
-    bool m_prepared = false;
     bool m_ended = false;
+    long m_readyState = 0;
 };
 
 } // namespace blink

@@ -30,6 +30,8 @@ public:
     void setInsideAFrame(bool insideAFrame);
     bool insideAFrame() const;
 
+    virtual bool isForUpdate() const;
+
     virtual bool isSynchronous() const = 0;
 
     virtual bool canBeProcessedImmediately() const = 0;
@@ -40,5 +42,10 @@ public:
 
 	static unsigned int numInstances;    
 };
+
+class VRWebGLCommandForUpdate: public VRWebGLCommand
+{
+};
+
 
 #endif // VRWebGLCommand_h

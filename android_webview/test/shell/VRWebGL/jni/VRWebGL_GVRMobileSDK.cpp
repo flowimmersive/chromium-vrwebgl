@@ -428,13 +428,16 @@ std::shared_ptr<blink::WebGamepad> VRWebGL_GVRMobileSDK::getGamepadCopy()
 {
   gamepadMutex_.lock();
   {
-    if (!gamepadCopy_)
+    if (gamepad_)
     {
-      gamepadCopy_.reset(new blink::WebGamepad(*gamepad_.get()));
-    }
-    else
-    {
-      *(gamepadCopy_.get()) = *(gamepad_.get());
+      if (!gamepadCopy_)
+      {
+        gamepadCopy_.reset(new blink::WebGamepad(*gamepad_.get()));
+      }
+      else
+      {
+        *(gamepadCopy_.get()) = *(gamepad_.get());
+      }
     }
   }
   gamepadMutex_.unlock();
@@ -690,160 +693,14 @@ void VRWebGLCommandProcessor::setRenderEnabled(bool flag)
     // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
 }
 
-GLuint VRWebGLCommandProcessor::newVideoTexture()
-{
-  //   ovrMessage message;
-  //   ovrMessage_Init( &message, MESSAGE_ON_NEW_VIDEO, MQ_WAIT_PROCESSED );
-  //   GLuint videoTextureId = 0;
-  //   message.Result = &videoTextureId;
-  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-  // return videoTextureId;
-  return 0;
-}
-
-void VRWebGLCommandProcessor::deleteVideoTexture(GLuint videoTextureId)
-{
-    // ovrMessage message;
-    // ovrMessage_Init( &message, MESSAGE_ON_NEW_VIDEO, MQ_WAIT_NONE );
-    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-}
-
-void VRWebGLCommandProcessor::setVideoSource(GLuint videoTextureId, const std::string& src)
-{
-    // ovrMessage message;
-    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_SRC, MQ_WAIT_NONE );
-    // std::string* newSrc = new std::string(src);
-    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-    // ovrMessage_SetPointerParm(&message, 1, newSrc);
-    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-}
-
-void VRWebGLCommandProcessor::playVideo(GLuint videoTextureId, double volume, bool loop)
-{
-    // ovrMessage message;
-    // ovrMessage_Init( &message, MESSAGE_ON_PLAY_VIDEO, MQ_WAIT_NONE );
-    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-    // ovrMessage_SetFloatParm(&message, 1, (float)volume);
-    // ovrMessage_SetIntegerParm(&message, 2, (int)(loop ? 1 : 0));
-    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-}
-
-void VRWebGLCommandProcessor::pauseVideo(GLuint videoTextureId)
-{
-    // ovrMessage message;
-    // ovrMessage_Init( &message, MESSAGE_ON_PAUSE_VIDEO, MQ_WAIT_NONE );
-    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-}
-
-void VRWebGLCommandProcessor::setVideoVolume(GLuint videoTextureId, double volume)
-{
-    // ovrMessage message;
-    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_VOLUME, MQ_WAIT_NONE );
-    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-    // ovrMessage_SetFloatParm(&message, 1, (float)volume);
-    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-}
-
-void VRWebGLCommandProcessor::setVideoLoop(GLuint videoTextureId, bool loop)
-{
-    // ovrMessage message;
-    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_LOOP, MQ_WAIT_NONE );
-    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-    // ovrMessage_SetIntegerParm(&message, 1, (int)(loop ? 1 : 0));
-    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-}
-
-void VRWebGLCommandProcessor::setVideoCurrentTime(GLuint videoTextureId, double currentTime)
-{
-    // ovrMessage message;
-    // ovrMessage_Init( &message, MESSAGE_ON_SET_VIDEO_CURRENT_TIME, MQ_WAIT_NONE );
-    // ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-    // ovrMessage_SetIntegerParm(&message, 1, (int)(currentTime * 1000.0));
-    // ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-}
-
-double VRWebGLCommandProcessor::getVideoCurrentTime(GLuint videoTextureId)
-{
-  //   ovrMessage message;
-  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_CURRENT_TIME, MQ_WAIT_PROCESSED );
-  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-  //   int currentTime = 0;
-  //   message.Result = &currentTime;
-  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-  // return (double)currentTime / 1000.0;
-  return 0;
-}
-
-double VRWebGLCommandProcessor::getVideoDuration(GLuint videoTextureId)
-{
-  //   ovrMessage message;
-  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_DURATION, MQ_WAIT_PROCESSED );
-  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-  //   int duration = 0;
-  //   message.Result = &duration;
-  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-  // return (double)duration / 1000.0;
-  return 0;
-}
-
-int VRWebGLCommandProcessor::getVideoWidth(GLuint videoTextureId)
-{
-  //   ovrMessage message;
-  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_WIDTH, MQ_WAIT_PROCESSED );
-  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-  //   int width = 0;
-  //   message.Result = &width;
-  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-  // return width;
-  return 0;
-}
-
-int VRWebGLCommandProcessor::getVideoHeight(GLuint videoTextureId)
-{
-  //   ovrMessage message;
-  //   ovrMessage_Init( &message, MESSAGE_ON_GET_VIDEO_HEIGHT, MQ_WAIT_PROCESSED );
-  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-  //   int height = 0;
-  //   message.Result = &height;
-  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-  // return height;
-  return 0;
-}
-
-bool VRWebGLCommandProcessor::checkVideoPrepared(GLuint videoTextureId)
-{
-  //   ovrMessage message;
-  //   ovrMessage_Init( &message, MESSAGE_ON_CHECK_VIDEO_PREPARED, MQ_WAIT_PROCESSED );
-  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-  //   bool prepared = false;
-  //   message.Result = &prepared;
-  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-  // return prepared;
-  return false;
-}
-
-bool VRWebGLCommandProcessor::checkVideoEnded(GLuint videoTextureId)
-{
-  //   ovrMessage message;
-  //   ovrMessage_Init( &message, MESSAGE_ON_CHECK_VIDEO_ENDED, MQ_WAIT_PROCESSED );
-  //   ovrMessage_SetGLuintParm(&message, 0, videoTextureId);
-  //   bool ended = false;
-  //   message.Result = &ended;
-  //   ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
-  // return ended;
-  return 0;
-}
-
 std::shared_ptr<blink::WebGamepad> VRWebGLCommandProcessor::getGamepad()
 {
-  std::shared_ptr<blink::WebGamepad> gamepad_;
+  std::shared_ptr<blink::WebGamepad> gamepad;
   if (VRWebGL_GVRMobileSDK::instance != 0)
   {
-    gamepad_ = VRWebGL_GVRMobileSDK::instance->getGamepadCopy();
+    gamepad = VRWebGL_GVRMobileSDK::instance->getGamepadCopy();
   }
-  return gamepad_;
+  return gamepad;
 }
 
 // ===============================================================================================

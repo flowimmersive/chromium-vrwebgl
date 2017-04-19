@@ -1219,8 +1219,13 @@
 				var obj = findById(index, id);
 				if (obj) {
 					// NOTE: Very specific handling for the video ended event.
-					if (obj instanceof VRWebGLVideo && eventName === "ended") {
-						obj.ended = true;
+					if (obj instanceof VRWebGLVideo) {
+						if (eventName === "ended") {
+							obj.ended = true;
+						}
+						else if (eventName === "canplaythrough") {
+							obj.readyState = 2;
+						}
 					}
 					obj.callEventListeners(eventName, event);
 				}

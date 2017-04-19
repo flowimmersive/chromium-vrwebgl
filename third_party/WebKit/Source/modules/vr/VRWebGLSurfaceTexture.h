@@ -36,6 +36,7 @@ public:
 	void deleteSurfaceTexture(const std::shared_ptr<VRWebGLSurfaceTexture>& surfaceTexture);
 	std::shared_ptr<VRWebGLSurfaceTexture> findSurfaceTextureByTextureId(unsigned textureId) const;
 	void update();
+	void update(unsigned textureId);
 	void clear();
 };
 

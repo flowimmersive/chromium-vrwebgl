@@ -39,12 +39,12 @@ void VRWebGLWebView::setSrc(const String& src)
 
 long VRWebGLWebView::width() const
 {
-	return VRWebGLCommandProcessor::getInstance()->getVideoWidth(m_textureId);
+	return 960; // TODO: This should not be fixed.
 }
 
 long VRWebGLWebView::height() const
 {
-	return VRWebGLCommandProcessor::getInstance()->getVideoHeight(m_textureId);
+	return 640; // TODO: This should not be fixed.
 }
 
 void VRWebGLWebView::touchstart(float x, float y)
@@ -116,6 +116,11 @@ void VRWebGLWebView::setTransparent(bool transparent)
 {
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setWebViewTransparent::newInstance(m_textureId, transparent));
 	m_transparent = transparent;
+}
+
+void VRWebGLWebView::setScale(long scale, bool loadWithOverviewMode, bool useWideViewPort)
+{
+	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_setWebViewScale::newInstance(m_textureId, (int)scale, loadWithOverviewMode, useWideViewPort));
 }
 
 VRWebGLWebView::VRWebGLWebView()

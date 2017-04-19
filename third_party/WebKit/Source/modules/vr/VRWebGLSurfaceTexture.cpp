@@ -155,6 +155,19 @@ void VRWebGLSurfaceTextures::update()
 	}
 }
 
+void VRWebGLSurfaceTextures::update(unsigned textureId)
+{
+  std::vector<std::shared_ptr<VRWebGLSurfaceTexture>>::iterator it;
+  for (it = surfaceTextures.begin(); it != surfaceTextures.end(); it++)
+  {
+    if ((*it)->getTextureId() == textureId)
+    {
+      (*it)->update();
+      break;
+    }
+  }
+}
+
 void VRWebGLSurfaceTextures::clear()
 {
   surfaceTextures.clear();

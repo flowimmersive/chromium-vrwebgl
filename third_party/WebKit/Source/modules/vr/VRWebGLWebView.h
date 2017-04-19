@@ -44,6 +44,8 @@ public:
     bool transparent() const;
     void setTransparent(bool transparent);
 
+    void setScale(long scale, bool loadWithOverviewMode, bool useWideViewPort);
+
     DECLARE_TRACE()
 
 private:

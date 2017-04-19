@@ -84,6 +84,7 @@ import java.util.ArrayList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -106,13 +107,13 @@ import android.speech.RecognitionListener;
  * This is a lightweight activity for tests that only require WebView functionality.
  */
 public class AwShellActivity extends Activity implements 
-        SurfaceTexture.OnFrameAvailableListener,
         MediaPlayer.OnVideoSizeChangedListener,
         MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnPreparedListener,
         AudioManager.OnAudioFocusChangeListener,
         GLSurfaceView.Renderer {  
+
     private static final String TAG = "cr.AwShellActivity";
     private static final String PREFERENCES_NAME = "AwShellPrefs";
     private static final String INITIAL_URL = "No URL provided either in the intent nor in the config.json";
@@ -142,6 +143,9 @@ public class AwShellActivity extends Activity implements
     
     private class Video
     {
+        public static final int PLAY = 1;
+        public static final int PAUSE = 2;
+
         public SurfaceTexture surfaceTexture = null;
         public Surface surface = null;
         public MediaPlayer mediaPlayer = null;
@@ -212,14 +216,69 @@ public class AwShellActivity extends Activity implements
                 @Override
                 public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon)
                 {
-                    dispatchEventToVRWebGL("loadstart", "{ url: '" + url + "'}");
+                    dispatchEventToVRWebGL("loadstart", 
+                        "{ url: '" + url + "'}");
                 }
 
                 @Override
                 public void onPageFinished(android.webkit.WebView view, String url)
                 {
-                    dispatchEventToVRWebGL("loadend", "{ url: '" + url + "'}");
+                    dispatchEventToVRWebGL("loadend", 
+                        "{ url: '" + url + "'}");
                 }
+
+                @Override
+                public void onLoadResource(android.webkit.WebView view, String url)
+                {
+                    dispatchEventToVRWebGL("loadresource", 
+                        "{ url: '" + url + "'}");
+                }
+
+                @Override
+                public void onReceivedError(android.webkit.WebView view,
+                    android.webkit.WebResourceRequest request, 
+                    android.webkit.WebResourceError error)
+                {
+                    dispatchEventToVRWebGL("error", 
+                        "{ " +
+                            "url: '" + request.getUrl() + "', " + 
+                            "isForMainFrame: " + request.isForMainFrame() + 
+                                ", " +
+                            "isRedirect: " + request.isRedirect() + ", " +
+                            "description: '" + error.getDescription() + "', " +
+                            "errorCode: " + error.getErrorCode() +
+                        "}");
+                }
+
+                @Override
+                public void onReceivedHttpError(android.webkit.WebView view, 
+                    android.webkit.WebResourceRequest request,
+                    android.webkit.WebResourceResponse errorResponse)
+                {
+                    dispatchEventToVRWebGL("httperror", 
+                        "{ " +
+                            "url: '" + request.getUrl() + "', " + 
+                            "isForMainFrame: " + request.isForMainFrame() + 
+                                ", " +
+                            "isRedirect: " + request.isRedirect() + ", " +
+                            "reasonPhrase: '" + 
+                                errorResponse.getReasonPhrase() + "', " +
+                            "statusCode: " + errorResponse.getStatusCode() +
+                        "}");
+                }
+
+                @Override
+                public void onReceivedSslError (android.webkit.WebView view,
+                    android.webkit.SslErrorHandler handler, 
+                    android.net.http.SslError error)
+                {
+                    dispatchEventToVRWebGL("sslerror", 
+                        "{ " +
+                            "url: '" + error.getUrl() + "', " + 
+                            "primaryError: " + error.getPrimaryError() +
+                        "}");
+                }
+
             });
             setWebChromeClient(new WebChromeClient() 
             {
@@ -403,25 +462,42 @@ public class AwShellActivity extends Activity implements
         {
             // System.out.println("SpeechRecognitionListener.onResults");
             ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            float[] confidences = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
             if (!matches.isEmpty())
             {
-                String jsonString = "{ results: [";
-                for (int i = 0; i < matches.size(); i++)
+                try
                 {
-                    jsonString += "{ isFinal: true, length: 1, 0: { transcript: '" + matches.get(i) + "', confidence: 1 } }" + (i < matches.size() - 1 ? ", " : "");
-                }
-                jsonString += "] }";
-                dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "result", jsonString);
-                dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "end", jsonString);
+                    JSONObject resultJSONObject = new JSONObject();
+                    JSONArray resultsJSONArray = new JSONArray();
+                    for (int i = 0; i < matches.size(); i++)
+                    {
+                        JSONObject matchJSONObject = new JSONObject();
+                        matchJSONObject.put("isFinal", true);
+                        matchJSONObject.put("length", 1);
+                        JSONObject transcriptJSONObject = new JSONObject();
+                        transcriptJSONObject.put("transcript", matches.get(i));
+                        transcriptJSONObject.put("confidence", confidences[i]);
+                        matchJSONObject.put("0", transcriptJSONObject);
+                        resultsJSONArray.put(matchJSONObject);
+                    }
+                    resultJSONObject.put("results", resultsJSONArray);
+                    String jsonString = resultJSONObject.toString();
 
-                // try
-                // {
-                //     String encodedMatch = URLEncoder.encode(matches.get(0), "UTF-8");
-                //     webview.loadUrl("http://www.google.com/search?q=" + encodedMatch);
-                // }
-                // catch(UnsupportedEncodingException e)
-                // {
-                // }
+                    // String jsonString = "{ results: [";
+                    // for (int i = 0; i < matches.size(); i++)
+                    // {
+                    //     jsonString += "{ isFinal: true, length: 1, 0: { transcript: '" + matches.get(i) + "', confidence: " + confidences[i] + " } }" + (i < matches.size() - 1 ? ", " : "");
+                    // }
+                    // jsonString += "] }";
+
+                    dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "result", jsonString);
+                    dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "end", jsonString);
+                }
+                catch(JSONException e)
+                {
+                    dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "error", "{ error: 'JSON exception while creating the speech recognition results.'}");
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -440,6 +516,11 @@ public class AwShellActivity extends Activity implements
         {
             speechRecognizer.startListening(speechRecognizerIntent);
         }
+
+        public void stop()
+        {
+            speechRecognizer.cancel();
+        }
     }
     private ArrayList<SpeechRecognition> speechRecognitions = new ArrayList<SpeechRecognition>();
 
@@ -455,7 +536,7 @@ public class AwShellActivity extends Activity implements
         @JavascriptInterface
         public void dispatchEvent(String jsonString)
         {
-            webview.dispatchEventToVRWebGL("eventfrompage", jsonString);
+            webview.dispatchEventToVRWebGL("eventfrompage", "{ payload: " + jsonString + "}");
         }
     }
 
@@ -1132,11 +1213,10 @@ public class AwShellActivity extends Activity implements
     @Override
     public void onCompletion(MediaPlayer mediaPlayer)
     {
-        Log.v(TAG, String.format("onCompletion"));
         Video video = findVideoByMediaPlayer(mediaPlayer);
         if (video != null)
         {
-            nativeVideoEnded(nativePointer, video.nativeTextureId);
+            dispatchEventToVRWebGL(INDEX_VIDEO, video.nativeTextureId, "ended", "{}");
         }
     }
 
@@ -1146,18 +1226,12 @@ public class AwShellActivity extends Activity implements
     }
 
     @Override
-    public void onFrameAvailable(SurfaceTexture surfaceTexture)
-    {
-    }
-
-    @Override
     public void onPrepared(MediaPlayer mediaPlayer)
     {
-        Log.v(TAG, String.format("onPrepared"));
         Video video = findVideoByMediaPlayer(mediaPlayer);
         if (video != null)
         {
-            nativeVideoPrepared(nativePointer, video.nativeTextureId);
+            dispatchEventToVRWebGL(INDEX_VIDEO, video.nativeTextureId, "canplaythrough", "{}");
         }
     }
     
@@ -1167,14 +1241,14 @@ public class AwShellActivity extends Activity implements
         // Request audio focus
         int result = audioManager.requestAudioFocus( this, AudioManager.STREAM_MUSIC,
             AudioManager.AUDIOFOCUS_GAIN );
-        if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ) 
-        {
-            Log.d(TAG,"startVideo(): GRANTED audio focus");
-        }
-        else if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ) 
-        {
-            Log.d(TAG,"startVideo(): FAILED to gain audio focus");
-        }
+        // if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ) 
+        // {
+        //     Log.d(TAG,"startVideo(): GRANTED audio focus");
+        // }
+        // else if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ) 
+        // {
+        //     Log.d(TAG,"startVideo(): FAILED to gain audio focus");
+        // }
     }
     
     private void releaseAudioFocus()
@@ -1186,7 +1260,6 @@ public class AwShellActivity extends Activity implements
         Log.d(TAG, "stopVideo()" );
         Video video = findVideoBySurfaceTexture(surfaceTexture);
         if (video != null && video.mediaPlayer != null) {
-            Log.d(TAG, "video stopped" );
             video.mediaPlayer.stop();
         }
         releaseAudioFocus();
@@ -1197,7 +1270,6 @@ public class AwShellActivity extends Activity implements
         Video video = findVideoBySurfaceTexture(surfaceTexture);
         if (video != null)
         {
-            Log.v(TAG, "mediaPlayer.setVolume");
             video.mediaPlayer.setVolume(volume, volume);
         }
     }
@@ -1207,7 +1279,6 @@ public class AwShellActivity extends Activity implements
         Video video = findVideoBySurfaceTexture(surfaceTexture);
         if (video != null)
         {
-            Log.v(TAG, "mediaPlayer.setLooping");
             video.mediaPlayer.setLooping(loop);
         }
     }
@@ -1215,53 +1286,45 @@ public class AwShellActivity extends Activity implements
     private int getVideoWidth(SurfaceTexture surfaceTexture)
     {
         Video video = findVideoBySurfaceTexture(surfaceTexture);
-        Log.v(TAG, "mediaPlayer.getVideoWidth");
         return video != null ? video.mediaPlayer.getVideoWidth() : 0;
     }
 
     private int getVideoHeight(SurfaceTexture surfaceTexture)
     {
         Video video = findVideoBySurfaceTexture(surfaceTexture);
-        Log.v(TAG, "mediaPlayer.getVideoHeight");
         return video != null ? video.mediaPlayer.getVideoHeight() : 0;
     }
 
     private int getVideoDuration(SurfaceTexture surfaceTexture)
     {
         Video video = findVideoBySurfaceTexture(surfaceTexture);
-        Log.v(TAG, "mediaPlayer.getDuration");
         return video != null ? video.mediaPlayer.getDuration() : 0;
     }
 
     private int getVideoCurrentTime(SurfaceTexture surfaceTexture)
     {
         Video video = findVideoBySurfaceTexture(surfaceTexture);
-        Log.v(TAG, "mediaPlayer.getPosition");
         return video != null ? video.mediaPlayer.getCurrentPosition() : 0;
     }
 
     private void pauseVideo(SurfaceTexture surfaceTexture) {
-        Log.d(TAG, "pauseVideo()" );
         try {
             Video video = findVideoBySurfaceTexture(surfaceTexture);
             if (video != null && video.mediaPlayer != null) {
-                Log.d(TAG, "video paused" );
                 video.mediaPlayer.pause();
             }
         }
         catch( IllegalStateException ise ) {
-            Log.d( TAG, "pauseVideo(): Caught illegalStateException: " + ise.toString() );
+            Log.e( TAG, "pauseVideo(): Caught illegalStateException: " + ise.toString() );
         }
     }
 
-    private void seekTo( SurfaceTexture surfaceTexture, final int seekPos ) {
-        Log.d( TAG, "seekToFromNative to " + seekPos );
+    private void setVideoCurrentTime( SurfaceTexture surfaceTexture, final int currentTime ) {
         try {
             Video video = findVideoBySurfaceTexture(surfaceTexture);
             if (video != null && video.mediaPlayer != null) {
-                video.mediaPlayer.seekTo(seekPos);
+                video.mediaPlayer.seekTo(currentTime);
                 try {
-                    Log.v(TAG, "mediaPlayer.prepare");
                     video.mediaPlayer.prepare();
                 } catch (IOException t) {
                     Log.e(TAG, "mediaPlayer.prepare failed:" + t.getMessage());
@@ -1269,12 +1332,11 @@ public class AwShellActivity extends Activity implements
             }
         }
         catch( IllegalStateException ise ) {
-            Log.d( TAG, "seekToFromNative(): Caught illegalStateException: " + ise.toString() );
+            Log.e( TAG, "seekToFromNative(): Caught illegalStateException: " + ise.toString() );
         }
     }
 
     private void playVideoOnUIThread( final SurfaceTexture surfaceTexture, final float volume, final boolean loop ) {
-        Log.d( TAG, "playVideoOnUIThread" );
         runOnUiThread( new Runnable() {
             @Override
             public void run() {
@@ -1284,31 +1346,34 @@ public class AwShellActivity extends Activity implements
     }
 
     private void playVideo(SurfaceTexture surfaceTexture, float volume, boolean loop) {
-        Log.v(TAG, "playVideo ");
-        synchronized(this)
-        {        
-            Video video = findVideoBySurfaceTexture(surfaceTexture);
-
-            if (video != null)
-            {
-                Log.v(TAG, "mediaPlayer.start");
-                try {
-                    video.mediaPlayer.start();
-                }
-                catch( IllegalStateException ise ) {
-                    Log.d( TAG, "mediaPlayer.start(): Caught illegalStateException: " + ise.toString() );
-                }
-                
-                video.mediaPlayer.setVolume(volume, volume);
-                video.mediaPlayer.setLooping(loop);
+        Video video = findVideoBySurfaceTexture(surfaceTexture);
+        if (video != null)
+        {
+            try {
+                video.mediaPlayer.start();
             }
+            catch( IllegalStateException ise ) {
+                Log.e( TAG, "mediaPlayer.start(): Caught illegalStateException: " + ise.toString() );
+            }
+            video.mediaPlayer.setVolume(volume, volume);
+            video.mediaPlayer.setLooping(loop);
         }
-
-        Log.v(TAG, "returning");
     }       
 
+    private void dispatchVideoPlaybackEvent(SurfaceTexture surfaceTexture, int event, float volume, boolean loop)
+    {
+        switch(event)
+        {
+            case Video.PLAY: 
+                playVideoOnUIThread(surfaceTexture, volume, loop);
+                break;
+            case Video.PAUSE:
+                pauseVideo(surfaceTexture);
+                break;
+        }
+    }
+
     private void setVideoSrcOnUIThread( final SurfaceTexture surfaceTexture, final String src) {
-        Log.d( TAG, "setVideoSrcOnUIThread" );
         runOnUiThread( new Runnable() {
             @Override
             public void run() {
@@ -1318,59 +1383,47 @@ public class AwShellActivity extends Activity implements
     }
 
     private void setVideoSrc(SurfaceTexture surfaceTexture, String src) {
-        Log.v(TAG, "setVideoSrc " + src);
-        synchronized (this) 
+        // Request audio focus
+        requestAudioFocus();
+    
+        Video video = findVideoBySurfaceTexture(surfaceTexture);
+
+        if (video != null)
         {
-            // Request audio focus
-            requestAudioFocus();
-        
-            Video video = findVideoBySurfaceTexture(surfaceTexture);
-
-            if (video != null)
-            {
-                try {
-                    if (src.contains("file:///android_asset/"))
-                    {
-                        src = src.replace("file:///android_asset/", "");
-                        src = src.replace("index.html", "");
-                        AssetFileDescriptor assetFileDescriptor = getAssets().openFd(src);
-                        video.mediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
-                    }
-                    else 
-                    {
-                        video.mediaPlayer.setDataSource(src);
-                    }
-                } catch (IOException t) {
-                    Log.e(TAG, "mediaPlayer.setDataSource failed");
+            try {
+                if (src.contains("file:///android_asset/"))
+                {
+                    src = src.replace("file:///android_asset/", "");
+                    src = src.replace("index.html", "");
+                    AssetFileDescriptor assetFileDescriptor = getAssets().openFd(src);
+                    video.mediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
                 }
-
-                try {
-                    video.mediaPlayer.prepare();
-                } catch (IOException t) {
-                    Log.e(TAG, "mediaPlayer.prepare failed:" + t.getMessage());
+                else 
+                {
+                    video.mediaPlayer.setDataSource(src);
                 }
+            } catch (IOException t) {
+                Log.e(TAG, "ERROR: mediaPlayer.setDataSource failed");
             }
-        }        
+
+            try {
+                video.mediaPlayer.prepare();
+            } catch (IOException t) {
+                Log.e(TAG, "ERROR: mediaPlayer.prepare failed:" + t.getMessage());
+            }
+        }
     }
 
 
-    private synchronized void newVideo(SurfaceTexture surfaceTexture, int nativeTextureId) 
+    private void newVideo(SurfaceTexture surfaceTexture, int nativeTextureId) 
     {
         Video video = new Video();
-        // Have native code pause any playing video,
-        // allocate a new external texture,
-        // and create a surfaceTexture with it.
         video.surfaceTexture = surfaceTexture;
-        video.surfaceTexture.setOnFrameAvailableListener(this);
         video.surface = new Surface(video.surfaceTexture);
 
         video.nativeTextureId = nativeTextureId;
 
-        Log.v(TAG, "MediaPlayer.create");
-
-        synchronized (this) {
-            video.mediaPlayer = new MediaPlayer();
-        }
+        video.mediaPlayer = new MediaPlayer();
         video.mediaPlayer.setOnVideoSizeChangedListener(this);
         video.mediaPlayer.setOnCompletionListener(this);
         video.mediaPlayer.setOnPreparedListener(this);
@@ -1382,13 +1435,16 @@ public class AwShellActivity extends Activity implements
         }
     }
 
-    private synchronized void deleteVideo(SurfaceTexture surfaceTexture) 
+    private void deleteVideo(SurfaceTexture surfaceTexture) 
     {
         Video video = findVideoBySurfaceTexture(surfaceTexture);
         if (video != null)
         {
             video.mediaPlayer.release();
-            videos.remove(video);        
+            synchronized(this)
+            {
+                videos.remove(video);        
+            }
         }
     }
 
@@ -1454,7 +1510,6 @@ public class AwShellActivity extends Activity implements
             @Override
             public void run() {
                 WebView webview = new WebView(AwShellActivity.this, surfaceTexture, nativeTextureId);
-                // webview.surfaceTexture.setOnFrameAvailableListener(this);
                 synchronized(AwShellActivity.this)
                 {
                     webviews.add(webview);
@@ -1465,7 +1520,7 @@ public class AwShellActivity extends Activity implements
         });
     }
 
-    public synchronized void deleteWebView(SurfaceTexture surfaceTexture) 
+    public void deleteWebView(SurfaceTexture surfaceTexture) 
     {
         WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
         if (webview != null)
@@ -1633,6 +1688,22 @@ public class AwShellActivity extends Activity implements
         });
     }
 
+    private void setWebViewScale(final SurfaceTexture surfaceTexture, final int scale, final boolean loadWithOverviewMode, final boolean useWideViewPort)
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
+                if (webview != null)
+                {
+                    webview.getSettings().setLoadWithOverviewMode(loadWithOverviewMode);
+                    webview.getSettings().setUseWideViewPort(useWideViewPort);
+                    webview.setInitialScale(scale);
+                }
+            }
+        });
+    }
+
     private void newSpeechRecognition(final long id)
     {
         runOnUiThread( new Runnable() {
@@ -1679,6 +1750,20 @@ public class AwShellActivity extends Activity implements
         });
     }
 
+    private void stopSpeechRecognition(final long id) 
+    {
+        runOnUiThread( new Runnable() {
+            @Override
+            public void run() {
+                SpeechRecognition speechRecognition = findSpeechRecognitionById(id);
+                if (speechRecognition != null)
+                {
+                    speechRecognition.stop();
+                }
+            }
+        });
+    }
+
     private void dispatchEventToVRWebGL(int index, long id, String eventName, String eventDataJSONString)
     {
         String jsCode = "if (window.vrwebgl) window.vrwebgl.dispatchEvent(" + index + ", " + id + ", '" + eventName + "', " + eventDataJSONString + ");";
@@ -1706,9 +1791,6 @@ public class AwShellActivity extends Activity implements
     private native void nativeOnTouchEvent( long nativePointer, int action, float x, float y );    
 
     // Video
-    private native void nativeVideoPrepared(long nativePointer, int textureId);
-    private native void nativeVideoEnded(long nativePointer, int textureId);
-
     private void logHeapUsageFromNative()
     {
         double allocated = (double)Debug.getNativeHeapAllocatedSize()/1048576.0;

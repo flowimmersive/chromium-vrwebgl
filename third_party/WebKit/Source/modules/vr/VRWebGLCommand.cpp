@@ -21,3 +21,8 @@ bool VRWebGLCommand::insideAFrame() const
 {
 	return m_insideAFrame;
 }
+
+bool VRWebGLCommand::isForUpdate() const
+{
+  return false;
+}

@@ -2399,6 +2399,7 @@ class VRWebGLCommand_setCameraWorldMatrix final: public VRWebGLCommand
 {
 private:
     GLfloat m_matrix[16];
+    bool m_processed = false;
 
     VRWebGLCommand_setCameraWorldMatrix(const GLfloat* matrix);
     
@@ -2414,4 +2415,27 @@ public:
     virtual std::string name() const override;
 };
 
+// ======================================================================================
+// ======================================================================================
+
+// This is not a WebGL/OpenGL command per se. We use it to set the camera world matrix in the right order among other VRWebGLCommands
+class VRWebGLCommand_updateSurfaceTexture: public VRWebGLCommand
+{
+private:
+    const GLuint m_textureId;
+    bool m_processed = false;
+
+    VRWebGLCommand_updateSurfaceTexture(GLuint textureId);
+    
+public:
+    static std::shared_ptr<VRWebGLCommand_updateSurfaceTexture> newInstance(GLuint textureId);
+    
+    virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+        
+    virtual std::string name() const override;
+};
 #endif // VRWebGL_h

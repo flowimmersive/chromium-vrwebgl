@@ -1,6 +1,16 @@
 [
+    DoNotCheckConstants,
     Constructor
 ] interface VRWebGLWebView {
+
+    const long HAVE_NOTHING = 0;
+    const long HAVE_METADATA = 1;
+    const long HAVE_CURRENT_DATA = 2;
+    const long HAVE_FUTURE_DATA = 3;
+    const long HAVE_ENOUGH_DATA = 4;
+
+    const long readyState = 2;
+
     attribute DOMString src;
     readonly attribute long id;
 
@@ -24,4 +34,6 @@
     void cursorexit();
 
     attribute boolean transparent;
+
+    void setScale(long scale, boolean loadWithOverviewMode, boolean useWideViewPort);
 };

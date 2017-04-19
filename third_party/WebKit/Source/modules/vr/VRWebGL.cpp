@@ -253,7 +253,7 @@ std::string VRWebGLCommand_bindRenderbuffer::name() const
 VRWebGLCommand_bindTexture::VRWebGLCommand_bindTexture(GLenum target, VRWebGLTexture* texture): m_target(target), m_texture(texture)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_bindTexture> VRWebGLCommand_bindTexture::newInstance(GLenum target, VRWebGLTexture* texture)
 {
     return std::shared_ptr<VRWebGLCommand_bindTexture>(new VRWebGLCommand_bindTexture(target, texture));
@@ -271,11 +271,12 @@ bool VRWebGLCommand_bindTexture::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_bindTexture::process() 
 {
-    GLuint textureId = m_texture != 0 ? m_texture->textureId() : 0;
-    GLuint texture = m_texture != 0 ? textureId != 0 ? textureId : m_texture->id() : 0;
-    VRWebGL_glBindTexture(textureId != 0 ? GL_TEXTURE_EXTERNAL_OES : m_target, texture);
+    GLuint externalTextureId = m_texture != 0 ? m_texture->externalTextureId() : 0;
+    GLuint textureId = m_texture != 0 ? externalTextureId != 0 ? externalTextureId : m_texture->id() : 0;
+    GLenum target = externalTextureId != 0 ? GL_TEXTURE_EXTERNAL_OES : m_target;
+    VRWebGL_glBindTexture(target, textureId);
 #ifdef VRWEBGL_SHOW_LOG  
-    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = << " << m_target << " texture = " << texture;
+    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = << " << target << " texture = " << texture;
 #endif
     return 0;
 }
@@ -3989,10 +3990,14 @@ bool VRWebGLCommand_setCameraWorldMatrix::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_setCameraWorldMatrix::process() 
 {
-    VRWebGLCommandProcessor::getInstance()->setCameraWorldMatrix(m_matrix);
+    if (!m_processed)
+    {
+        VRWebGLCommandProcessor::getInstance()->setCameraWorldMatrix(m_matrix);
 #ifdef VRWEBGL_SHOW_LOG    
-    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name();
+        VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name();
 #endif
+        m_processed = true;
+    }
     return 0;
 }
 
@@ -4001,3 +4006,43 @@ std::string VRWebGLCommand_setCameraWorldMatrix::name() const
     return "setCameraWorldMatrix";
 }
 
+// ======================================================================================
+// This is not a WebGL/OpenGL command per se. We use it to set the camera world matrix in the right order among other VRWebGLCommands
+VRWebGLCommand_updateSurfaceTexture::VRWebGLCommand_updateSurfaceTexture(GLuint textureId): m_textureId(textureId)
+{
+}
+    
+std::shared_ptr<VRWebGLCommand_updateSurfaceTexture> VRWebGLCommand_updateSurfaceTexture::newInstance(GLuint textureId)
+{
+    return std::shared_ptr<VRWebGLCommand_updateSurfaceTexture>(new VRWebGLCommand_updateSurfaceTexture(textureId));
+}
+
+bool VRWebGLCommand_updateSurfaceTexture::isSynchronous() const 
+{
+    return false;
+}
+
+bool VRWebGLCommand_updateSurfaceTexture::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_updateSurfaceTexture::process() 
+{
+    if (!m_processed)
+    {
+        GLenum target = GL_TEXTURE_EXTERNAL_OES;
+        VRWebGL_glBindTexture(target, m_textureId);
+        VRWebGLCommandProcessor::getInstance()->updateSurfaceTexture(m_textureId);
+#ifdef VRWEBGL_SHOW_LOG    
+        VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << ", textureId = " << m_textureId;
+#endif
+        m_processed = true;
+    }
+    return 0;
+}
+
+std::string VRWebGLCommand_updateSurfaceTexture::name() const 
+{
+    return "updateSurfaceTexture";
+}
