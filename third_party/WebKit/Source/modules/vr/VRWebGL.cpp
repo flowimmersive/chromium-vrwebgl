@@ -2839,13 +2839,13 @@ std::string VRWebGLCommand_shaderSource::name() const
 // ======================================================================================
 // ======================================================================================
 
-VRWebGLCommand_texParameteri::VRWebGLCommand_texParameteri(GLenum target, GLenum pname, GLint param): m_target(target), m_pname(pname), m_param(param)
+VRWebGLCommand_texParameteri::VRWebGLCommand_texParameteri(GLenum target, GLenum pname, GLint param, VRWebGLTexture* texture): m_target(target), m_pname(pname), m_param(param), m_texture(texture)
 {
 }
 
-std::shared_ptr<VRWebGLCommand_texParameteri> VRWebGLCommand_texParameteri::newInstance(GLenum target, GLenum pname, GLint param)
+std::shared_ptr<VRWebGLCommand_texParameteri> VRWebGLCommand_texParameteri::newInstance(GLenum target, GLenum pname, GLint param, VRWebGLTexture* texture)
 {
-    return std::shared_ptr<VRWebGLCommand_texParameteri>(new VRWebGLCommand_texParameteri(target, pname, param));
+    return std::shared_ptr<VRWebGLCommand_texParameteri>(new VRWebGLCommand_texParameteri(target, pname, param, texture));
 }
 
 bool VRWebGLCommand_texParameteri::isSynchronous() const 
@@ -2860,6 +2860,12 @@ bool VRWebGLCommand_texParameteri::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_texParameteri::process() 
 {
+    // A hack to fix the assignment of the correct filter to the external textures.
+    if (m_texture && m_texture->externalTextureId() != 0 && (m_pname == GL_TEXTURE_MIN_FILTER || m_pname == GL_TEXTURE_MAG_FILTER))
+    {
+        m_target = GL_TEXTURE_EXTERNAL_OES;
+    }
+    
     VRWebGL_glTexParameteri(m_target, m_pname, m_param);
 #ifdef VRWEBGL_SHOW_LOG  
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " pname = " << m_pname << " param = " << m_param;

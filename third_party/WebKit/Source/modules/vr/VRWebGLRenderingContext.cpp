@@ -2479,12 +2479,14 @@ void VRWebGLRenderingContext::texParameter(GLenum target, GLenum pname, GLfloat 
         VLOG(0) << "VRWebGL: ERROR: texParameter, invalid parameter name";
         return;
     }
+
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texParameter begin";
     std::shared_ptr<VRWebGLCommand> vrWebGLCommand;
     if (isFloat) {
 		vrWebGLCommand = VRWebGLCommand_texParameterf::newInstance(target, pname, paramf);
     } else {
-		vrWebGLCommand = VRWebGLCommand_texParameteri::newInstance(target, pname, parami);
+        // Pass the texture to try to apply the correct target for external textures for filters. 
+		vrWebGLCommand = VRWebGLCommand_texParameteri::newInstance(target, pname, parami, m_textureCurrentlyBound);
     }
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texParameter end";

@@ -1736,11 +1736,13 @@ private:
     GLenum m_target;
     GLenum m_pname;
     GLint m_param;
+    // This attribute should not be needed but added to fix external texture handling for filters.
+    VRWebGLTexture* m_texture;
 
-    VRWebGLCommand_texParameteri(GLenum target, GLenum pname,GLint param);
+    VRWebGLCommand_texParameteri(GLenum target, GLenum pname,GLint param, VRWebGLTexture* texture);
 
 public:
-    static std::shared_ptr<VRWebGLCommand_texParameteri> newInstance(GLenum target, GLenum pname, GLint param);
+    static std::shared_ptr<VRWebGLCommand_texParameteri> newInstance(GLenum target, GLenum pname, GLint param, VRWebGLTexture* texture);
     
     virtual bool isSynchronous() const override;
     
