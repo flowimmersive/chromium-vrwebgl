@@ -1,10 +1,14 @@
 #ifndef VRWebGL_h
 #define VRWebGL_h
 
+// #ifndef GL_GLEXT_PROTOTYPES
+// #define GL_GLEXT_PROTOTYPES
+// #endif
+
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES3/gl3.h>
-// // #include <GLES3/gl3ext.h>
+#include <GLES2/gl2ext.h>
 
 #include "modules/vr/VRWebGLCommand.h"
 
@@ -32,6 +36,9 @@ using blink::VRWebGLBuffer;
 using blink::VRWebGLActiveInfo;
 using blink::VRWebGLFramebuffer;
 using blink::VRWebGLRenderbuffer;
+
+// Initialize the extension pointers
+void VRWebGL_initializeExtensions();
 
 // VRWebGL OpenGL functions. They are all implemented in the VRWebGL_gl.cpp file.
 GLuint VRWebGL_glCreateShader(GLenum type);
@@ -128,6 +135,10 @@ const GLubyte* VRWebGL_glGetString(GLenum name);
 GLenum VRWebGL_glGetError(void);
 GLenum VRWebGL_glCheckFramebufferStatus(GLenum target);
 void VRWebGL_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data);
+
+void VRWebGL_glDrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+void VRWebGL_glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount);
+void VRWebGL_glVertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 
 // ======================================================================================
 // ======================================================================================
@@ -2384,6 +2395,102 @@ private:
 public:
     static std::shared_ptr<VRWebGLCommand_getString> newInstance(GLenum pname);
     
+    virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+// ======================================================================================
+// ======================================================================================
+
+class VRWebGLCommand_drawArraysInstancedANGLE final: public VRWebGLCommand
+{
+private:
+    GLenum m_mode;
+    GLint m_first;
+    GLsizei m_count;
+    GLsizei m_primcount;
+
+    VRWebGLCommand_drawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+    
+public:
+    static std::shared_ptr<VRWebGLCommand_drawArraysInstancedANGLE> newInstance(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+    
+    virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+// ======================================================================================
+// ======================================================================================
+
+class VRWebGLCommand_drawElementsInstancedANGLE final: public VRWebGLCommand
+{
+private:
+    GLenum m_mode;
+    GLsizei m_count;
+    GLenum m_type;
+    long long m_offset;
+    GLsizei m_primcount;
+
+    VRWebGLCommand_drawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, long long offset, GLsizei primcount);
+    
+public:
+    static std::shared_ptr<VRWebGLCommand_drawElementsInstancedANGLE> newInstance(GLenum mode, GLsizei count, GLenum type, long long offset, GLsizei primcount);
+    
+    virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+// ======================================================================================
+// ======================================================================================
+
+class VRWebGLCommand_vertexAttribDivisorANGLE final: public VRWebGLCommand
+{
+private:
+    GLuint m_index;
+    GLuint m_divisor;
+
+    VRWebGLCommand_vertexAttribDivisorANGLE(GLuint index, GLuint divisor);
+    
+public:
+    static std::shared_ptr<VRWebGLCommand_vertexAttribDivisorANGLE> newInstance(GLuint index, GLuint divisor);
+    
+    virtual bool isSynchronous() const override;
+    
+    virtual bool canBeProcessedImmediately() const override;
+    
+    virtual void* process() override;
+    
+    virtual std::string name() const override;
+};
+
+// ======================================================================================
+// ======================================================================================
+
+class VRWebGLCommand_initializeExtensions final: public VRWebGLCommand
+{
+private:
+    VRWebGLCommand_initializeExtensions();
+    
+public:
+    static std::shared_ptr<VRWebGLCommand_initializeExtensions> newInstance();
+    
+    virtual bool isForUpdate() const override;
+
     virtual bool isSynchronous() const override;
     
     virtual bool canBeProcessedImmediately() const override;

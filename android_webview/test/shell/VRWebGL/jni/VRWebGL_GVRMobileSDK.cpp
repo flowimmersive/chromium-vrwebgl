@@ -596,7 +596,7 @@ void VRWebGL_GVRMobileSDK::DrawWorld(const gvr::Mat4f& view_matrix,
       fovRight_ = fov;
     }
     viewportWidth_ = viewportWidth;
-    viewportHeight_ = viewportHeight_;
+    viewportHeight_ = viewportHeight;
   }
   eyeParametersMutex_.unlock();
   

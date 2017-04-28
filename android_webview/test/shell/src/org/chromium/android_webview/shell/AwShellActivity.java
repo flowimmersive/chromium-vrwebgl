@@ -156,8 +156,8 @@ public class AwShellActivity extends Activity implements
 
     class WebView extends android.webkit.WebView 
     {
-        public static final int WEBVIEW_TEXTURE_WIDTH = 960;
-        public static final int WEBVIEW_TEXTURE_HEIGHT = 640;
+        public static final int WEBVIEW_TEXTURE_WIDTH = 800; //960;
+        public static final int WEBVIEW_TEXTURE_HEIGHT = 533; //640;
 
         public static final int TOUCH_START = 1;
         public static final int TOUCH_MOVE = 2;
@@ -696,7 +696,7 @@ public class AwShellActivity extends Activity implements
         // Add the GLSurfaceView to the GvrLayout.
         surfaceView = new GLSurfaceView(this);
         surfaceView.setZOrderMediaOverlay(true);
-        surfaceView.setEGLContextClientVersion(2);
+        surfaceView.setEGLContextClientVersion(3);
         surfaceView.setEGLConfigChooser(8, 8, 8, 0, 0, 0);
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setRenderer(this);

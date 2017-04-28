@@ -33,6 +33,8 @@ class VRWebGLRenderbuffer;
 class VRWebGLVideo;
 class VRWebGLWebView;
 
+class VRWebGLANGLEInstancedArrays;
+
 class HTMLFormElement;
 class HTMLImageElement;
 class HTMLCanvasElement;
@@ -364,6 +366,8 @@ private:
     Member<VREyeParameters> m_vrEyeParametersLeft;
     Member<VREyeParameters> m_vrEyeParametersRight;
     Member<Gamepad> m_gamepad;
+
+    Member<VRWebGLANGLEInstancedArrays> m_angleInstancedArraysExtension;
 };
 
 } // namespace blink

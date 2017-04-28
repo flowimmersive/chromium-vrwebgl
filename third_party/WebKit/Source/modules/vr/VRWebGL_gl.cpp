@@ -5,6 +5,53 @@ calls.
 */
 #include "modules/vr/VRWebGL.h"
 
+#include <android/log.h>
+
+#define LOG_TAG "VRWebGL"
+#ifdef VRWEBGL_SHOW_LOG
+    #define ALOGV(...) __android_log_print( ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__ )
+#else
+    #define ALOGV(...)
+#endif
+#define ALOGE(...) __android_log_print( ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__ )
+
+// Not using this but left it as a reminder of the pain I went through 
+// to get this done. Also, prepared for some new extensions that could be
+// added in the future.
+
+// PFNGLDRAWARRAYSINSTANCEDANGLEPROC glDrawArraysInstancedANGLE = 0;
+// PFNGLDRAWELEMENTSINSTANCEDANGLEPROC glDrawElementsInstancedANGLE = 0;
+// PFNGLVERTEXATTRIBDIVISORANGLEPROC glVertexAttribDivisorANGLE = 0;
+
+void VRWebGL_initializeExtensions() 
+{
+	// ALOGE("VRWebGL_initializeExtensions: glDrawArraysInstancedANGLE = %p",glDrawArraysInstancedANGLE);
+	// ALOGE("VRWebGL_initializeExtensions: glDrawElementsInstancedANGLE = %p",glDrawElementsInstancedANGLE);
+	// ALOGE("VRWebGL_initializeExtensions: glVertexAttribDivisorANGLE = %p",glVertexAttribDivisorANGLE);
+
+
+	// GLint numberOfExtensions = 0;
+	// glGetIntegerv(GL_NUM_EXTENSIONS, &numberOfExtensions);
+	// ALOGE("VRWebGL_initializeExtensions: numberOfExtensions = %d", numberOfExtensions);
+	// for (GLint i = 0; i < numberOfExtensions; i++)
+	// {
+	// 	char *name = (char*)glGetStringi(GL_EXTENSIONS, i);
+	// 	ALOGE("VRWebGL_initializeExtensions: %s", name);
+	// }
+
+	// char* extensionString = (char*)glGetString(GL_EXTENSIONS);
+	// if (strstr(extensionString, "GL_ANGLE_instanced_arrays"))
+ //  {
+	// 	glDrawArraysInstancedANGLE = (PFNGLDRAWARRAYSINSTANCEDANGLEPROC)eglGetProcAddress("glDrawArraysInstancedANGLE");
+	// 	glDrawElementsInstancedANGLE = (PFNGLDRAWELEMENTSINSTANCEDANGLEPROC)eglGetProcAddress("glDrawElementsInstancedANGLE");
+	// 	glVertexAttribDivisorANGLE = (PFNGLVERTEXATTRIBDIVISORANGLEPROC)eglGetProcAddress("glVertexAttribDivisorANGLE");
+
+	// 	ALOGE("VRWebGL_initializeExtensions: glDrawArraysInstancedANGLE = %p",glDrawArraysInstancedANGLE);
+	// 	ALOGE("VRWebGL_initializeExtensions: glDrawElementsInstancedANGLE = %p",glDrawElementsInstancedANGLE);
+	// 	ALOGE("VRWebGL_initializeExtensions: glVertexAttribDivisorANGLE = %p",glVertexAttribDivisorANGLE);
+ //  }
+}
+
 void VRWebGL_glAttachShader(GLuint program, GLuint shader)
 {
 	glAttachShader(program, shader);
@@ -473,4 +520,22 @@ GLenum VRWebGL_glCheckFramebufferStatus(GLenum target)
 void VRWebGL_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data)
 {
 	glReadPixels(x, y, width, height, format, type, data);
+}
+
+void VRWebGL_glDrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+{
+	glDrawArraysInstanced(mode, first, count, primcount);
+	// glDrawArraysInstancedANGLE(mode, first, count, primcount);
+}
+
+void VRWebGL_glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei primcount)
+{
+	glDrawElementsInstanced(mode, count, type, indices, primcount);
+	// glDrawElementsInstancedANGLE(mode, count, type, indices, primcount);
+}
+
+void VRWebGL_glVertexAttribDivisorANGLE(GLuint index, GLuint divisor)
+{
+	glVertexAttribDivisor(index, divisor);	
+	// glVertexAttribDivisorANGLE(index, divisor);	
 }

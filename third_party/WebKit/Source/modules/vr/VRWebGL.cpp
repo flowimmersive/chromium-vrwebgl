@@ -3973,6 +3973,155 @@ std::string VRWebGLCommand_getString::name() const
 }
 
 // ======================================================================================
+// ======================================================================================
+
+VRWebGLCommand_initializeExtensions::VRWebGLCommand_initializeExtensions()
+{
+}
+    
+std::shared_ptr<VRWebGLCommand_initializeExtensions> VRWebGLCommand_initializeExtensions::newInstance()
+{
+    return std::shared_ptr<VRWebGLCommand_initializeExtensions>(new VRWebGLCommand_initializeExtensions());
+}
+
+bool VRWebGLCommand_initializeExtensions::isForUpdate() const
+{
+    return true;
+}
+
+bool VRWebGLCommand_initializeExtensions::isSynchronous() const 
+{
+    return false;
+}
+
+bool VRWebGLCommand_initializeExtensions::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_initializeExtensions::process() 
+{
+    VRWebGL_initializeExtensions();
+#ifdef VRWEBGL_SHOW_LOG    
+    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name();
+#endif
+    return 0;
+}
+
+std::string VRWebGLCommand_initializeExtensions::name() const 
+{
+    return "initializeExtensions";
+}
+
+// ======================================================================================
+// ======================================================================================
+
+VRWebGLCommand_drawArraysInstancedANGLE::VRWebGLCommand_drawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount): m_mode(mode), m_first(first), m_count(count), m_primcount(primcount)
+{
+}
+    
+std::shared_ptr<VRWebGLCommand_drawArraysInstancedANGLE> VRWebGLCommand_drawArraysInstancedANGLE::newInstance(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+{
+    return std::shared_ptr<VRWebGLCommand_drawArraysInstancedANGLE>(new VRWebGLCommand_drawArraysInstancedANGLE(mode, first, count, primcount));
+}
+
+bool VRWebGLCommand_drawArraysInstancedANGLE::isSynchronous() const 
+{
+    return false;
+}
+
+bool VRWebGLCommand_drawArraysInstancedANGLE::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_drawArraysInstancedANGLE::process() 
+{
+    VRWebGL_glDrawArraysInstancedANGLE(m_mode, m_first, m_count, m_primcount);
+#ifdef VRWEBGL_SHOW_LOG    
+    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode << " first = " << m_first << " count = " << m_count << " primcount = " << m_primcount;
+#endif
+    return 0;
+}
+
+std::string VRWebGLCommand_drawArraysInstancedANGLE::name() const 
+{
+    return "drawArraysInstancedANGLE";
+}
+
+// ======================================================================================
+// ======================================================================================
+
+VRWebGLCommand_drawElementsInstancedANGLE::VRWebGLCommand_drawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, long long offset, GLsizei primcount): m_mode(mode), m_count(count), m_type(type), m_offset(offset), m_primcount(primcount)
+{
+}
+    
+std::shared_ptr<VRWebGLCommand_drawElementsInstancedANGLE> VRWebGLCommand_drawElementsInstancedANGLE::newInstance(GLenum mode, GLsizei count, GLenum type, long long offset, GLsizei primcount)
+{
+    return std::shared_ptr<VRWebGLCommand_drawElementsInstancedANGLE>(new VRWebGLCommand_drawElementsInstancedANGLE(mode, count, type, offset, primcount));
+}
+
+bool VRWebGLCommand_drawElementsInstancedANGLE::isSynchronous() const 
+{
+    return false;
+}
+
+bool VRWebGLCommand_drawElementsInstancedANGLE::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_drawElementsInstancedANGLE::process() 
+{
+    VRWebGL_glDrawElementsInstancedANGLE(m_mode, m_count, m_type, reinterpret_cast<void*>(static_cast<intptr_t>(m_offset)), m_primcount);
+#ifdef VRWEBGL_SHOW_LOG    
+    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode << " count = " << m_count << " type = " << m_type << " offset = " << m_offset << " primcount = " << m_primcount;
+#endif
+    return 0;
+}
+
+std::string VRWebGLCommand_drawElementsInstancedANGLE::name() const 
+{
+    return "drawElementsInstancedANGLE";
+}
+
+// ======================================================================================
+// ======================================================================================
+
+VRWebGLCommand_vertexAttribDivisorANGLE::VRWebGLCommand_vertexAttribDivisorANGLE(GLuint index, GLuint divisor): m_index(index), m_divisor(divisor)
+{
+}
+    
+std::shared_ptr<VRWebGLCommand_vertexAttribDivisorANGLE> VRWebGLCommand_vertexAttribDivisorANGLE::newInstance(GLuint index, GLuint divisor)
+{
+    return std::shared_ptr<VRWebGLCommand_vertexAttribDivisorANGLE>(new VRWebGLCommand_vertexAttribDivisorANGLE(index, divisor));
+}
+
+bool VRWebGLCommand_vertexAttribDivisorANGLE::isSynchronous() const 
+{
+    return false;
+}
+
+bool VRWebGLCommand_vertexAttribDivisorANGLE::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_vertexAttribDivisorANGLE::process() 
+{
+    VRWebGL_glVertexAttribDivisorANGLE(m_index, m_divisor);
+#ifdef VRWEBGL_SHOW_LOG    
+    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " index = " << m_index << " divisor = " << m_divisor;
+#endif
+    return 0;
+}
+
+std::string VRWebGLCommand_vertexAttribDivisorANGLE::name() const 
+{
+    return "vertexAttribDivisorANGLE";
+}
+
+// ======================================================================================
 // This is not a WebGL/OpenGL command per se. We use it to set the camera world matrix in the right order among other VRWebGLCommands
 VRWebGLCommand_setCameraWorldMatrix::VRWebGLCommand_setCameraWorldMatrix(const GLfloat* matrix)
 {

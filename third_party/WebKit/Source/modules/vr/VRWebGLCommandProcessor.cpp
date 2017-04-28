@@ -412,11 +412,6 @@ void VRWebGLCommandProcessor::m_resetEverything()
     m_projectionMatrixProgramAndUniformLocations.clear();
     m_modelViewMatrixProgramAndUniformLocations.clear();
 
-    m_projectionMatrix[16];
-    m_viewMatrix[16];
-    m_cameraWorldMatrix[16];
-    m_cameraWorldMatrixWithTranslationOnly[16];
-
     m_framebuffer = 0;
 
     // Add default projection and modelview matrix uniform names to look for.
@@ -445,6 +440,8 @@ void VRWebGLCommandProcessor::m_resetEverything()
     // Soft shadow example
     m_projectionMatrixUniformNames.push_back("camProj"); 
 
+    // Tojiro's webgl examples
+    m_projectionMatrixUniformNames.push_back("projectionMat"); 
 
     // MODELVIEW
     m_modelViewMatrixUniformNames.clear();
@@ -468,6 +465,10 @@ void VRWebGLCommandProcessor::m_resetEverything()
 
     // Soft shadow example
     m_modelViewMatrixUniformNames.push_back("camView"); 
+
+    // Tojiro's webgl examples
+    m_modelViewMatrixUniformNames.push_back("viewMat"); 
+
 
 
     // MODELVIEWPROJECTION

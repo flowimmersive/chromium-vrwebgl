@@ -11,6 +11,8 @@
 #include "modules/vr/VRWebGLVideo.h"
 #include "modules/vr/VRWebGLWebView.h"
 
+#include "modules/vr/VRWebGLANGLEInstancedArrays.h"
+
 #include "modules/vr/VRWebGLCommand.h"
 #include "modules/vr/VRWebGLCommandProcessor.h"
 #include "modules/vr/VRWebGL.h"
@@ -944,7 +946,20 @@ ScriptValue VRWebGLRenderingContext::getExtension(ScriptState* scriptState, cons
 	{
 		result = name.contains(m_supportedExtensionNames[i], TextCaseASCIIInsensitive);
 	}
-	return result ? WebGLAny(scriptState, true) : ScriptValue::createNull(scriptState);
+
+    ScriptValue sv = ScriptValue::createNull(scriptState);
+    // TODO: Create a proper structure (map) to hold all the supported extensions.
+    if (result)
+    {
+        // TODO: Get rid of this when the proper structure to hold the extensions is in place.
+        if (name.contains("ANGLE_instanced_arrays", TextCaseASCIIInsensitive))
+        {
+            v8::Local<v8::Value> wrappedExtension =
+              ToV8(m_angleInstancedArraysExtension, scriptState->context()->Global(), scriptState->isolate());
+            sv = ScriptValue(scriptState, wrappedExtension);
+        }
+    }
+    return sv;
 }
 
 ScriptValue VRWebGLRenderingContext::getParameter(ScriptState* scriptState, GLenum pname)
@@ -2249,14 +2264,12 @@ VRWebGLRenderingContext::VRWebGLRenderingContext():
 	m_modelViewMatrix(16),
     m_gamepad(nullptr)
 {
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::VRWebGLRenderingContext begin";
-	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_getString::newInstance(GL_EXTENSIONS);
-	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
-	void* result = VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::VRWebGLRenderingContext end";
+	void* result = VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_getString::newInstance(GL_EXTENSIONS));
 
 	String extensionsString((const GLubyte*)result);
     extensionsString.split(' ', m_supportedExtensionNames);	
+    // TODO: It seems that the right way to get all the extension available is to use the GLES3 way of asking for the number of extensions first and then go for each of the strings one by one: https://github.com/android-ndk/ndk/issues/279. Adding this extension manually for now but fix it asap.
+    m_supportedExtensionNames.push_back("ANGLE_instanced_arrays");
 
     // TODO: We shouldn't need to do this when the extensions are properly handled.
 	VLOG(0) << "VRWebGL: Supported extensions: " << extensionsString;
@@ -2276,6 +2289,11 @@ VRWebGLRenderingContext::VRWebGLRenderingContext():
     m_vrPose = VRPose::create();
     m_vrEyeParametersLeft = new VREyeParameters();
     m_vrEyeParametersRight = new VREyeParameters();
+
+    VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_initializeExtensions::newInstance());
+
+    // TODO: Create a proper structure (map) to hold all the supported extensions.
+    m_angleInstancedArraysExtension = VRWebGLANGLEInstancedArrays::create();
 }
 
 void VRWebGLRenderingContext::resetUnpackParameters()
