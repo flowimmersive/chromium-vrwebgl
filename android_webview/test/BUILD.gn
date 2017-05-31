@@ -21,6 +21,7 @@ android_apk("android_webview_apk") {
     ":vrwebgl_zxing_javalib",
     ":vrwebgl_ovr_systemutils_javalib",
     ":vrwebgl_ovr_vrapi_javalib",
+    "//third_party/android_tools:android_support_v7_appcompat_java",
     ":android_webview_apk_assets",
     ":android_webview_apk_resources",
     "//android_webview:android_webview_java",
@@ -84,6 +85,7 @@ android_assets("android_webview_apk_assets") {
     "shell/assets/oculussig_4317d84d",
     "shell/assets/oculussig_9ed13553",
     "shell/assets/oculussig_67a5ceee",
+    "shell/assets/oculussig_98891935574d413151",
     "shell/assets/config.json",
     "shell/assets/VRWebGL.js",
     "shell/assets/asset_file.html",
@@ -135,7 +137,6 @@ android_assets("android_webview_apk_assets") {
     "tests/cubes/VREffect.js",
     "tests/cubes/WebVR.js"
   ]
-}
 }
 
 shared_library("libstandalonelibwebviewchromium") {
