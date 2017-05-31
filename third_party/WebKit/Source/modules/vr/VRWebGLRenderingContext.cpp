@@ -940,7 +940,6 @@ GLenum VRWebGLRenderingContext::getError()
 
 ScriptValue VRWebGLRenderingContext::getExtension(ScriptState* scriptState, const String& name)
 {
-	// TODO
 	bool result = false;
 	for (size_t i = 0; !result && i < m_supportedExtensionNames.size(); i++) 
 	{
@@ -954,9 +953,11 @@ ScriptValue VRWebGLRenderingContext::getExtension(ScriptState* scriptState, cons
         // TODO: Get rid of this when the proper structure to hold the extensions is in place.
         if (name.contains("ANGLE_instanced_arrays", TextCaseASCIIInsensitive))
         {
-            v8::Local<v8::Value> wrappedExtension =
-              ToV8(m_angleInstancedArraysExtension, scriptState->context()->Global(), scriptState->isolate());
-            sv = ScriptValue(scriptState, wrappedExtension);
+            // TODO: In the Gear VR, this code is making the app to crash.
+            
+            // v8::Local<v8::Value> wrappedExtension =
+            //   ToV8(m_angleInstancedArraysExtension, scriptState->context()->Global(), scriptState->isolate());
+            // sv = ScriptValue(scriptState, wrappedExtension);
         }
     }
     return sv;

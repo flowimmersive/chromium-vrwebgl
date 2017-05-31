@@ -130,13 +130,6 @@ public class AwShellActivity extends Activity implements
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private long nativePointer = 0;   
-    // This is done on the GL thread because refreshViewerProfile isn't thread-safe.
-    private final Runnable refreshViewerProfileRunnable = new Runnable() {
-        @Override
-        public void run() {
-            gvrLayout.getGvrApi().refreshViewerProfile();
-        }
-    };
     
     private class Video
     {
@@ -883,7 +876,6 @@ public class AwShellActivity extends Activity implements
                     }
                     speechRecognitions.clear();
                 }
-                return null;
             }
 
             @Override
@@ -968,66 +960,6 @@ public class AwShellActivity extends Activity implements
                     jsInjected = true;
                 }
                 return null;
-            }
-
-            @Override
-            public void onDownloadStart(String url,
-                                        String userAgent,
-                                        String contentDisposition,
-                                        String mimeType,
-                                        long contentLength) {
-            }
-
-            @Override
-            public void handleJsAlert(String url, String message, final JsResultReceiver receiver) {
-                Utils.createAlertDialog(AwShellActivity.this, url, message, new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        receiver.confirm();
-                    }
-                }, 1, "Ok", null, null).show();                
-            }
-
-            @Override
-            public void handleJsPrompt(String url, String message, String defaultValue, final JsPromptResultReceiver receiver) {
-                final EditText editText = new EditText(AwShellActivity.this);
-                Utils.createPromptDialog(AwShellActivity.this, editText, url, message, new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        if (which == DialogInterface.BUTTON_POSITIVE)
-                        {
-                            receiver.confirm(editText.getText().toString());
-                        }
-                        else 
-                        {
-                            receiver.cancel();
-                        }
-                    }
-                }, 2, "Ok", "Cancel", null).show();                
-            }
-
-            @Override
-            public void handleJsConfirm(String url, String message, final JsResultReceiver receiver) {
-                Utils.createAlertDialog(AwShellActivity.this, url, message, new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        if (which == DialogInterface.BUTTON_POSITIVE) 
-                        {
-                            receiver.confirm();
-                        }
-                        else 
-                        {
-                            receiver.cancel();
-                        }
-
-                    }
-                }, 2, "Yes", "No", null).show();                
             }
 
             @Override
@@ -1196,24 +1128,46 @@ public class AwShellActivity extends Activity implements
         return mAwTestContainerView.dispatchGenericMotionEvent(event);
     }
     
-    @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) 
+    @Override public void surfaceCreated( SurfaceHolder holder )
     {
         if ( nativePointer != 0 )
         {
-            nativeOnSurfaceCreated( nativePointer );
+            nativeOnSurfaceCreated( nativePointer, holder.getSurface() );
+            surfaceHolder = holder;
+        }
+
+        if (!urlLoaded)
+        {
+            mAwTestContainerView.getAwContents().loadUrl(url);
+            urlLoaded = true;
+        }
+
+        surfaceView.setZOrderMediaOverlay(true);
+
+        System.out.println("VRWebGL: surfaceCreated and page loaded: " + layout.getMeasuredWidth() + "x" + layout.getMeasuredHeight());
+    }
+
+    @Override public void surfaceChanged( SurfaceHolder holder, int format, int width, int height )
+    {
+        if ( nativePointer != 0 )
+        {
+            nativeOnSurfaceChanged( nativePointer, holder.getSurface() );
+            surfaceHolder = holder;
+        }
+    }
+    
+    @Override public void surfaceDestroyed( SurfaceHolder holder )
+    {
+        if ( nativePointer != 0 )
+        {
+            nativeOnSurfaceDestroyed( nativePointer );
+            surfaceHolder = null;
         }
     }
 
     @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height)
+    public void onFrameAvailable(SurfaceTexture surfaceTexture)
     {
-    }
-
-    @Override
-    public void onDrawFrame(GL10 gl) 
-    {
-        nativeOnDrawFrame(nativePointer);
     }
 
     @Override

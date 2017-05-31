@@ -1,6 +1,6 @@
 Steps to copy a new Oculus Mobile SDK libraries
 
-1.- Create a new OpenGLLoader .a library. simply go to the 1stParty folder on the Oculud Mobile SDK and to the OpenGLLoader folder inside it. Find where the jni folder is (project/Android) and execute ndk-build from the parent folder of the jni folder. The library result will be inside the obj folder alongside the jni folder.
+1.- Create a new OpenGLLoader .a library. simply go to the 1stParty folder on the Oculus Mobile SDK and to the OpenGLLoader folder inside it. Find where the jni folder is (project/Android) and execute ndk-build from the parent folder of the jni folder. The library result will be inside the obj folder alongside the jni folder.
 2.- Copy the libraries: 
 
 In the main folder:
