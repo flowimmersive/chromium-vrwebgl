@@ -3,7 +3,7 @@ MY_LOCAL_PATH := $(call my-dir)
 # ==========================================================
 # vrapi
 # ==========================================================
-LOCAL_PATH := ./3rdparty/ovr_sdk_mobile_1.0.3/armeabi-v7a
+LOCAL_PATH := ./3rdparty/ovr_sdk_mobile_1.5.0/armeabi-v7a
 include $(CLEAR_VARS)
 LOCAL_MODULE := vrapi
 LOCAL_SRC_FILES := \
@@ -11,19 +11,9 @@ LOCAL_SRC_FILES := \
 include $(PREBUILT_SHARED_LIBRARY)
 
 # ==========================================================
-# systemutils
-# ==========================================================
-LOCAL_PATH := ./3rdparty/ovr_sdk_mobile_1.0.3/armeabi-v7a
-include $(CLEAR_VARS)
-LOCAL_MODULE := systemutils
-LOCAL_SRC_FILES := \
-	libsystemutils.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-# ==========================================================
 # openglloader
 # ==========================================================
-LOCAL_PATH := ./3rdparty/ovr_sdk_mobile_1.0.3/armeabi-v7a
+LOCAL_PATH := ./3rdparty/ovr_sdk_mobile_1.5.0/armeabi-v7a
 include $(CLEAR_VARS)
 LOCAL_MODULE := openglloader
 LOCAL_SRC_FILES := \
@@ -33,7 +23,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 # ==========================================================
 # ovrkernel
 # ==========================================================
-LOCAL_PATH := ./3rdparty/ovr_sdk_mobile_1.0.3/armeabi-v7a
+LOCAL_PATH := ./3rdparty/ovr_sdk_mobile_1.5.0/armeabi-v7a
 include $(CLEAR_VARS)
 LOCAL_MODULE := ovrkernel
 LOCAL_SRC_FILES := \
@@ -62,7 +52,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := VRWebGL_OculusMobileSDK
 LOCAL_C_INCLUDES := \
 	. \
-	./3rdparty/ovr_sdk_mobile_1.0.3/include \
+	./3rdparty/ovr_sdk_mobile_1.5.0/include \
 	../../../../../third_party/WebKit/Source
 LOCAL_SRC_FILES := \
 	./VRWebGL_OculusMobileSDK.cpp \

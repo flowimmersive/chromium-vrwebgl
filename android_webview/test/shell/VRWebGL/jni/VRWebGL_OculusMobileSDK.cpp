@@ -45,8 +45,6 @@ typedef void (GL_APIENTRY* PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC) (GLenum 
 #include "VrApi.h"
 #include "VrApi_Helpers.h"
 
-#include "SystemActivities.h"
-
 #define DEBUG 1
 #define LOG_TAG "VRWebGL"
 
@@ -1302,7 +1300,7 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
   parms.FrameIndex = frameIndex;
   parms.MinimumVsyncs = minimumVsyncs;
   parms.PerformanceParms = *perfParms;
-  parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
+  parms.Layers[0].Flags |= VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
 
   // In order to reduce the flickering, when a synchronous command has been executed in the update call, do not render anything.
   // Not perfect, as the render get stalled, but at least it is better than rendering with an undefined state of the opengl context.
@@ -1426,10 +1424,10 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
 
     ovrFramebuffer_Resolve( frameBuffer );
 
-    parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].ColorTextureSwapChain = frameBuffer->ColorTextureSwapChain;
-    parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].TextureSwapChainIndex = frameBuffer->TextureSwapChainIndex;
-    parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].TexCoordsFromTanAngles = renderer->TexCoordsTanAnglesMatrix;
-    parms.Layers[VRAPI_FRAME_LAYER_TYPE_WORLD].Textures[eye].HeadPose = updatedTracking.HeadPose;
+    parms.Layers[0].Textures[eye].ColorTextureSwapChain = frameBuffer->ColorTextureSwapChain;
+    parms.Layers[0].Textures[eye].TextureSwapChainIndex = frameBuffer->TextureSwapChainIndex;
+    parms.Layers[0].Textures[eye].TexCoordsFromTanAngles = renderer->TexCoordsTanAnglesMatrix;
+    parms.Layers[0].Textures[eye].HeadPose = updatedTracking.HeadPose;
 
     ovrFramebuffer_Advance( frameBuffer );
   }
@@ -1846,26 +1844,12 @@ static void ovrApp_BackButtonAction( ovrApp * app, const ovrPerformanceParms * p
   }
   else if ( app->BackButtonState == BACK_BUTTON_STATE_PENDING_SHORT_PRESS && !app->BackButtonDown )
   {
-    if ( ( vrapi_GetTimeInSeconds() - app->BackButtonDownStartTime ) > BUTTON_DOUBLE_TAP_TIME_IN_SECONDS )
+    if ( ( vrapi_GetTimeInSeconds() - app->BackButtonDownStartTime ) > vrapi_GetSystemPropertyFloat( &app->Java, VRAPI_SYS_PROP_BACK_BUTTON_DOUBLETAP_TIME ) )
     {
       ALOGV( "back button short press" );
       ALOGV( "        ovrApp_PushBlackFinal()" );
       ovrApp_PushBlackFinal( app, perfParms );
-      ALOGV( "        SystemActivities_StartSystemActivity( %s )", PUI_CONFIRM_QUIT );
-      SystemActivities_StartSystemActivity( &app->Java, PUI_CONFIRM_QUIT, NULL );
       app->BackButtonState = BACK_BUTTON_STATE_NONE;
-    }
-  }
-  else if ( app->BackButtonState == BACK_BUTTON_STATE_NONE && app->BackButtonDown )
-  {
-    if ( ( vrapi_GetTimeInSeconds() - app->BackButtonDownStartTime ) > BACK_BUTTON_LONG_PRESS_TIME_IN_SECONDS )
-    {
-      ALOGV( "back button long press" );
-      ALOGV( "        ovrApp_PushBlackFinal()" );
-      ovrApp_PushBlackFinal( app, perfParms );
-      ALOGV( "        SystemActivities_StartSystemActivity( %s )", PUI_GLOBAL_MENU );
-      SystemActivities_StartSystemActivity( &app->Java, PUI_GLOBAL_MENU, NULL );
-      app->BackButtonState = BACK_BUTTON_STATE_SKIP_UP;
     }
   }
 }
@@ -1879,7 +1863,7 @@ static int ovrApp_HandleKeyEvent( ovrApp * app, const int keyCode, const int act
     {
       if ( !app->BackButtonDown )
       {
-        if ( ( vrapi_GetTimeInSeconds() - app->BackButtonDownStartTime ) < BUTTON_DOUBLE_TAP_TIME_IN_SECONDS )
+        if ( ( vrapi_GetTimeInSeconds() - app->BackButtonDownStartTime ) < vrapi_GetSystemPropertyFloat( &app->Java, VRAPI_SYS_PROP_BACK_BUTTON_DOUBLETAP_TIME ) )
         {
           app->BackButtonState = BACK_BUTTON_STATE_PENDING_DOUBLE_TAP;
         }
@@ -1891,7 +1875,7 @@ static int ovrApp_HandleKeyEvent( ovrApp * app, const int keyCode, const int act
     {
       if ( app->BackButtonState == BACK_BUTTON_STATE_NONE )
       {
-        if ( ( vrapi_GetTimeInSeconds() - app->BackButtonDownStartTime ) < BUTTON_SHORT_PRESS_TIME_IN_SECONDS )
+        if ( ( vrapi_GetTimeInSeconds() - app->BackButtonDownStartTime ) < vrapi_GetSystemPropertyFloat( &app->Java, VRAPI_SYS_PROP_BACK_BUTTON_SHORTPRESS_TIME ) )
         {
           app->BackButtonState = BACK_BUTTON_STATE_PENDING_SHORT_PRESS;
         }
@@ -1923,27 +1907,6 @@ static int ovrApp_HandleTouchEvent( ovrApp * app, const int action, const float 
 #endif
   }
   return 1;
-}
-
-static void ovrApp_HandleSystemEvents( ovrApp * app )
-{
-  SystemActivitiesAppEventList_t appEvents;
-  SystemActivities_Update( app->Ovr, &app->Java, &appEvents );
-
-  // if you want to reorient on mount, check mount state here
-  const bool isMounted = ( vrapi_GetSystemStatusInt( &app->Java, VRAPI_SYS_STATUS_MOUNTED ) != VRAPI_FALSE );
-  if ( isMounted && !app->WasMounted )
-  {
-    // We just mounted so push a reorient event to be handled at the app level (if desired)
-    char reorientMessage[1024];
-    SystemActivities_CreateSystemActivitiesCommand( "", SYSTEM_ACTIVITY_EVENT_REORIENT, "", "", reorientMessage, sizeof( reorientMessage ) );
-    SystemActivities_AppendAppEvent( &appEvents, reorientMessage );
-  }
-  app->WasMounted = isMounted;
-
-  // TODO: any app specific events should be handled right here by looping over appEvents list
-
-  SystemActivities_PostUpdate( app->Ovr, &app->Java, &appEvents );
 }
 
 /*
@@ -2110,18 +2073,14 @@ void * AppThreadFunction( void * parm )
   java.Vm->AttachCurrentThread( &java.Env, NULL );
   java.ActivityObject = appThread->ActivityObject;
 
-  SystemActivities_Init( &java );
-
   VRWebGLCommandProcessor::getInstance()->setupJNI(java.Env, appThread->ActivityObject);
 
   const ovrInitParms initParms = vrapi_DefaultInitParms( &java );
   int32_t initResult = vrapi_Initialize( &initParms );
   if ( initResult != VRAPI_INITIALIZE_SUCCESS )
   {
-    char const * msg = initResult == VRAPI_INITIALIZE_PERMISSIONS_ERROR ? 
-                    "Thread priority security exception. Make sure the APK is signed." :
-                    "VrApi initialization error.";
-    SystemActivities_DisplayError( &java, SYSTEM_ACTIVITIES_FATAL_ERROR_OSIG, __FILE__, msg );
+    vrapi_Shutdown();
+    exit( 0 );
   }
 
   ovrApp appState;
@@ -2193,7 +2152,6 @@ void * AppThreadFunction( void * parm )
     }
 
     ovrApp_BackButtonAction( &appState, &perfParms );
-    ovrApp_HandleSystemEvents( &appState );
 
     if ( appState.Ovr == NULL )
     {
@@ -2311,8 +2269,6 @@ void * AppThreadFunction( void * parm )
   ovrEgl_DestroyContext( &appState.Egl );
 
   vrapi_Shutdown();
-
-  SystemActivities_Shutdown( &java );
 
   java.Vm->DetachCurrentThread( );
 
