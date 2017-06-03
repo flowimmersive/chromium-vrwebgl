@@ -53,7 +53,8 @@ LOCAL_MODULE := VRWebGL_OculusMobileSDK
 LOCAL_C_INCLUDES := \
 	. \
 	./3rdparty/ovr_sdk_mobile_1.5.0/include \
-	../../../../../third_party/WebKit/Source
+	../../../../../third_party/WebKit/Source \
+	../../../../../third_party/WebKit
 LOCAL_SRC_FILES := \
 	./VRWebGL_OculusMobileSDK.cpp \
 	../../../../../third_party/WebKit/Source/modules/vr/VRWebGLCommandProcessor.cpp \

@@ -33,6 +33,8 @@ Copyright : Copyright 2015 Oculus VR, LLC. All Rights reserved.
 #include "modules/vr/VRWebGLPose.h"
 #include "modules/vr/VRWebGLEyeParameters.h"
 
+#include "public/platform/WebGamepad.h"
+
 #if !defined( EGL_OPENGL_ES3_BIT_KHR )
 #define EGL_OPENGL_ES3_BIT_KHR    0x0040
 #endif
@@ -1702,6 +1704,13 @@ enum ovrBackButtonState
   BACK_BUTTON_STATE_SKIP_UP
 };
 
+// TODO: Move these inside of ovrApp
+enum HandednessType
+{
+  HAND_LEFT,
+  HAND_RIGHT
+};
+
 struct ovrApp
 {
   ovrJava       Java;
@@ -1728,24 +1737,29 @@ struct ovrApp
   bool        WasMounted;
 
   // VRWEBGL BEGIN
-  static pthread_mutex_t    HeadTrackingInfoMutex;
-  static ovrRigidBodyPosef  Pose;
+  static pthread_mutex_t      HeadTrackingInfoMutex;
+  static ovrRigidBodyPosef    Pose;
   static VRWebGLEyeParameters EyeParameters;
+  static pthread_mutex_t      GamepadMutex;
+  static ovrDeviceID          RemoteDeviceID;
+  static HandednessType       Handedness;
+  static std::shared_ptr<blink::WebGamepad> Gamepad;
+  static std::shared_ptr<blink::WebGamepad> GamepadCopy;
+  static uint16_t             MaxTrackpadX;
+  static uint16_t             MaxTrackpadY;
   // VRWEBGL END
 };
 
 pthread_mutex_t   ovrApp::HeadTrackingInfoMutex;
 ovrRigidBodyPosef   ovrApp::Pose;
 VRWebGLEyeParameters ovrApp::EyeParameters;
-
-// TODO: Move these inside of ovrApp
-ovrDeviceID RemoteDeviceID = ovrDeviceIdType_Invalid;
-enum HandednessType
-{
-  HAND_LEFT,
-  HAND_RIGHT
-};
-HandednessType Handedness;
+pthread_mutex_t ovrApp::GamepadMutex;
+ovrDeviceID ovrApp::RemoteDeviceID = ovrDeviceIdType_Invalid;
+HandednessType ovrApp::Handedness;
+std::shared_ptr<blink::WebGamepad> ovrApp::Gamepad;
+std::shared_ptr<blink::WebGamepad> ovrApp::GamepadCopy;
+uint16_t ovrApp::MaxTrackpadX = 0;
+uint16_t ovrApp::MaxTrackpadY = 0;
 
 static void OnRemoteDisconnected( ovrApp* app, ovrDeviceID const deviceID )
 {
@@ -1755,7 +1769,6 @@ static void OnRemoteConnected( ovrApp* app, ovrDeviceID const deviceID )
 {
   ALOGV("Remote connected, ID = %u", deviceID );
 
-#if !defined( OVR_OS_WIN32 )
   ovrInputTrackedRemoteCapabilities remoteCapabilities;
 
   remoteCapabilities.Header.Type = ovrControllerType_TrackedRemote;
@@ -1763,33 +1776,34 @@ static void OnRemoteConnected( ovrApp* app, ovrDeviceID const deviceID )
   ovrResult result = vrapi_GetInputDeviceCapabilities( app->Ovr, &remoteCapabilities.Header );
   if ( result == ovrSuccess )
   {
-    Handedness = ( remoteCapabilities.ControllerCapabilities & ovrControllerCaps_LeftHand ) ? HAND_LEFT : HAND_RIGHT;
-    char const * hand = Handedness == HAND_LEFT ? "left" : "right";
+    ovrApp::Handedness = ( remoteCapabilities.ControllerCapabilities & ovrControllerCaps_LeftHand ) ? HAND_LEFT : HAND_RIGHT;
+    char const * hand = ovrApp::Handedness == HAND_LEFT ? "left" : "right";
     ALOGV( "Remote caps: hand = %s, Button %x, Controller %x, MaxX %d, MaxY %d, SizeX %f SizeY %f",
         hand, remoteCapabilities.ButtonCapabilities,
         remoteCapabilities.ControllerCapabilities,
         remoteCapabilities.TrackpadMaxX, remoteCapabilities.TrackpadMaxY,
         remoteCapabilities.TrackpadSizeX, remoteCapabilities.TrackpadSizeY );
 
+    ovrApp::MaxTrackpadX = remoteCapabilities.TrackpadMaxX;
+    ovrApp::MaxTrackpadY = remoteCapabilities.TrackpadMaxY;
+
     ovrInputStateTrackedRemote remoteInputState;
     remoteInputState.Header.ControllerType = ovrControllerType_TrackedRemote;
-    result = vrapi_GetCurrentInputState( app->Ovr, RemoteDeviceID, &remoteInputState.Header );
+    result = vrapi_GetCurrentInputState( app->Ovr, deviceID, &remoteInputState.Header );
   }
   else
   {
     ALOGV( "vrapi_GetInputDeviceCapabilities: Error %i", result );
   }
 
-  vrapi_RecenterInputPose( app->Ovr, RemoteDeviceID );
-#endif
+  vrapi_RecenterInputPose( app->Ovr, deviceID );
 }
 
 static void EnumerateInputDevices(ovrApp* app)
 {
-#if defined( OVR_OS_ANDROID )
   // Enumerates all available input devices available through VrApi
 
-  ALOGV( "Enumerating input devices:" );
+  // ALOGV( "Enumerating input devices:" );
 
   bool foundRemote = false;
 
@@ -1800,11 +1814,11 @@ static void EnumerateInputDevices(ovrApp* app)
     if ( vrapi_EnumerateInputDevices( app->Ovr, deviceIndex, &curCaps ) < 0 )
     {
       // No more devices, we are done!
-      ALOGV( "No more devices" );
+      // ALOGV( "No more devices" );
       break;
     }
 
-    ALOGV( "# %i, Device ID %u, type %u", deviceIndex, curCaps.DeviceID, curCaps.Type );
+    // ALOGV( "# %i, Device ID %u, type %u", deviceIndex, curCaps.DeviceID, curCaps.Type );
 
     switch( curCaps.Type )
     {
@@ -1812,11 +1826,11 @@ static void EnumerateInputDevices(ovrApp* app)
         if ( !foundRemote )
         {
           foundRemote = true;
-          if ( RemoteDeviceID != curCaps.DeviceID )
+          if ( ovrApp::RemoteDeviceID != curCaps.DeviceID )
           {
-            OnRemoteDisconnected( app, RemoteDeviceID );
-            RemoteDeviceID = curCaps.DeviceID;
-            OnRemoteConnected( app, RemoteDeviceID );            
+            OnRemoteDisconnected( app, ovrApp::RemoteDeviceID );
+            ovrApp::RemoteDeviceID = curCaps.DeviceID;
+            OnRemoteConnected( app, ovrApp::RemoteDeviceID );            
           }
         }
         break;
@@ -1826,12 +1840,11 @@ static void EnumerateInputDevices(ovrApp* app)
   }
 
   // if no remotes were found, disconnect the current remote
-  if ( !foundRemote && RemoteDeviceID != ovrDeviceIdType_Invalid )
+  if ( !foundRemote && ovrApp::RemoteDeviceID != ovrDeviceIdType_Invalid )
   {
-    OnRemoteDisconnected( app, RemoteDeviceID );
-    RemoteDeviceID = ovrDeviceIdType_Invalid;
+    OnRemoteDisconnected( app, ovrApp::RemoteDeviceID );
+    ovrApp::RemoteDeviceID = ovrDeviceIdType_Invalid;
   }
-#endif
 }
 
 static void UpdateRemoteDevice(ovrApp* app, const double predictedDisplayTime)
@@ -1839,12 +1852,15 @@ static void UpdateRemoteDevice(ovrApp* app, const double predictedDisplayTime)
   ovrTracking remoteTracking;
 
   bool recenteredController = false;
-#if !defined( OVR_OS_WIN32 )
-  if ( RemoteDeviceID != ovrDeviceIdType_Invalid )
-  {
-    ovrResult result = vrapi_GetInputTrackingState( app->Ovr, RemoteDeviceID, predictedDisplayTime, &remoteTracking );
 
-    ALOGV("Controller pose: %f, %f, %f, %f", remoteTracking.HeadPose.Pose.Orientation.x, remoteTracking.HeadPose.Pose.Orientation.y, remoteTracking.HeadPose.Pose.Orientation.z, remoteTracking.HeadPose.Pose.Orientation.w);
+  // ALOGV("UpdateRemoteDevice: ovrApp::RemoteDeviceID = %d", ovrApp::RemoteDeviceID);
+
+  if ( ovrApp::RemoteDeviceID != ovrDeviceIdType_Invalid )
+  {
+    ovrResult result = vrapi_GetInputTrackingState( app->Ovr, ovrApp::RemoteDeviceID, predictedDisplayTime, &remoteTracking );
+
+    // ALOGV("Controller pose: %f, %f, %f, %f", remoteTracking.HeadPose.Pose.Orientation.x, remoteTracking.HeadPose.Pose.Orientation.y, remoteTracking.HeadPose.Pose.Orientation.z, remoteTracking.HeadPose.Pose.Orientation.w);
+
     // float yaw;
     // float pitch;
     // float roll;
@@ -1860,27 +1876,27 @@ static void UpdateRemoteDevice(ovrApp* app, const double predictedDisplayTime)
 
     ovrInputStateTrackedRemote remoteInputState;
     remoteInputState.Header.ControllerType = ovrControllerType_TrackedRemote;
-    result = vrapi_GetCurrentInputState( app->Ovr, RemoteDeviceID, &remoteInputState.Header );
+    result = vrapi_GetCurrentInputState( app->Ovr, ovrApp::RemoteDeviceID, &remoteInputState.Header );
     if ( result == ovrSuccess )
     {
-      std::string buttons;
-      char temp[128];
-      sprintf( temp, "( %.2f, %.2f ) ", remoteInputState.TrackpadPosition.x, remoteInputState.TrackpadPosition.y );
-      buttons += temp;
-      if ( remoteInputState.Buttons & ovrButton_A )
-      {
-        buttons += "A ";
-      }
-      if ( remoteInputState.Buttons & ovrButton_Enter )
-      {
-        buttons += "TRACKPAD ";
-      }
-      if ( remoteInputState.Buttons & ovrButton_Back )
-      {
-        buttons += "BACK ";
-      }
-      char const * hand = Handedness == HAND_LEFT ? "left" : "right";
-      ALOGV( "hand = %s, %s", hand, buttons.c_str() );
+      // std::string buttons;
+      // char temp[128];
+      // sprintf( temp, "( %.2f, %.2f ) ", remoteInputState.TrackpadPosition.x, remoteInputState.TrackpadPosition.y );
+      // buttons += temp;
+      // if ( remoteInputState.Buttons & ovrButton_A )
+      // {
+      //   buttons += "A ";
+      // }
+      // if ( remoteInputState.Buttons & ovrButton_Enter )
+      // {
+      //   buttons += "TRACKPAD ";
+      // }
+      // if ( remoteInputState.Buttons & ovrButton_Back )
+      // {
+      //   buttons += "BACK ";
+      // }
+      // char const * hand = ovrApp::Handedness == HAND_LEFT ? "left" : "right";
+      // ALOGV( "hand = %s, %s", hand, buttons.c_str() );
 
       // if ( remoteInputState.RecenterCount != LastRecenterCount )
       // {
@@ -1888,215 +1904,30 @@ static void UpdateRemoteDevice(ovrApp* app, const double predictedDisplayTime)
       //   LOG_WITH_TAG( "MLBUState", "**RECENTERED** (%i != %i )", (int)remoteInputState.RecenterCount, LastRecenterCount );
       //   LastRecenterCount = remoteInputState.RecenterCount;
       // }
+
+      pthread_mutex_lock( &ovrApp::GamepadMutex );
+      ovrApp::Gamepad->pose.orientation.x = remoteTracking.HeadPose.Pose.Orientation.x;
+      ovrApp::Gamepad->pose.orientation.y = remoteTracking.HeadPose.Pose.Orientation.y;
+      ovrApp::Gamepad->pose.orientation.z = remoteTracking.HeadPose.Pose.Orientation.z;
+      ovrApp::Gamepad->pose.orientation.w = remoteTracking.HeadPose.Pose.Orientation.w;
+      ovrApp::Gamepad->buttons[0].pressed = remoteInputState.Buttons & ovrButton_Enter;
+
+      ovrApp::Gamepad->buttons[0].value = remoteInputState.Buttons & ovrButton_Enter;
+      ovrApp::Gamepad->buttons[1].pressed = remoteInputState.Buttons & ovrButton_A;
+      ovrApp::Gamepad->buttons[1].value = remoteInputState.Buttons & ovrButton_A;
+      ovrApp::Gamepad->buttons[0].touched = remoteInputState.TrackpadStatus;
+      ovrApp::Gamepad->axes[0] = (double)remoteInputState.TrackpadPosition.x / (double)ovrApp::MaxTrackpadX * 2.0 - 1.0;
+      ovrApp::Gamepad->axes[1] = (double)remoteInputState.TrackpadPosition.y / (double)ovrApp::MaxTrackpadY * 2.0 - 1.0;
+
+      // ALOGV("Status: touch = %d, %lf, %lf. Battery: %d", ovrApp::Gamepad->buttons[0].touched, ovrApp::Gamepad->axes[0], ovrApp::Gamepad->axes[1],remoteInputState.BatteryPercentRemaining);
+
+      pthread_mutex_unlock( &ovrApp::GamepadMutex );     
     }
     else
     {
       ALOGV( "ERROR %i getting remote input state!", result );
     }
   }
-#endif
-//   //------------------------------------------------------------------------------------------
-
-//   // if the orientation is tracked by the headset, don't allow the gamepad to rotate the view
-//   if ( ( vrFrameWithoutMove.Tracking.Status & VRAPI_TRACKING_STATUS_ORIENTATION_TRACKED ) != 0 )
-//   {
-//     vrFrameWithoutMove.Input.sticks[1][0] = 0.0f;
-//     vrFrameWithoutMove.Input.sticks[1][1] = 0.0f; 
-//   }
-
-//   // Player movement.
-//   Scene.SetFreeMove( true );
-//   Scene.Frame( vrFrameWithoutMove, app->GetHeadModelParms() );
-
-//   ovrFrameResult res;
-//   Scene.GetFrameMatrices( vrFrameWithoutMove.FovX, vrFrameWithoutMove.FovY, res.FrameMatrices );
-//   Scene.GenerateFrameSurfaceList( res.FrameMatrices, res.Surfaces );
-
-//   //------------------------------------------------------------------------------------------
-//   // calculate the controller pose from the most recent scene pose
-//   Vector3f pointerStart( 0.0f );
-//   Vector3f pointerEnd( 0.0f );
-
-//   Matrix4f traceMat( res.FrameMatrices.CenterView.Inverted() );
-//   if ( RemoteDeviceID != ovrDeviceIdType_Invalid )
-//   {
-//     Array< ovrJoint > worldJoints = ArmModel.GetSkeleton().GetJoints();
-// #if 1
-//     Posef remotePoseWithoutPosition( remoteTracking.HeadPose.Pose );
-//     remotePoseWithoutPosition.Translation = Vector3f( 0.0f, 0.0f, 0.0f );
-
-//     Posef remotePose;
-// #if defined( OVR_OS_WIN32 )
-//     Posef headPose( Quatf( Scene.GetCenterEyeTransform() ), Scene.GetCenterEyeTransform().GetTranslation() - Vector3f( 0.0f, 1.675f, 0.0f ) );
-//     ArmModel.Update( headPose, remotePoseWithoutPosition, Handedness, 
-//         recenteredController, remotePose );
-// #else
-//     ArmModel.Update( vrFrame.BaseTracking.HeadPose.Pose, remotePoseWithoutPosition, Handedness, 
-//         recenteredController, remotePose );
-// #endif
-
-//     float const EYE_HEIGHT = 1.675f;
-//     Posef neckPose( Quatf(), Vector3f( 0.0f, EYE_HEIGHT, 0.0f ) );    
-//     RenderBones( vrFrame, ParticleSystem, *SpriteAtlas, 0, RemoteBeamRenderer, *BeamAtlas, 0, 
-//         neckPose, ArmModel.GetTransformedJoints(), JointHandles );
-
-//     traceMat = Matrix4f::Translation( Vector3f( 0.0f, EYE_HEIGHT, 0.0f ) ) * Matrix4f( remoteTracking.HeadPose.Pose );
-
-//     ControllerSurface.surface = &ControllerModel->Def.surfaces[0];
-//     ControllerSurface.modelMatrix = traceMat * Matrix4f::RotationY( Mathf::Pi );
-
-//     pointerStart = traceMat.Transform( Vector3f( 0.0f ) );
-//     pointerEnd = traceMat.Transform( Vector3f( 0.0f, 0.0f, -10.0f ) );
-// #else
-//     OVR_UNUSED( recenteredController );
-//     const Vector3f wristFromFootPos( 0.2f * ( Handedness == HAND_LEFT ? -1.0f : 1.0f ), 1.07f, -0.23f );
-//     const Vector3f wristFromModel( -0.02f, 0.0f, -0.10f );
-//     const Vector3f footPos( 0.0f );
-
-//     Matrix4f controllerOrientation( remoteTracking.HeadPose.Pose.Orientation );
-
-//     Matrix4f worldFromLaser = Matrix4f::Translation( footPos + wristFromFootPos )
-//         * controllerOrientation
-//         * Matrix4f::Translation( wristFromModel + Vector3f( 0.0f, -0.01f, 0.0f ) );
-
-//     pointerStart = worldFromLaser.Transform( Vector3f( 0.0f ) );
-//     pointerEnd = worldFromLaser.Transform( Vector3f( 0.0f, 0.0f, -10.0f ) );
-
-//     ControllerSurface.surface = &ControllerModel->Def.surfaces[0];
-//     ControllerSurface.modelMatrix =
-//         Matrix4f::Translation( footPos + wristFromFootPos )
-//         * controllerOrientation
-//         * Matrix4f::Translation( wristFromModel )
-//         * Matrix4f::RotationY( Mathf::Pi );
-
-//     traceMat = worldFromLaser;
-
-//     auto logYaw = [] ( const char * name, const Matrix4f & m )
-//     {
-//       float yaw;
-//       float pitch;
-//       float roll;     
-//       m.ToEulerAngles< Axis_Y, Axis_X, Axis_Z, Rotate_CCW, Handed_R >( &yaw, &pitch, &roll );
-//       Vector3f dir = m.Transform( Vector3f( 0.0f, 0.0f, -1.0f ) );
-//       LOG( "%s yaw = %.2f, dir ( %.2f, %.2f, %.2f )", name, yaw, dir.x, dir.y, dir.z );
-//     };
-
-//     Quatf headPose( vrFrame.Tracking.HeadPose.Pose.Orientation );
-//     logYaw( "head", Matrix4f( headPose ) );
-//     Quatf remotePose( remoteTracking.HeadPose.Pose.Orientation );
-//     logYaw( "remote", Matrix4f( remotePose ) );
-//     logYaw( "eye", Scene.GetCenterEyeTransform() );
-// #endif
-
-//     Vector3f const pointerDir = ( pointerEnd - pointerStart ).Normalized();
-//     HitTestResult hit = GuiSys->TestRayIntersection( pointerStart, pointerDir );
-//     LaserHit = hit.HitHandle.IsValid();
-//     if ( LaserHit )
-//     {
-//       pointerEnd = pointerStart + hit.RayDir * hit.t - pointerDir * 0.025f;//pointerDir * 0.15f;
-//     }
-//     else
-//     {
-//       pointerEnd = pointerStart + pointerDir * 10.0f;
-//     }
-//   }
-//   //------------------------------------------------------------------------------------------
-
-//   // Update GUI systems after the app frame, but before rendering anything.
-//   GuiSys->Frame( vrFrameWithoutMove, res.FrameMatrices.CenterView, traceMat );
-//   // Append GuiSys surfaces.
-//   GuiSys->AppendSurfaceList( res.FrameMatrices.CenterView, &res.Surfaces );
-
-//   FrameParms = vrapi_DefaultFrameParms( app->GetJava(), VRAPI_FRAME_INIT_DEFAULT, vrapi_GetTimeInSeconds(), nullptr );
-
-//   FrameParms.FrameIndex = vrFrameWithoutMove.FrameNumber;
-//   FrameParms.MinimumVsyncs = app->GetMinimumVsyncs();
-//   FrameParms.PerformanceParms = app->GetPerformanceParms();
-
-//   ovrFrameLayer & worldLayer = FrameParms.Layers[0];
-//   for ( int eye = 0; eye < VRAPI_FRAME_LAYER_EYE_MAX; eye++ )
-//   {
-//     worldLayer.Textures[eye].ColorTextureSwapChain = vrFrameWithoutMove.ColorTextureSwapChain[eye];
-//     worldLayer.Textures[eye].DepthTextureSwapChain = vrFrameWithoutMove.DepthTextureSwapChain[eye];
-//     worldLayer.Textures[eye].TextureSwapChainIndex = vrFrameWithoutMove.TextureSwapChainIndex;
-
-//     worldLayer.Textures[eye].TexCoordsFromTanAngles = vrFrameWithoutMove.TexCoordsFromTanAngles;
-//     worldLayer.Textures[eye].HeadPose = vrFrameWithoutMove.Tracking.HeadPose;
-//   }
-
-//   FrameParms.ExternalVelocity = Scene.GetExternalVelocity();
-//   worldLayer.Flags = VRAPI_FRAME_LAYER_FLAG_CHROMATIC_ABERRATION_CORRECTION;
-
-//   res.FrameParms = (ovrFrameParmsExtBase *) & FrameParms;
-
-//   res.ClearColorBuffer = true;
-//   res.ClearDepthBuffer = false;
-//   res.ClearColor = Vector4f( 0.0f, 0.0f, 0.0f, 1.0f );  // solid alpha for underlay camera support
-
-//   //------------------------------------------------------------------------------------------
-//   if ( RemoteDeviceID != ovrDeviceIdType_Invalid )
-//   {
-//     if ( !LaserPointerBeamHandle.IsValid() )
-//     {
-//       LaserPointerBeamHandle = RemoteBeamRenderer->AddBeam( vrFrame, *BeamAtlas, 0, 0.032f, pointerStart, pointerEnd, 
-//           LASER_COLOR, ovrBeamRenderer::LIFETIME_INFINITE );
-//       LOG_WITH_TAG( "MLBULaser", "AddBeam %i", LaserPointerBeamHandle.Get() );
-
-//       // Hide the gaze cursor when the remote laser pointer is active.
-//       GuiSys->GetGazeCursor().HideCursor();
-//     }
-//     else
-//     {
-//       //LOG_WITH_TAG( "MLBUBeam", "UpdateBeam %i", LaserPointerBeamHandle );
-//       RemoteBeamRenderer->UpdateBeam( vrFrame, LaserPointerBeamHandle, *BeamAtlas, 0, 0.032f, pointerStart, pointerEnd, LASER_COLOR );
-//       //Vector3f s = viewPos + viewUp * -0.125f + viewFwd * 1.3f;
-//       //Vector3f e = viewPos + viewUp * 0.125f + viewFwd * 1.3f;
-//       //RemoteBeamRenderer->UpdateBeam( vrFrame, LaserPointerBeamHandle, *BeamAtlas, 0, 0.032f, s, e, Vector4f( 1.0f ) );
-//     }
-
-//     if ( !LaserPointerParticleHandle.IsValid() )
-//     {
-//       if ( LaserHit )
-//       {
-//         LaserPointerParticleHandle = ParticleSystem->AddParticle( vrFrame, pointerEnd, 0.0f, Vector3f( 0.0f ), Vector3f( 0.0f ), 
-//             LASER_COLOR, ovrEaseFunc::NONE, 0.0f, 0.1f, 0.1f, 0 );
-//         LOG_WITH_TAG( "MLBULaser", "AddParticle %i", LaserPointerParticleHandle.Get() );
-//       }
-//     }
-//     else
-//     {
-//       if ( LaserHit )
-//       {
-//         ParticleSystem->UpdateParticle( vrFrame, LaserPointerParticleHandle, pointerEnd, 0.0f, Vector3f( 0.0f ), Vector3f( 0.0f ),
-//             LASER_COLOR, ovrEaseFunc::NONE, 0.0f, 0.1f, 0.1f, 0 );
-//       }
-//       else
-//       {
-//         ParticleSystem->RemoveParticle( LaserPointerParticleHandle );
-//         LaserPointerParticleHandle.Release();
-//       }
-//     }
-
-// //    ParticleSystem->AddParticle( vrFrame, pointerStart_NoWrist, 0.0f, Vector3f( 0.0f ), Vector3f( 0.0f ), 
-// //        Vector4f( 0.0f, 1.0f, 1.0f, 1.0f ), ovrEaseFunc::ALPHA_IN_OUT_LINEAR, 0.0f, 0.025f, 0.5f, 0 );
-//     ParticleSystem->AddParticle( vrFrame, pointerStart, 0.0f, Vector3f( 0.0f ), Vector3f( 0.0f ), 
-//         Vector4f( 0.0f, 1.0f, 0.0f, 0.5f ), ovrEaseFunc::ALPHA_IN_OUT_LINEAR, 0.0f, 0.025f, 0.05f, 0 );
-//   }
-
-//   // since we don't delete any lines, we don't need to run its frame at all
-//   RemoteBeamRenderer->Frame( vrFrame, app->GetLastViewMatrix(), *BeamAtlas );
-//   ParticleSystem->Frame( vrFrame, *SpriteAtlas, res.FrameMatrices.CenterView );
-
-//   // add the model to the surfaces to render
-//   if ( RemoteDeviceID != ovrDeviceIdType_Invalid && ControllerSurface.surface != nullptr )
-//   {
-//     res.Surfaces.PushBack( ControllerSurface );
-//   }
-
-//   const Matrix4f projectionMatrix;
-//   ParticleSystem->RenderEyeView( res.FrameMatrices.CenterView, projectionMatrix, res.Surfaces );
-//   RemoteBeamRenderer->RenderEyeView( res.FrameMatrices.CenterView, projectionMatrix, res.Surfaces );
-
 }
 
 static void ovrApp_Clear( ovrApp * app )
@@ -2183,7 +2014,7 @@ static void ovrApp_HandleVrModeChanges( ovrApp * app )
 #endif
       ALOGV( "        eglGetCurrentSurface( EGL_DRAW ) = %p", eglGetCurrentSurface( EGL_DRAW ) );
 
-      OnRemoteDisconnected(app, RemoteDeviceID);
+      OnRemoteDisconnected(app, ovrApp::RemoteDeviceID);
 
       vrapi_LeaveVrMode( app->Ovr );
       app->Ovr = NULL;
@@ -2463,8 +2294,18 @@ void * AppThreadFunction( void * parm )
     pthread_mutexattr_init( &attr );
     pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_ERRORCHECK );
     pthread_mutex_init( &ovrApp::HeadTrackingInfoMutex, &attr );
+    pthread_mutex_init( &ovrApp::GamepadMutex, &attr );
     pthread_mutex_init( &ovrRenderer::NewNearFarMutex, &attr );
     pthread_mutexattr_destroy( &attr );
+    ovrApp::Gamepad.reset(new blink::WebGamepad());
+    strcpy((char*)ovrApp::Gamepad->id, "Daydream Controller");
+    ovrApp::Gamepad->buttonsLength = 2;
+    ovrApp::Gamepad->axesLength = 2;
+    ovrApp::Gamepad->pose.notNull = true;
+    ovrApp::Gamepad->pose.orientation.notNull = true;
+    ovrApp::Gamepad->pose.hasOrientation = true;
+    ovrApp::Gamepad->pose.hasPosition = false;
+    ovrApp::GamepadCopy.reset(new blink::WebGamepad());
     // VRWEBGL END    
 
 
@@ -2630,6 +2471,7 @@ void * AppThreadFunction( void * parm )
 
     // VRWEBGL BEGIN
     pthread_mutex_destroy( &ovrApp::HeadTrackingInfoMutex );
+    pthread_mutex_destroy( &ovrApp::GamepadMutex );
     pthread_mutex_destroy( &ovrRenderer::NewNearFarMutex );
     // VRWEBGL END
 
@@ -2760,9 +2602,10 @@ void VRWebGLCommandProcessor::setRenderEnabled(bool flag)
 
 std::shared_ptr<blink::WebGamepad> VRWebGLCommandProcessor::getGamepad()
 {
-  std::shared_ptr<blink::WebGamepad> gamepad;
-  // TODO: Needs implementation using the Oculus controller API.
-  return gamepad;
+  pthread_mutex_lock( &ovrApp::GamepadMutex );
+  *ovrApp::GamepadCopy = *ovrApp::Gamepad;
+  pthread_mutex_unlock( &ovrApp::GamepadMutex );     
+  return ovrApp::GamepadCopy;
 }
 
 // VRWEBGL END
