@@ -2,6 +2,7 @@
 
 * [Overview](#overview)
 * [How to build your own version of Chromium with VRWebGL](#how_to_build_your_own_version_of_chromium_with_vrwebgl)
+* [How to work on this repo](#how_to_work_on_this_repo)
 * [License](#license)
 
 # <a name="overview">Overview</a>
@@ -14,6 +15,8 @@
 2. Build, install and run.
 
 ## 1. Clone the Chromium project and prepare it to be built
+
+Pushing Chromium to github is not easy. This repository has been forked from: 
 
 Chromium cloning/building instruction are available online: [https://www.chromium.org/developers/how-tos/android-build-instructions](https://www.chromium.org/developers/how-tos/android-build-instructions)
 
@@ -74,4 +77,18 @@ You can review the content of the script to see what it does (it is a fairly sim
 The final APK will be built in the folder `~/chromium/src/out/vrwebgl_57.0.2987.5_oculus/out/apks`.
 
 **NOTE:** It is important to note that this tutorial assumes the Oculus version of VRWebGL but there is also a Google VR version available in a different branch. Maybe some day these 2 branches will be merged into one.
+
+# <a name="how_to_work_on_this_repo"></a>How to work on this repou ca
+
+Some tips on how to efficiently work on this repo.
+
+If you have followed all the steps above to build your own version of Chromium with vrwebgl, you will notice that there are 2 remotes:
+1. The Chromium original remote.
+2. The remote that points to this repo. If you used the name in the tutorial above, vrwebgl will be your remote name.
+This is not a big of a problem as long as you understand what you are doing. The good news is that you won't be able to push to the chromium original remote (as long as you are not a Chromium committer, but in that case is very unlikely you are using this repo :)).
+* DO NOT USE THE MASTER BRANCH: The master branch is the Chromium master branch at the time this repo was forked (or as it is if a new merge has been done). 
+* Use the vrwebgl_TAG_PLATFORM as your master branch (for example vrwebgl_57.0.2987.5_oculus): It is not orthodox but this is an experimental build on top of Chromium and the tag is based on is important. I would recommend to use the tag to be aware of what tag you are working on as new rebased might happen to newer tags in the future.
+* Create branches to work on your features with the name of the branch as a prefix. For example: vrwebgl_TAG_PLATFORM_BRANCH - vrwebgl_57.0.2987.5_oculus_my_new_feature. Rebase from the main branch as needed and merge when done as usual (only that remember that the main branch is not master).
+* If you want to update to a newer tag, fetch the original chromium repo remote and checkout a new branch while on the main branch wollowing the naming convention in this tutorial: `git checkout -b vrwebgl_NEWTAG_PLATFORM`. For example: `git checkout -b vrwebgl_60.0.1234.5_oculus`. Then rebase to the new tag: `git rebase TAG`. For example: `git rebase 60.0.1234.5`
+* Remember to specify the remote in your command that have to do with the remote: get push, git fetch, ... For example, push to the remote that points to this repo (if you followed the tutorial you may have used the name vrwebgl): `git push vrwebgl vrwbegl_TAG_PLATFORM_BRANCH` for example: `git push vrwebgl vrwebgl_57.0.2987.5_oculus_my_new_feature`.
 
