@@ -30,6 +30,7 @@ Let's assume that the machine is installed along with:
 
 * GIT
 * Python
+* The Android SDK (and the PATH pointing to the `platform-tools` folder)
 
 Open a terminal window to be able
 
@@ -42,8 +43,9 @@ Open a terminal window to be able
 5. Add a remote pointing to this repo:`git remote add vrwebgl git@github.com:flowimmersive/chromium-vrwebgl.git`. You can use a different name for your remote than `vrwebgl`, but remember the name as you will need to use it from now on.
 6. Fetch the new remote: `git fetch vrwebgl`
 7. Checkout the remote branch from the new remote of the corresponding VRWebGL version you want to work on, for example: `git checkout --track vrwebgl/vrwebgl_57.0.2987.5_oculus`. The branches that represent VRWebGL implementations start with the `vrwebgl_` prefix. The name of the branch is important as it will be used in the build step down below.
-8. Create a folder where to make the final product compilation using the same name as the branch checked out in a step above: `~/chromium/src$ mkdir -p out/vrwebgl_57.0.2987.5_oculus` in our example.
-9. Create and edit a new file `out/vrwebgl_57.0.2987.5_oculus/args.gn` with the command `~/chromium/src$ gedit out/vrwebgl_57.0.2987.5_oculus/args.gn` (or any other editor). Copy and paste the following content in the `args.gn` file:
+8. Synchronize the dependencies: `~/chromium/src$ gclient sync --disable-syntax-validation`
+9. Create a folder where to make the final product compilation using the same name as the branch checked out in a step above: `~/chromium/src$ mkdir -p out/vrwebgl_57.0.2987.5_oculus` in our example.
+10. Create and edit a new file `out/vrwebgl_57.0.2987.5_oculus/args.gn` with the command `~/chromium/src$ gedit out/vrwebgl_57.0.2987.5_oculus/args.gn` (or any other editor). Copy and paste the following content in the `args.gn` file:
   ```
   target_os = "android"
   target_cpu = "arm" 
@@ -57,9 +59,8 @@ Open a terminal window to be able
   enable_nacl = false
   remove_webcore_debug_symbols = true
   ```
-10. Prepare to build: `~/chromium/src$ gn args out/vrwebgl_57.0.2987.5_oculus`. **NOTE**: once the command is executed, the vi editor will show you the content of the `args.gn` file just edited a few steps before. Just exit by pressing ESC and typing colon `':'` and `'q'` with an exclamation mark `'!'` = `:q!`.
-11. Install the build dependencies: `~/chromium/src$ build/install-build-deps-android.sh` 
-12. Synchronize the dependencies: `~/chromium/src$ gclient sync --disable-syntax-validation`
+11. Prepare to build: `~/chromium/src$ gn args out/vrwebgl_57.0.2987.5_oculus`. **NOTE**: once the command is executed, the vi editor will show you the content of the `args.gn` file just edited a few steps before. Just exit by pressing ESC and typing colon `':'` and `'q'` with an exclamation mark `'!'` = `:q!`.
+12. Install the build dependencies for android: `~/chromium/src$ build/install-build-deps-android.sh` 
 13. Setup the environment: `~/chromium/src$ . build/android/envsetup.sh`
 
 I know, many steps to be followed, but once you have completed all of them (remember that some will take a loooong time to finish), you won't need to execute them again (except from `gclient sync --disable-syntax-validation` that you may need to execute it occassionally if you rebase a different tag or a branch based on a different tag).
