@@ -78,7 +78,7 @@ The final APK will be built in the folder `~/chromium/src/out/vrwebgl_57.0.2987.
 
 **NOTE:** It is important to note that this tutorial assumes the Oculus version of VRWebGL but there is also a Google VR version available in a different branch. Maybe some day these 2 branches will be merged into one.
 
-# <a name="how_to_work_on_this_repo"></a>How to work on this repou ca
+# <a name="how_to_work_on_this_repo"></a>How to work on this repo
 
 Some tips on how to efficiently work on this repo.
 
