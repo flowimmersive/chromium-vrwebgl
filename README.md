@@ -85,7 +85,9 @@ Some tips on how to efficiently work on this repo.
 If you have followed all the steps above to build your own version of Chromium with vrwebgl, you will notice that there are 2 remotes:
 1. The Chromium original remote.
 2. The remote that points to this repo. If you used the name in the tutorial above, vrwebgl will be your remote name.
+
 This is not a big of a problem as long as you understand what you are doing. The good news is that you won't be able to push to the chromium original remote (as long as you are not a Chromium committer, but in that case is very unlikely you are using this repo :)).
+
 * DO NOT USE THE MASTER BRANCH: The master branch is the Chromium master branch at the time this repo was forked (or as it is if a new merge has been done). 
 * Use the vrwebgl_TAG_PLATFORM as your master branch (for example vrwebgl_57.0.2987.5_oculus): It is not orthodox but this is an experimental build on top of Chromium and the tag is based on is important. I would recommend to use the tag to be aware of what tag you are working on as new rebased might happen to newer tags in the future.
 * Create branches to work on your features with the name of the branch as a prefix. For example: vrwebgl_TAG_PLATFORM_BRANCH - vrwebgl_57.0.2987.5_oculus_my_new_feature. Rebase from the main branch as needed and merge when done as usual (only that remember that the main branch is not master).
