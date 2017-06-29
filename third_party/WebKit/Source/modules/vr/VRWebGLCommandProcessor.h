@@ -6,7 +6,8 @@
 #include <GLES3/gl3.h>
 
 #include <string>
-#include <deque>
+#include <vector>
+#include <set>
 #include <memory>
 #include <map>
 
@@ -24,7 +25,9 @@ namespace blink
 class VRWebGLCommandProcessor
 {
 private:
-    void m_resetEverything();  
+    const static unsigned QUEUE_SIZE_INCREMENT;
+    const static unsigned BATCH_SIZE_INCREMENT;
+    const static unsigned MAX_NUMBER_OF_BATCHES;
 
     class VRWebGLProgramAndUniformLocation
     {
@@ -37,26 +40,62 @@ private:
         bool operator==(const VRWebGLProgramAndUniformLocation& other) const;
     };
 
-    std::deque<std::shared_ptr<VRWebGLCommand>> m_vrWebGLCommandQueue;
-    std::deque<std::shared_ptr<VRWebGLCommand>> m_vrWebGLCommandQueueBatch;
-    std::deque<std::shared_ptr<VRWebGLCommand>> m_vrWebGLCommandForUpdateQueue;
+    class VRWebGLCommandQueue
+    {
+    private:
+        std::vector<std::shared_ptr<VRWebGLCommand>> m_queue;
+        unsigned m_index = 0;
+        // By default, queues are set as processed as we want to reuse them.
+        unsigned m_processCount = 2;
+
+    public:
+        VRWebGLCommandQueue();
+        VRWebGLCommandQueue(unsigned size);
+        void queue(const std::shared_ptr<VRWebGLCommand>& command);
+        void copy(VRWebGLCommandQueue& queue, bool copyProcessCount);
+        void add(VRWebGLCommandQueue& queue, bool markAsProcessed);
+        void process(bool emptyAfterProcess, bool markAsProcessed);
+        bool isProcessed() const;
+        void clear();
+        unsigned getNumberOfCommands() const;
+    };
+
+    class VRWebGLCommandQueueBatches
+    {
+    private:
+        std::vector<VRWebGLCommandQueue> m_batches;
+        unsigned m_index = 0;
+
+        VRWebGLCommandQueueBatches(const VRWebGLCommandQueueBatches&) = delete;
+        VRWebGLCommandQueueBatches& operator=(const VRWebGLCommandQueueBatches&) = delete;
+    public:
+        VRWebGLCommandQueueBatches();
+        void copy(VRWebGLCommandQueue& queue);
+        void copy(VRWebGLCommandQueueBatches& batches);
+        void add(VRWebGLCommandQueue& queue, bool markAsProcessed);
+        void process(bool onlyProcessNonProcessed);
+        void clear();
+        unsigned getNumberOfBatches() const;
+    };
+
+    VRWebGLCommandQueue m_vrWebGLCommandQueue;
+    VRWebGLCommandQueueBatches m_vrWebGLCommandQueueBatches;
+    VRWebGLCommandQueueBatches m_vrWebGLCommandQueueBatchesCopy;
+    VRWebGLCommandQueue m_vrWebGLCommandForUpdateQueue;
     bool m_insideAFrame = false;
-    bool m_currentBatchRenderedForBothEyes = true;
-    bool m_synchronousVRWebGLCommandProcessedInUpdate = false;
+    bool m_synchronousCommandProcessedSoWaitForNextEndFrameToBeAbleToRender = false;
     std::shared_ptr<VRWebGLCommand> m_synchronousVRWebGLCommand;
     void* m_synchronousVRWebGLCommandResult = 0;
     pthread_mutex_t	m_mutex;
     pthread_cond_t m_synchronousVRWebGLCommandProcessed;
-    pthread_cond_t m_bothEyesRendered;
+    pthread_cond_t m_allBatchesProcessed;
 
-    unsigned int m_indexOfEyeBeingRendered = -1;
-
-    std::deque<std::string> m_projectionMatrixUniformNames;
-    std::deque<std::string> m_modelViewMatrixUniformNames;
-    std::deque<std::string> m_modelViewProjectionMatrixUniformNames;
-    std::deque<VRWebGLProgramAndUniformLocation> m_projectionMatrixProgramAndUniformLocations;
-    std::deque<VRWebGLProgramAndUniformLocation> m_modelViewMatrixProgramAndUniformLocations;
-    std::deque<VRWebGLProgramAndUniformLocation> m_modelViewProjectionMatrixProgramAndUniformLocations;
+    std::set<std::string> m_projectionMatrixUniformNames;
+    std::set<std::string> m_modelViewMatrixUniformNames;
+    std::set<std::string> m_modelViewProjectionMatrixUniformNames;
+    std::vector<VRWebGLProgramAndUniformLocation> m_projectionMatrixProgramAndUniformLocations;
+    std::vector<VRWebGLProgramAndUniformLocation> m_modelViewMatrixProgramAndUniformLocations;
+    std::vector<VRWebGLProgramAndUniformLocation> m_modelViewProjectionMatrixProgramAndUniformLocations;
 
     GLfloat m_projectionMatrix[16];
     GLfloat m_viewMatrix[16];
@@ -113,6 +152,8 @@ private:
     // This class is a singleton
     VRWebGLCommandProcessor();
 
+    void m_resetEverything();  
+
 public:
     static VRWebGLCommandProcessor* getInstance();
 
@@ -128,7 +169,13 @@ public:
 
     void updateSurfaceTexture(GLuint textureId);
     
-    void renderFrame(bool process = true);
+    void renderFrame(
+        const GLfloat* projectionMatrixL, 
+        const GLfloat* viewMatrixL,
+        int32_t leftL, int32_t bottomL, int32_t widthL, int32_t heightL,
+        const GLfloat* projectionMatrixR, 
+        const GLfloat* viewMatrixR,
+        int32_t leftR, int32_t bottomR, int32_t widthR, int32_t heightR);
 
     // The following methods should only be called from the OpenGL thread, so no mutex lock is implemented.
     void setMatrixUniformLocationForName(const GLuint program, const GLint location, const std::string& name);
@@ -166,8 +213,6 @@ public:
     const GLfloat* getCameraWorldMatrixWithTranslationOnly() const;
 
     void reset();  
-
-    bool m_synchronousVRWebGLCommandBeenProcessedInUpdate() const;
 
     void setupJNI(JNIEnv* jniEnv, jobject mainActivityJObject);
 

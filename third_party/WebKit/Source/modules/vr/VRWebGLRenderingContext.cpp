@@ -958,6 +958,9 @@ ScriptValue VRWebGLRenderingContext::getExtension(ScriptState* scriptState, cons
               ToV8(m_angleInstancedArraysExtension, scriptState->context()->Global(), scriptState->isolate());
             sv = ScriptValue(scriptState, wrappedExtension);
         }
+        else {
+            sv = WebGLAny(scriptState, true);
+        }
     }
     return sv;
 }

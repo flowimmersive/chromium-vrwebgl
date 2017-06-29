@@ -15,6 +15,7 @@
 #include <string>
 #include <thread>  // NOLINT
 #include <vector>
+#include <chrono>
 
 #include "vr/gvr/capi/include/gvr.h"
 #include "vr/gvr/capi/include/gvr_audio.h"
@@ -29,6 +30,30 @@
 // #include "modules/vr/VRWebGLGamepad.h"
 
 #include "public/platform/WebGamepad.h"
+
+class Profiler
+{
+private:
+  std::vector<std::chrono::time_point<std::chrono::high_resolution_clock>> starts;
+public:
+  ~Profiler()
+  {
+    assert(starts.empty());
+  }
+  void start()
+  {
+    starts.push_back(std::chrono::high_resolution_clock::now());
+  }
+  std::chrono::milliseconds finish()
+  {
+    assert(!starts.empty());
+    auto now = std::chrono::high_resolution_clock::now();
+    auto start = starts.back();
+    starts.pop_back();
+    std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+    return elapsed;
+  }
+};
 
 class VRWebGL_GVRMobileSDK {
  public:
@@ -86,6 +111,13 @@ class VRWebGL_GVRMobileSDK {
   void getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters);
 
  private:
+
+  struct Viewport
+  {
+    int32_t left, bottom;
+    int32_t width, height;
+  };
+
   /*
    * Prepares the GvrApi framebuffer for rendering, resizing if needed.
    */
@@ -97,7 +129,7 @@ class VRWebGL_GVRMobileSDK {
    * @param view_matrix View transformation for the current eye.
    * @param viewport The buffer viewport for which we are rendering.
    */
-  void DrawWorld(const gvr::Mat4f& view_matrix,
+  void PrepareEyeForRender(const gvr::Mat4f& view_matrix,
                  const gvr::BufferViewport& viewport, gvr::Eye eye);
 
   std::unique_ptr<gvr::GvrApi> gvr_api_;
@@ -107,13 +139,11 @@ class VRWebGL_GVRMobileSDK {
 
   gvr::Mat4f head_view_;
   GLfloat head_view_orientation_[4];
-  gvr::Mat4f projectionMatrixTransposed_;
-  gvr::Mat4f viewMatrixTransposed_;
+  gvr::Mat4f projectionMatrixTransposed_[2];
+  gvr::Mat4f viewMatrixTransposed_[2];
   gvr::Sizei render_size_;
-  gvr::Rectf fovLeft_;
-  gvr::Rectf fovRight_;
-  GLfloat viewportWidth_;
-  GLfloat viewportHeight_;
+  gvr::Rectf fov_[2];
+  Viewport viewport_[2];
   GLfloat interpupillaryDistance_;
 
   std::unique_ptr<gvr::ControllerApi> gvr_controller_api_;
@@ -459,46 +489,51 @@ void VRWebGL_GVRMobileSDK::getEyeParameters(const std::string& eye, VRWebGLEyePa
   {
     if (eye == "left")
     {
-      eyeParameters.upDegrees = fovLeft_.top;
-      eyeParameters.downDegrees = fovLeft_.bottom;
-      eyeParameters.leftDegrees = fovLeft_.left;
-      eyeParameters.rightDegrees = fovLeft_.right;
+      eyeParameters.upDegrees = fov_[GVR_LEFT_EYE].top;
+      eyeParameters.downDegrees = fov_[GVR_LEFT_EYE].bottom;
+      eyeParameters.leftDegrees = fov_[GVR_LEFT_EYE].left;
+      eyeParameters.rightDegrees = fov_[GVR_LEFT_EYE].right;
     }
     else if (eye == "right")
     {
-      eyeParameters.upDegrees = fovRight_.top;
-      eyeParameters.downDegrees = fovRight_.bottom;
-      eyeParameters.leftDegrees = fovRight_.left;
-      eyeParameters.rightDegrees = fovRight_.right;
+      eyeParameters.upDegrees = fov_[GVR_RIGHT_EYE].top;
+      eyeParameters.downDegrees = fov_[GVR_RIGHT_EYE].bottom;
+      eyeParameters.leftDegrees = fov_[GVR_RIGHT_EYE].left;
+      eyeParameters.rightDegrees = fov_[GVR_RIGHT_EYE].right;
     }
-    eyeParameters.width = viewportWidth_;
-    eyeParameters.height = viewportHeight_;
+    eyeParameters.width = viewport_[GVR_RIGHT_EYE].width;
+    eyeParameters.height = viewport_[GVR_RIGHT_EYE].height;
     eyeParameters.interpupillaryDistance = interpupillaryDistance_;
   }
   eyeParametersMutex_.unlock();
 }
 
 void VRWebGL_GVRMobileSDK::DrawFrame() {
-  VRWebGLCommandProcessor::getInstance()->update();
+  Profiler profiler;
+
+  profiler.start();
+
+  profiler.start();
+
+  profiler.start();
 
   if (gvr_viewer_type_ == GVR_VIEWER_TYPE_DAYDREAM) {
     ProcessControllerInput();
   }
 
-  // In order to reduce the flickering, when a synchronous command has been executed in the update call, do not render anything.
-  // Not perfect, as the render get stalled, but at least it is better than rendering with an undefined state of the opengl context.
-  if (/*!appThread->renderEnabled || */VRWebGLCommandProcessor::getInstance()->m_synchronousVRWebGLCommandBeenProcessedInUpdate())
-  {
-    VRWebGLCommandProcessor::getInstance()->renderFrame(false);
-    return;
-  }
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: processing the controller took %lld ms", profiler.finish().count());  
 
   PrepareFramebuffer();
+  profiler.start();
   gvr::Frame frame = swapchain_->AcquireFrame();
+
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: preparing the frame buffer took %lld ms", profiler.finish().count());  
 
   // A client app does its rendering here.
   gvr::ClockTimePoint target_time = gvr::GvrApi::GetTimePointNow();
   target_time.monotonic_system_time_nanos += kPredictionTimeWithoutVsyncNanos;
+
+  profiler.start();
 
   head_view_ = gvr_api_->GetHeadSpaceFromStartSpaceRotation(target_time);
 
@@ -524,27 +559,54 @@ void VRWebGL_GVRMobileSDK::DrawFrame() {
   gvr::Mat4f left_eye_view = MatrixMul(left_eye_matrix, head_view_);
   gvr::Mat4f right_eye_view = MatrixMul(right_eye_matrix, head_view_);
 
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: calculating head pose took %lld ms", profiler.finish().count());  
+
+  profiler.start();
+
   viewport_list_->SetToRecommendedBufferViewports();
 
-  // glEnable(GL_DEPTH_TEST);
-  // glEnable(GL_CULL_FACE);
-  // glDisable(GL_SCISSOR_TEST);
-  // glDisable(GL_BLEND);
-
-  // Draw the world.
   frame.BindBuffer(0);
-  // glClearColor(0.1f, 0.1f, 0.1f, 0.5f);  // Dark background so text shows up.
-  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: setting the recommended buffer viewports took %lld ms", profiler.finish().count());  
+
+  profiler.start();
+
   viewport_list_->GetBufferViewport(0, &scratch_viewport_);
-  DrawWorld(left_eye_view, scratch_viewport_, GVR_LEFT_EYE);
+  PrepareEyeForRender(left_eye_view, scratch_viewport_, GVR_LEFT_EYE);
   viewport_list_->GetBufferViewport(1, &scratch_viewport_);
-  DrawWorld(right_eye_view, scratch_viewport_, GVR_RIGHT_EYE);
+  PrepareEyeForRender(right_eye_view, scratch_viewport_, GVR_RIGHT_EYE);
+
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: preparing both eyes took %lld ms", profiler.finish().count());  
+
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: init before renderFrame took %lld ms", profiler.finish().count());  
+
+  // Render both eyes
+  profiler.start();
+
+  VRWebGLCommandProcessor::getInstance()->renderFrame(
+    (const GLfloat*)projectionMatrixTransposed_[GVR_LEFT_EYE].m[0], 
+    (const GLfloat*)viewMatrixTransposed_[GVR_LEFT_EYE].m[0], 
+    viewport_[GVR_LEFT_EYE].left, viewport_[GVR_LEFT_EYE].bottom, 
+    viewport_[GVR_LEFT_EYE].width, viewport_[GVR_LEFT_EYE].height, 
+    (const GLfloat*)projectionMatrixTransposed_[GVR_RIGHT_EYE].m[0], 
+    (const GLfloat*)viewMatrixTransposed_[GVR_RIGHT_EYE].m[0],
+    viewport_[GVR_RIGHT_EYE].left, viewport_[GVR_RIGHT_EYE].bottom, 
+    viewport_[GVR_RIGHT_EYE].width, viewport_[GVR_RIGHT_EYE].height);
+
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: renderFrame took %lld ms", profiler.finish().count());  
+
+  profiler.start();
+
   frame.Unbind();
 
   // Submit frame.
   frame.Submit(*viewport_list_, head_view_);
 
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: unbind and submit took %lld ms", profiler.finish().count());  
+
   // CheckGLError("onDrawFrame");
+
+  LOGD("VRWebGL_GVRMobileSDK::DrawFrame: whole call took %lld ms", profiler.finish().count());  
 }
 
 void VRWebGL_GVRMobileSDK::PrepareFramebuffer() {
@@ -571,15 +633,13 @@ void VRWebGL_GVRMobileSDK::OnResume() {
   ResumeControllerApiAsNeeded();
 }
 
-void VRWebGL_GVRMobileSDK::DrawWorld(const gvr::Mat4f& view_matrix,
+void VRWebGL_GVRMobileSDK::PrepareEyeForRender(const gvr::Mat4f& view_matrix,
                                      const gvr::BufferViewport& viewport, gvr::Eye eye) {
   const gvr::Recti pixel_rect =
       CalculatePixelSpaceRect(render_size_, viewport.GetSourceUv());
   
-  GLfloat viewportWidth = pixel_rect.right - pixel_rect.left;
-  GLfloat viewportHeight = pixel_rect.top - pixel_rect.bottom;
-  glViewport(pixel_rect.left, pixel_rect.bottom,
-             viewportWidth, viewportHeight);
+  int32_t viewportWidth = pixel_rect.right - pixel_rect.left;
+  int32_t viewportHeight = pixel_rect.top - pixel_rect.bottom;
 
   // CheckGLError("World drawing setup");
 
@@ -587,16 +647,9 @@ void VRWebGL_GVRMobileSDK::DrawWorld(const gvr::Mat4f& view_matrix,
 
   eyeParametersMutex_.lock();
   {
-    if (eye == GVR_LEFT_EYE)
-    {
-      fovLeft_ = fov;
-    }
-    else if (eye == GVR_RIGHT_EYE)
-    {
-      fovRight_ = fov;
-    }
-    viewportWidth_ = viewportWidth;
-    viewportHeight_ = viewportHeight;
+    fov_[eye] = fov;
+    viewport_[eye].width = viewportWidth;
+    viewport_[eye].height = viewportHeight;
   }
   eyeParametersMutex_.unlock();
   
@@ -604,15 +657,11 @@ void VRWebGL_GVRMobileSDK::DrawWorld(const gvr::Mat4f& view_matrix,
       PerspectiveMatrixFromView(fov, kZNear, kZFar);
   
   // Transpose oculus projection and view matrices to be opengl compatible.
-  VRWebGL_transposeMatrix4((const GLfloat*)perspective.m[0], (GLfloat*)projectionMatrixTransposed_.m[0]);
-  VRWebGL_transposeMatrix4((const GLfloat*)view_matrix.m[0], (GLfloat*)viewMatrixTransposed_.m[0]);
-  
-  // Setup the information before rendering current eye's frame
-  VRWebGLCommandProcessor::getInstance()->setViewAndProjectionMatrices((const GLfloat*)projectionMatrixTransposed_.m[0], (const GLfloat*)viewMatrixTransposed_.m[0]);  
-  // VRWebGLCommandProcessor::getInstance()->setFramebuffer(ovrFramebuffer_GetCurrent(frameBuffer));
-  VRWebGLCommandProcessor::getInstance()->setViewport(pixel_rect.left, pixel_rect.bottom, viewportWidth, viewportHeight);
-  // Render current eye's frame
-  VRWebGLCommandProcessor::getInstance()->renderFrame();
+  VRWebGL_transposeMatrix4((const GLfloat*)perspective.m[0], (GLfloat*)projectionMatrixTransposed_[eye].m[0]);
+  VRWebGL_transposeMatrix4((const GLfloat*)view_matrix.m[0], (GLfloat*)viewMatrixTransposed_[eye].m[0]);  
+
+  viewport_[eye].left = pixel_rect.left;
+  viewport_[eye].bottom = pixel_rect.bottom;
 }
 
 void VRWebGLCommandProcessor::getPose(VRWebGLPose& pose)

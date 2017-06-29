@@ -276,7 +276,7 @@ void* VRWebGLCommand_bindTexture::process()
     GLenum target = externalTextureId != 0 ? GL_TEXTURE_EXTERNAL_OES : m_target;
     VRWebGL_glBindTexture(target, textureId);
 #ifdef VRWEBGL_SHOW_LOG  
-    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = << " << target << " texture = " << texture;
+    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = << " << target << " texture = " << textureId;
 #endif
     return 0;
 }
@@ -2668,9 +2668,9 @@ bool VRWebGLCommand_pixelStorei::canBeProcessedImmediately() const
 void* VRWebGLCommand_pixelStorei::process() 
 {
     VRWebGL_glPixelStorei(m_pname, m_param);
-#ifdef VRWEBGL_SHOW_LOG  
+// #ifdef VRWEBGL_SHOW_LOG  
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " pname = " << m_pname << " param = " << m_param;
-#endif    
+// #endif    
     return 0;
 }
 

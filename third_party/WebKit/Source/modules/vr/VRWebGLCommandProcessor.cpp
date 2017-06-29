@@ -6,6 +6,10 @@
 #include <android/log.h>
 #include <algorithm>
 
+#include <chrono>
+
+#include <stdlib.h>
+
 #define LOG_TAG "VRWebGL"
 #ifdef VRWEBGL_SHOW_LOG
     #define ALOGV(...) __android_log_print( ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__ )
@@ -13,6 +17,10 @@
     #define ALOGV(...)
 #endif
 #define ALOGE(...) __android_log_print( ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__ )
+
+const unsigned VRWebGLCommandProcessor::QUEUE_SIZE_INCREMENT = 100;
+const unsigned VRWebGLCommandProcessor::BATCH_SIZE_INCREMENT = 5;
+const unsigned VRWebGLCommandProcessor::MAX_NUMBER_OF_BATCHES = 10;
 
 VRWebGLCommandProcessor::VRWebGLProgramAndUniformLocation::VRWebGLProgramAndUniformLocation()
 {
@@ -27,6 +35,210 @@ bool VRWebGLCommandProcessor::VRWebGLProgramAndUniformLocation::operator==(const
     return m_program == other.m_program && m_location == other.m_location;
 }
 
+VRWebGLCommandProcessor::VRWebGLCommandQueue::VRWebGLCommandQueue(): m_queue(QUEUE_SIZE_INCREMENT)
+{
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueue::queue(const std::shared_ptr<VRWebGLCommand>& command)
+{
+    m_queue[m_index] = command;
+    m_index++;
+    if (m_index >= m_queue.size())
+    {
+        m_queue.resize(m_queue.size() + QUEUE_SIZE_INCREMENT);
+    }
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueue::copy(VRWebGLCommandQueue& queue, bool copyProcessCount)
+{
+    if (queue.m_index == 0) return;
+    if (queue.m_index >= m_queue.size())
+    {
+        m_queue.resize(queue.m_index);
+    }
+    std::copy(queue.m_queue.begin(), queue.m_queue.begin() + queue.m_index, m_queue.begin());
+    m_index = queue.m_index; 
+    m_processCount = copyProcessCount ? queue.m_processCount : 0;
+    queue.m_index = 0;
+    queue.m_processCount = 2;
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueue::add(VRWebGLCommandQueue& queue, bool markAsProcessed)
+{
+    if (queue.m_index == 0) return;
+    unsigned size = m_index + queue.m_index; 
+    if (size >= m_queue.size())
+    {
+        m_queue.resize(size + QUEUE_SIZE_INCREMENT);
+    }
+    std::copy(queue.m_queue.begin(), queue.m_queue.begin() + queue.m_index, m_queue.begin() + m_index);
+    m_index = size; 
+    m_processCount = markAsProcessed ? 2 : 0;
+    queue.m_index = 0;
+    queue.m_processCount = 2;
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueue::process(bool emptyAfterProcess, bool markAsProcessed)
+{
+    if (!markAsProcessed)
+    {
+        if (m_processCount == 2)
+        {
+            m_processCount = 0;
+        }
+        m_processCount++;
+    }
+    else 
+    {
+        m_processCount = 2;
+    }
+    for (unsigned i = 0; i < m_index; i++)
+    {
+        std::shared_ptr<VRWebGLCommand> command = m_queue[i];
+        if (!command) continue;
+        if (m_processCount == 1)
+        {
+            ALOGE("VRWebGLCommandQueue::process: processing '%s'", command->name().c_str());
+        }
+        command->process();
+
+        int glerror = glGetError();
+        if (glerror != GL_NO_ERROR) {
+            ALOGE("VRWebGLCommandQueue::process: GL error after processing '%s': %d", command->name().c_str(), glerror);
+            if (command->name() != "pixelStorei")
+            {
+                abort();
+            }
+        }
+
+        if (!command->insideAFrame()) {
+            m_queue[i].reset();
+        }
+    }
+    if (isProcessed() && emptyAfterProcess)
+    {
+        m_index = 0;
+    }
+}
+
+bool VRWebGLCommandProcessor::VRWebGLCommandQueue::isProcessed() const
+{
+    return m_processCount == 2;
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueue::clear()
+{
+    std::fill(m_queue.begin(), m_queue.end(), std::shared_ptr<VRWebGLCommand>());
+    m_index = 0;
+    m_processCount = 2;
+}
+
+unsigned VRWebGLCommandProcessor::VRWebGLCommandQueue::getNumberOfCommands() const
+{
+    return m_index;
+}
+
+VRWebGLCommandProcessor::VRWebGLCommandQueueBatches::VRWebGLCommandQueueBatches(): m_batches(BATCH_SIZE_INCREMENT)
+{
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueueBatches::copy(VRWebGLCommandQueue& queue)
+{
+    if (queue.getNumberOfCommands() == 0) return;
+    // If the index of the current batch is not processed, we need to keep it
+    // because it needs to be processed.
+    if (!m_batches[m_index].isProcessed())
+    {
+        m_index++;
+        if (m_index >= m_batches.size())
+        {
+            m_batches.resize(m_batches.size() + BATCH_SIZE_INCREMENT);
+        }
+    }
+    m_batches[m_index].copy(queue, false);
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueueBatches::copy(VRWebGLCommandQueueBatches& batches)
+{
+    if (batches.m_index > m_batches.size())
+    {
+        m_batches.resize(batches.m_index + BATCH_SIZE_INCREMENT);
+    }
+    for (unsigned i = 0; i <= batches.m_index; i++)
+    {
+        m_batches[i].copy(batches.m_batches[i], true);
+    }
+    m_index = batches.m_index;
+    batches.m_index = 0;
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueueBatches::add(VRWebGLCommandQueue& queue, bool markAsProcessed)
+{
+    m_batches[m_index].add(queue, markAsProcessed);
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueueBatches::process(bool onlyProcessNonProcessed)
+{
+    int indexOfANonProcessedBatch = -1;
+    for (unsigned i = 0; i < m_index; i++) {
+        if (!m_batches[i].isProcessed())
+        {
+            // ALOGE("VRWebGLCommandQueueBatches::process: processing i = %d with m_index = %d", i, m_index);
+            m_batches[i].process(false, onlyProcessNonProcessed);
+            indexOfANonProcessedBatch = i;
+            if (!onlyProcessNonProcessed)
+            {
+                break;
+            }
+        }
+    }
+
+    if (onlyProcessNonProcessed)
+    {
+        if (!m_batches[m_index].isProcessed())
+        {
+            // The current batch always has to be processed 
+            m_batches[m_index].process(false, onlyProcessNonProcessed);
+        }
+    }
+    else
+    {
+        if (indexOfANonProcessedBatch == -1)
+        {
+            m_batches[m_index].process(false, onlyProcessNonProcessed);
+        }
+        else if (m_index >= MAX_NUMBER_OF_BATCHES && m_batches[indexOfANonProcessedBatch].isProcessed())
+        {
+            m_batches[indexOfANonProcessedBatch] = m_batches[m_index];
+            m_index = indexOfANonProcessedBatch;
+            return;
+        }
+    }
+
+    // If the current batch has been processed, we are sure all of the batches
+    // have been processed, so copy it to index 0 to work from there from now
+    // on so the container is not always growing.
+    if (m_batches[m_index].isProcessed())
+    {
+        m_batches[0] = m_batches[m_index];
+        m_index = 0;
+    }
+}
+
+void VRWebGLCommandProcessor::VRWebGLCommandQueueBatches::clear()
+{
+    for (VRWebGLCommandQueue& batch: m_batches)
+    {
+        batch.clear();
+    }
+    m_index = 0;
+}
+
+unsigned VRWebGLCommandProcessor::VRWebGLCommandQueueBatches::getNumberOfBatches() const
+{
+    return m_index + 1;
+}
+
 VRWebGLCommandProcessor::VRWebGLCommandProcessor()
 {
     pthread_mutexattr_t	attr;
@@ -35,7 +247,7 @@ VRWebGLCommandProcessor::VRWebGLCommandProcessor()
     pthread_mutex_init(&m_mutex, &attr);
     pthread_mutexattr_destroy(&attr);
     pthread_cond_init(&m_synchronousVRWebGLCommandProcessed, NULL);
-    pthread_cond_init(&m_bothEyesRendered, NULL);
+    pthread_cond_init(&m_allBatchesProcessed, NULL);
 
     reset();
 }
@@ -50,7 +262,7 @@ VRWebGLCommandProcessor::~VRWebGLCommandProcessor()
 {
     pthread_mutex_destroy(&m_mutex);
     pthread_cond_destroy(&m_synchronousVRWebGLCommandProcessed);
-    pthread_cond_destroy(&m_bothEyesRendered);
+    pthread_cond_destroy(&m_allBatchesProcessed);
 }
 
 void VRWebGLCommandProcessor::startFrame()
@@ -85,29 +297,15 @@ void* VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(const std::share
         }
         else
         {
-            // The command is synchronous, so:
-            // 1.- Store the command so it can be executed in the OpenGL thread (check the update method).
-            // 2.- Stack all the commands up until now to be called too!
-            // 3.- Wait for the synchronous command to be processed.
-            // 4.- Return the result of the call
-            m_synchronousVRWebGLCommand = vrWebGLCommand;
-
-            ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing %d commands in the batch before adding", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-            m_vrWebGLCommandQueueBatch.insert(m_vrWebGLCommandQueueBatch.end(), m_vrWebGLCommandQueue.begin(), m_vrWebGLCommandQueue.end());
-            m_vrWebGLCommandQueue.clear();
-            ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing %d commands in the batch after adding", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-
             if (m_insideAFrame)
             {
                 ALOGE("VRWebGL: A synchronous call has been made inside a frame. Not a great idea. Many of these calls might slow down the JS process as they block the JS thread until the result of the call is provided from the OpenGL thread.");
             }
             
+            m_synchronousVRWebGLCommand = vrWebGLCommand;
             m_synchronousVRWebGLCommandResult = 0;
 
-            // while ( !m_synchronousVRWebGLCommandResult )
-            // {
-                pthread_cond_wait( &m_synchronousVRWebGLCommandProcessed, &m_mutex );
-            // }
+            pthread_cond_wait( &m_synchronousVRWebGLCommandProcessed, &m_mutex );
             
             result = m_synchronousVRWebGLCommandResult;
         }
@@ -116,12 +314,12 @@ void* VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(const std::share
     {
         if (vrWebGLCommand->isForUpdate())
         {
-            m_vrWebGLCommandForUpdateQueue.push_back(vrWebGLCommand);
+            m_vrWebGLCommandForUpdateQueue.queue(vrWebGLCommand);
         }
         else
         {
             vrWebGLCommand->setInsideAFrame(m_insideAFrame);
-            m_vrWebGLCommandQueue.push_back(vrWebGLCommand);
+            m_vrWebGLCommandQueue.queue(vrWebGLCommand);
         }
     }
     
@@ -145,80 +343,21 @@ void VRWebGLCommandProcessor::endFrame()
 
     m_insideAFrame = false;
     
-    while(!m_currentBatchRenderedForBothEyes || m_indexOfEyeBeingRendered == 0)
+    // If there was a synchronous command, add, if not, copy
+    if (m_synchronousCommandProcessedSoWaitForNextEndFrameToBeAbleToRender)
     {
-        pthread_cond_wait( &m_bothEyesRendered, &m_mutex );
+        // ALOGE("VRWebGLCommandProcessor::endFrame: add");
+        m_vrWebGLCommandQueueBatches.add(m_vrWebGLCommandQueue, false);
+        m_synchronousCommandProcessedSoWaitForNextEndFrameToBeAbleToRender = false;
     }
-
-    if (!m_vrWebGLCommandQueue.empty())
+    else
     {
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::endFrame %d commands in the batch", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-        m_vrWebGLCommandQueueBatch = m_vrWebGLCommandQueue;
-        m_vrWebGLCommandQueue.clear();
-        m_currentBatchRenderedForBothEyes = false;
-    }
-
-    m_synchronousVRWebGLCommandProcessedInUpdate = false;
-    
-    pthread_mutex_unlock( &m_mutex );
-}
-
-void VRWebGLCommandProcessor::update()
-{
-    pthread_mutex_lock( &m_mutex );
-
-    // Process all the commands that are for update only.
-    for (std::shared_ptr<VRWebGLCommand> vrWebGLCommandForUpdate: m_vrWebGLCommandForUpdateQueue)
-    {
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processing command for update %s", getCurrentThreadName().c_str(), vrWebGLCommandForUpdate->name().c_str());
-        vrWebGLCommandForUpdate->process();
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processed command for update %s", getCurrentThreadName().c_str(), vrWebGLCommandForUpdate->name().c_str());
-    }
-    m_vrWebGLCommandForUpdateQueue.clear();
-
-    if (m_reset)
-    {
-        m_resetEverything();
-        m_reset = false;
-    }
-
-    // Update all the surface textures
-    // No longer done here. Each texImage2D call will update its own surface texture with a command.
-    // m_surfaceTextures.update();
-
-    // If there is a synchronous VRWebGLCommand, execute it, store the result and notify the waiting thread
-    if (m_synchronousVRWebGLCommand)
-    {
-        // But before, execute all the commands that have been batched up until the execution of the synchronous command.
-        if (!m_vrWebGLCommandQueueBatch.empty())
-        {
-            ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update %d commands in the batch before processing", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-            for (unsigned int i = 0; i < m_vrWebGLCommandQueueBatch.size(); i++)
-            {
-                std::shared_ptr<VRWebGLCommand> vrWebGLCommand = m_vrWebGLCommandQueueBatch[i];
-
-                ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processing command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-                vrWebGLCommand->process();
-                ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processed command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-
-                if (!vrWebGLCommand->insideAFrame())
-                {
-                    ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update removing outside of a frame command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-                    m_vrWebGLCommandQueueBatch.erase(m_vrWebGLCommandQueueBatch.begin() + i);
-                    i--;
-                    ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update removed outside of a frame command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-                }
-            }
-            ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update %d commands in the batch after process", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-        }
-
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processing synchronous command %s", getCurrentThreadName().c_str(), m_synchronousVRWebGLCommand->name().c_str());
-        m_synchronousVRWebGLCommandResult = m_synchronousVRWebGLCommand->process();
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processed synchronous command %s", getCurrentThreadName().c_str(), m_synchronousVRWebGLCommand->name().c_str());
-        m_synchronousVRWebGLCommand.reset();
-        pthread_cond_broadcast( &m_synchronousVRWebGLCommandProcessed );
-
-        m_synchronousVRWebGLCommandProcessedInUpdate = true;
+        // ALOGE("VRWebGLCommandProcessor::endFrame: copy. m_vrWebGLCommandQueue.getNumberOfCommands() = %d", m_vrWebGLCommandQueue.getNumberOfCommands());
+        m_vrWebGLCommandQueueBatches.copy(m_vrWebGLCommandQueue);
+        // if (m_vrWebGLCommandQueueBatches.getNumberOfBatches() >= MAX_NUMBER_OF_BATCHES)
+        // {
+        //     pthread_cond_wait( &m_allBatchesProcessed, &m_mutex );
+        // }
     }
 
     pthread_mutex_unlock( &m_mutex );
@@ -229,42 +368,87 @@ void VRWebGLCommandProcessor::updateSurfaceTexture(GLuint textureId)
     m_surfaceTextures.update(textureId);
 }
 
-void VRWebGLCommandProcessor::renderFrame(bool process)
+void VRWebGLCommandProcessor::renderFrame(
+    const GLfloat* projectionMatrixL, 
+    const GLfloat* viewMatrixL,
+    int32_t leftL, int32_t bottomL, int32_t widthL, int32_t heightL,
+    const GLfloat* projectionMatrixR, 
+    const GLfloat* viewMatrixR,
+    int32_t leftR, int32_t bottomR, int32_t widthR, int32_t heightR)
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     pthread_mutex_lock( &m_mutex );
 
-    if (process && !m_synchronousVRWebGLCommand && !m_vrWebGLCommandQueueBatch.empty())
+    // If there is a synchronous VRWebGLCommand, execute it, store the result and notify the waiting thread
+    if (m_synchronousVRWebGLCommand)
     {
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::renderFrame %d commands in the batch before processing", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
-        for (unsigned int i = 0; i < m_vrWebGLCommandQueueBatch.size(); i++)
-        {
-            std::shared_ptr<VRWebGLCommand> vrWebGLCommand = m_vrWebGLCommandQueueBatch[i];
+        m_synchronousCommandProcessedSoWaitForNextEndFrameToBeAbleToRender = true;
 
-            ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::renderFrame processing command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-            vrWebGLCommand->process();
-            ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::renderFrame processed command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
+        // Make sure that all the batches that have not been processed are processed (but nothing more).
+        m_vrWebGLCommandQueueBatches.process(true);
 
-            if (!vrWebGLCommand->insideAFrame() && m_indexOfEyeBeingRendered == -1)
-            {
-                ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::renderFrame removing outside of a frame command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-                m_vrWebGLCommandQueueBatch.erase(m_vrWebGLCommandQueueBatch.begin() + i);
-                i--;
-                ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::renderFrame removed outside of a frame command %s", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-            }
-        }
-        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::renderFrame %d commands in the batch after process", getCurrentThreadName().c_str(), m_vrWebGLCommandQueueBatch.size());
+        // Process all the commands queued until this moment
+        // Do not empty it. The second parameter does not matter but what the
+        // heck, mark it as processed. It will be emptied in the next call.
+        m_vrWebGLCommandQueue.process(false, true);
+
+        // Append commands to the latest batch. Mark it as processed as all
+        // the commands have already been processed with the previous 2 
+        // calls so a future synchronous command won't re-execute them. When
+        // all synchronous commands are finished, at least future render calls
+        // will execute all of the commands. 
+        m_vrWebGLCommandQueueBatches.add(m_vrWebGLCommandQueue, true);
+
+        // Actually process the synchronous command
+        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processing synchronous command %s", getCurrentThreadName().c_str(), m_synchronousVRWebGLCommand->name().c_str());
+        m_synchronousVRWebGLCommandResult = m_synchronousVRWebGLCommand->process();
+        ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::update processed synchronous command %s", getCurrentThreadName().c_str(), m_synchronousVRWebGLCommand->name().c_str());
+        m_synchronousVRWebGLCommand.reset();
+        pthread_cond_broadcast( &m_synchronousVRWebGLCommandProcessed );
     }
 
-    // Increment the indexOfEyeBeingRendered to measure when the 2 calls, one for each eye, are made so we can notify to whoever is waiting for this condition
-    m_indexOfEyeBeingRendered++;
-    if (m_indexOfEyeBeingRendered == 1)
-    {        
-        m_indexOfEyeBeingRendered = -1;
-        m_currentBatchRenderedForBothEyes = true;
-        pthread_cond_broadcast( &m_bothEyesRendered );
+    // If reset was requested, comply
+    if (m_reset)
+    {
+        m_resetEverything();
+        m_reset = false;
     }
-    
-    pthread_mutex_unlock( &m_mutex );
+
+    // Execute any commands for update
+    m_vrWebGLCommandForUpdateQueue.process(true, true);
+
+    // Only render if the endFrame call cleared the state.
+    if (!m_synchronousCommandProcessedSoWaitForNextEndFrameToBeAbleToRender)
+    {
+        // Make a copy of the commands so we do not block the JS thread
+        m_vrWebGLCommandQueueBatchesCopy.copy(m_vrWebGLCommandQueueBatches);
+
+        pthread_mutex_unlock( &m_mutex );
+
+        setViewAndProjectionMatrices(projectionMatrixL, viewMatrixL);
+        setViewport(leftL, bottomL, widthL, heightL);
+        glViewport(leftL, bottomL, widthL, heightL);
+        m_vrWebGLCommandQueueBatchesCopy.process(false);
+
+        setViewAndProjectionMatrices(projectionMatrixR, viewMatrixR);
+        setViewport(leftR, bottomR, widthR, heightR);
+        glViewport(leftR, bottomR, widthR, heightR);
+        m_vrWebGLCommandQueueBatchesCopy.process(false);
+    }
+    else
+    {
+        pthread_mutex_unlock( &m_mutex );
+    }
+
+    // if (m_vrWebGLCommandQueueBatches.getNumberOfBatches() == 1)
+    // {
+    //     pthread_cond_broadcast( &m_allBatchesProcessed );
+    // }
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
+    ALOGE("VRWebGLCommandProcessor::renderFrame: elapsedTime = %lld", elapsed.count());
 }
 
 // The following methods should only be called from the OpenGL thread, so no mutex lock is implemented.
@@ -282,7 +466,7 @@ void VRWebGLCommandProcessor::setMatrixUniformLocationForName(const GLuint progr
     }
     else if (std::find(m_modelViewProjectionMatrixUniformNames.begin(), m_modelViewProjectionMatrixUniformNames.end(), name) != m_modelViewProjectionMatrixUniformNames.end())
     {
-        ALOGE("VRWebGL: modelviewprojection matrix uniform '%s' found. Storing location '%d' for program '%d'", name.c_str(), location, program);
+        ALOGV("VRWebGL: modelviewprojection matrix uniform '%s' found. Storing location '%d' for program '%d'", name.c_str(), location, program);
         m_modelViewProjectionMatrixProgramAndUniformLocations.push_back(VRWebGLProgramAndUniformLocation(program, location));
     }
 }
@@ -399,13 +583,14 @@ const GLfloat* VRWebGLCommandProcessor::getCameraWorldMatrixWithTranslationOnly(
 void VRWebGLCommandProcessor::m_resetEverything() 
 {
     m_vrWebGLCommandQueue.clear();
-    m_vrWebGLCommandQueueBatch.clear();
+    m_vrWebGLCommandQueueBatches.clear();
+    m_vrWebGLCommandQueueBatchesCopy.clear();
     m_vrWebGLCommandForUpdateQueue.clear();
+
     m_insideAFrame = false;
-    m_currentBatchRenderedForBothEyes = true;
+    m_synchronousCommandProcessedSoWaitForNextEndFrameToBeAbleToRender = false;
     m_synchronousVRWebGLCommand.reset();
     m_synchronousVRWebGLCommandResult = 0;
-    m_indexOfEyeBeingRendered = -1;
 
     m_surfaceTextures.clear();
 
@@ -420,59 +605,59 @@ void VRWebGLCommandProcessor::m_resetEverything()
     m_projectionMatrixUniformNames.clear();
     
     // WebGLLessons
-    m_projectionMatrixUniformNames.push_back("uProjectionMatrix");
-    m_projectionMatrixUniformNames.push_back("uPMatrix");
+    m_projectionMatrixUniformNames.insert("uProjectionMatrix");
+    m_projectionMatrixUniformNames.insert("uPMatrix");
 
     // ThreeJS
-    m_projectionMatrixUniformNames.push_back("projectionMatrix");
+    m_projectionMatrixUniformNames.insert("projectionMatrix");
     
     // PlayCanvas
-    m_projectionMatrixUniformNames.push_back("matrix_projection"); 
-    m_projectionMatrixUniformNames.push_back("matrix_viewProjection");
+    m_projectionMatrixUniformNames.insert("matrix_projection"); 
+    m_projectionMatrixUniformNames.insert("matrix_viewProjection");
     
     // Sketchfab
-    m_projectionMatrixUniformNames.push_back("ProjectionMatrix");
+    m_projectionMatrixUniformNames.insert("ProjectionMatrix");
     
     // Goo
-    m_projectionMatrixUniformNames.push_back("projectionMatrix"); 
-    m_projectionMatrixUniformNames.push_back("viewProjectionMatrix"); 
+    m_projectionMatrixUniformNames.insert("projectionMatrix"); 
+    m_projectionMatrixUniformNames.insert("viewProjectionMatrix"); 
 
     // Soft shadow example
-    m_projectionMatrixUniformNames.push_back("camProj"); 
+    m_projectionMatrixUniformNames.insert("camProj"); 
 
     // Tojiro's webgl examples
-    m_projectionMatrixUniformNames.push_back("projectionMat"); 
+    m_projectionMatrixUniformNames.insert("projectionMat"); 
 
     // MODELVIEW
     m_modelViewMatrixUniformNames.clear();
     
     // WebGLLessons
-    m_modelViewMatrixUniformNames.push_back("uMVMatrix");
+    m_modelViewMatrixUniformNames.insert("uMVMatrix");
     
     // ThreeJS
-    m_modelViewMatrixUniformNames.push_back("modelViewMatrix"); 
+    m_modelViewMatrixUniformNames.insert("modelViewMatrix"); 
     
     // PlayCanvas
-    m_modelViewMatrixUniformNames.push_back("matrix_view"); 
-    m_modelViewMatrixUniformNames.push_back("matrix_model");
+    m_modelViewMatrixUniformNames.insert("matrix_view"); 
+    m_modelViewMatrixUniformNames.insert("matrix_model");
     
     // Sketchfab
-    m_modelViewMatrixUniformNames.push_back("ModelViewMatrix"); 
+    m_modelViewMatrixUniformNames.insert("ModelViewMatrix"); 
     
     // Goo
-    m_modelViewMatrixUniformNames.push_back("viewMatrix"); 
-    m_modelViewMatrixUniformNames.push_back("worldMatrix"); 
+    m_modelViewMatrixUniformNames.insert("viewMatrix"); 
+    m_modelViewMatrixUniformNames.insert("worldMatrix"); 
 
     // Soft shadow example
-    m_modelViewMatrixUniformNames.push_back("camView"); 
+    m_modelViewMatrixUniformNames.insert("camView"); 
 
     // Tojiro's webgl examples
-    m_modelViewMatrixUniformNames.push_back("viewMat"); 
+    m_modelViewMatrixUniformNames.insert("viewMat"); 
 
 
 
     // MODELVIEWPROJECTION
-    m_modelViewProjectionMatrixUniformNames.push_back("uMatMVP");
+    m_modelViewProjectionMatrixUniformNames.insert("uMatMVP");
 
     // Reset the thread ids
     memset(m_threadIds, 0, sizeof(m_threadIds));
@@ -490,11 +675,6 @@ void VRWebGLCommandProcessor::reset() {
     pthread_mutex_lock( &m_mutex );
     m_reset = true;
     pthread_mutex_unlock( &m_mutex );
-}
-
-bool VRWebGLCommandProcessor::m_synchronousVRWebGLCommandBeenProcessedInUpdate() const
-{
-    return m_synchronousVRWebGLCommandProcessedInUpdate;
 }
 
 void VRWebGLCommandProcessor::setupJNI(JNIEnv* jniEnv, jobject mainActivityJObject)
@@ -1435,7 +1615,6 @@ std::string VRWebGLCommand_deleteVideo::name() const
 
 VRWebGLCommand_setVideoSrc::VRWebGLCommand_setVideoSrc(GLuint textureId, const std::string& src): textureId(textureId), src(src)
 {
-    ALOGE("JudaX: VRWebGLCommand_setVideoSrc::constructor(%d, %s)", textureId, src.c_str());
 }
 
 std::shared_ptr<VRWebGLCommand_setVideoSrc> VRWebGLCommand_setVideoSrc::newInstance(GLuint textureId, const std::string& src)
@@ -1460,7 +1639,6 @@ bool VRWebGLCommand_setVideoSrc::canBeProcessedImmediately() const
 
 void* VRWebGLCommand_setVideoSrc::process()
 {
-    ALOGE("JudaX: VRWebGLCommand_setVideoSrc::process(%d, %s)", textureId, src.c_str());
     std::shared_ptr<VRWebGLSurfaceTexture> surfaceTexture = VRWebGLCommandProcessor::getInstance()->findSurfaceTextureByTextureId(textureId);
     if (surfaceTexture)
     {
