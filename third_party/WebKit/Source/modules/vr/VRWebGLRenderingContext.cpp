@@ -34,7 +34,7 @@
 
 #include "modules/gamepad/Gamepad.h"
 
-namespace blink 
+namespace blink
 {
 
 VRWebGLRenderingContext::LRUImageBufferCache::LRUImageBufferCache(int capacity)
@@ -257,7 +257,7 @@ void StripComments::process(UChar c)
     }
 }
 
-#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD	
+#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD
 
 void* openGLThreadFunction( void * param )
 {
@@ -290,13 +290,13 @@ VRWebGLRenderingContext* VRWebGLRenderingContext::create()
 
 	VRWebGLRenderingContext* instance = new VRWebGLRenderingContext();
 
-#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD	
+#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD
     const int createErr = pthread_create(&(instance->m_openGLThread), NULL, openGLThreadFunction, instance);
     if ( createErr != 0 )
     {
         VLOG(0) << "VRWebGL: pthread_create returned " << createErr << " while creating simulated openGL thread." << std::endl;
     }
-#endif    
+#endif
 
 	VLOG(0) << "VRWebGL: VRWebGLRenderingContext::create end";
 	return instance;
@@ -308,7 +308,7 @@ VRWebGLRenderingContext::~VRWebGLRenderingContext()
 
 	m_destroyed = true;
 
-#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD	
+#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD
 	pthread_join( m_openGLThread, NULL );
 #endif
 
@@ -380,10 +380,10 @@ void VRWebGLRenderingContext::bindTexture(ScriptState* scriptState, GLenum targe
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_bindTexture::newInstance(target, texture);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::bindTexture end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::bindTexture end";
     m_textureCurrentlyBound = texture;
 }
-    
+
 void VRWebGLRenderingContext::blendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendColor begin";
@@ -399,7 +399,7 @@ void VRWebGLRenderingContext::blendEquation(GLenum mode)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_blendEquation::newInstance(mode);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendEquation end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendEquation end";
 }
 
 void VRWebGLRenderingContext::blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
@@ -408,7 +408,7 @@ void VRWebGLRenderingContext::blendEquationSeparate(GLenum modeRGB, GLenum modeA
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_blendEquationSeparate::newInstance(modeRGB, modeAlpha);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendEquationSeparate end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendEquationSeparate end";
 }
 
 void VRWebGLRenderingContext::blendFunc(GLenum sfactor, GLenum dfactor)
@@ -417,7 +417,7 @@ void VRWebGLRenderingContext::blendFunc(GLenum sfactor, GLenum dfactor)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_blendFunc::newInstance(sfactor, dfactor);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendFunc end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendFunc end";
 }
 
 void VRWebGLRenderingContext::blendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
@@ -426,7 +426,7 @@ void VRWebGLRenderingContext::blendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GL
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_blendFuncSeparate::newInstance(srcRGB, dstRGB, srcAlpha, dstAlpha);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendFuncSeparate end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::blendFuncSeparate end";
 }
 
 void VRWebGLRenderingContext::bufferData(GLenum target, long long size, GLenum usage)
@@ -559,7 +559,7 @@ VRWebGLBuffer* VRWebGLRenderingContext::createBuffer()
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::createBuffer end";
 
 	m_vrWebGLObjects.add(vrWebGLBuffer);
-	
+
 	return vrWebGLBuffer;
 }
 
@@ -573,7 +573,7 @@ VRWebGLFramebuffer* VRWebGLRenderingContext::createFramebuffer()
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::createFramebuffer end";
 
 	m_vrWebGLObjects.add(vrWebGLFramebuffer);
-	
+
 	return vrWebGLFramebuffer;
 }
 
@@ -587,7 +587,7 @@ VRWebGLProgram* VRWebGLRenderingContext::createProgram()
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::createProgram end";
 
 	m_vrWebGLObjects.add(vrWebGLProgram);
-	
+
 	return vrWebGLProgram;
 }
 
@@ -601,7 +601,7 @@ VRWebGLRenderbuffer* VRWebGLRenderingContext::createRenderbuffer()
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::createRenderbuffer end";
 
 	m_vrWebGLObjects.add(vrWebGLRenderbuffer);
-	
+
 	return vrWebGLRenderbuffer;
 }
 
@@ -629,7 +629,7 @@ VRWebGLTexture* VRWebGLRenderingContext::createTexture()
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::createTexture end";
 
 	m_vrWebGLObjects.add(vrWebGLTexture);
-	
+
 	return vrWebGLTexture;
 }
 
@@ -639,7 +639,7 @@ void VRWebGLRenderingContext::cullFace(GLenum mode)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_cullFace::newInstance(mode);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::cullFace end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::cullFace end";
 }
 
 void VRWebGLRenderingContext::deleteBuffer(VRWebGLBuffer* buffer)
@@ -706,7 +706,7 @@ void VRWebGLRenderingContext::depthFunc(GLenum func)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_depthFunc::newInstance(func);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::depthFunc end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::depthFunc end";
 }
 
 void VRWebGLRenderingContext::depthMask(GLboolean flag)
@@ -715,7 +715,7 @@ void VRWebGLRenderingContext::depthMask(GLboolean flag)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_depthMask::newInstance(flag);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::depthMask end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::depthMask end";
 }
 
 void VRWebGLRenderingContext::depthRange(GLfloat zNear, GLfloat zFar)
@@ -729,7 +729,7 @@ void VRWebGLRenderingContext::depthRange(GLfloat zNear, GLfloat zFar)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_depthRangef::newInstance(zNear, zFar);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::depthRange end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::depthRange end";
 }
 
 void VRWebGLRenderingContext::detachShader(ScriptState* scriptState, VRWebGLProgram* program, VRWebGLShader* shader)
@@ -757,7 +757,7 @@ void VRWebGLRenderingContext::disable(GLenum cap)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_disable::newInstance(cap);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::disable end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::disable end";
 }
 
 
@@ -794,7 +794,7 @@ void VRWebGLRenderingContext::enable(GLenum cap)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_enable::newInstance(cap);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::enable end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::enable end";
 }
 
 void VRWebGLRenderingContext::enableVertexAttribArray(GLuint index)
@@ -834,7 +834,7 @@ void VRWebGLRenderingContext::frontFace(GLenum mode)
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_frontFace::newInstance(mode);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::frontFace end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::frontFace end";
 }
 
 void VRWebGLRenderingContext::generateMipmap(GLenum target)
@@ -882,7 +882,7 @@ VRWebGLActiveInfo* VRWebGLRenderingContext::getActiveAttrib(VRWebGLProgram* prog
 VRWebGLActiveInfo* VRWebGLRenderingContext::getActiveUniform(VRWebGLProgram* program, GLuint index)
 {
 	// Take advantage that these 2 commands are synchronous.
-	
+
 	// First call the getProgramiv to get the max size among the active uniform names
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::getProgramiv begin";
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_getProgramiv::newInstance(program, GL_ACTIVE_UNIFORM_MAX_LENGTH);
@@ -938,28 +938,37 @@ GLenum VRWebGLRenderingContext::getError()
 	return *((GLenum*)result);
 }
 
-ScriptValue VRWebGLRenderingContext::getExtension(ScriptState* scriptState, const String& name)
+ScriptValue VRWebGLRenderingContext::getExtension(ScriptState* scriptState, const String& original_name)
 {
+    // TODO: names changed in the constructor, replace when fixed
+    String name = String(original_name);
+    name.replace("GL_", "");
+    name.replace("EXT_", "");
+    name.replace("OES_", "");
+    name.replace("QCOM_", "");
+    name.replace("ANDROID_", "");
+    name.replace("OVR_", "");
+    name.replace("KHR_", "");
+
 	bool result = false;
-	for (size_t i = 0; !result && i < m_supportedExtensionNames.size(); i++) 
+	for (size_t i = 0; !result && i < m_supportedExtensionNames.size(); i++)
 	{
 		result = name.contains(m_supportedExtensionNames[i], TextCaseASCIIInsensitive);
 	}
 
     ScriptValue sv = ScriptValue::createNull(scriptState);
+
     // TODO: Create a proper structure (map) to hold all the supported extensions.
-    if (result)
+    // TODO: Get rid of this when the proper structure to hold the extensions is in place.
+    if (result || name.contains("ANGLE_instanced_arrays", TextCaseASCIIInsensitive))
     {
-        // TODO: Get rid of this when the proper structure to hold the extensions is in place.
-        if (name.contains("ANGLE_instanced_arrays", TextCaseASCIIInsensitive))
-        {
-            // TODO: In the Gear VR, this code is making the app to crash.
-            
-            // v8::Local<v8::Value> wrappedExtension =
-            //   ToV8(m_angleInstancedArraysExtension, scriptState->context()->Global(), scriptState->isolate());
-            // sv = ScriptValue(scriptState, wrappedExtension);
-        }
+        // TODO: m_angleInstancedArraysExtension is returned if extension is supported, return correct extension insted
+        v8::Local<v8::Value> wrappedExtension =
+          ToV8(m_angleInstancedArraysExtension, scriptState->context()->Global(), scriptState->isolate());
+
+        sv = ScriptValue(scriptState, wrappedExtension);
     }
+
     return sv;
 }
 
@@ -1260,7 +1269,7 @@ ScriptValue VRWebGLRenderingContext::getProgramParameter(ScriptState* scriptStat
     //     }
     default:
         return ScriptValue::createNull(scriptState);
-    }	
+    }
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name() << " result = " << *((GLint*)result);
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::getProgramParameter end";
 	return ScriptValue::createNull(scriptState);
@@ -1428,7 +1437,7 @@ void VRWebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width, GLsize
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_readPixels::newInstance(x, y, width, height, format, type, data);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::readPixels end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::readPixels end";
 }
 
 void VRWebGLRenderingContext::renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
@@ -1437,12 +1446,12 @@ void VRWebGLRenderingContext::renderbufferStorage(GLenum target, GLenum internal
 	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_renderbufferStorage::newInstance(target, internalformat, width, height);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::renderbufferStorage end";	
+	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::renderbufferStorage end";
 }
 
 void VRWebGLRenderingContext::scissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-	if (m_framebufferCurrentlyBound != 0) 
+	if (m_framebufferCurrentlyBound != 0)
 	{
 		// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::scissor begin";
 		std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_scissor::newInstance(x, y, width, height);
@@ -1491,7 +1500,7 @@ const char* VRWebGLRenderingContext::getTexImageFunctionName(TexImageFunctionID 
     }
 }
 
-IntRect VRWebGLRenderingContext::sentinelEmptyRect() 
+IntRect VRWebGLRenderingContext::sentinelEmptyRect()
 {
   // Return a rectangle with -1 width and height so we can recognize
   // it later and recalculate it based on the Image whose data we'll
@@ -1507,7 +1516,7 @@ IntRect VRWebGLRenderingContext::safeGetImageSize(Image* image) {
   return getTextureSourceSize(image);
 }
 
-IntRect VRWebGLRenderingContext::getImageDataSize(ImageData* pixels) 
+IntRect VRWebGLRenderingContext::getImageDataSize(ImageData* pixels)
 {
   DCHECK(pixels);
   return getTextureSourceSize(pixels);
@@ -1614,8 +1623,8 @@ void VRWebGLRenderingContext::texImageHelperImageData(TexImageFunctionID functio
         }
 
         if (!WebGLImageConversion::extractImageData(
-                pixels->data()->data(), WebGLImageConversion::DataFormat::DataFormatRGBA8, 
-                pixels->size(), adjustedSourceImageRect, depth, unpackImageHeight, format, 
+                pixels->data()->data(), WebGLImageConversion::DataFormat::DataFormatRGBA8,
+                pixels->size(), adjustedSourceImageRect, depth, unpackImageHeight, format,
                 type, m_unpackFlipY, m_unpackPremultiplyAlpha, data)) {
 	        VLOG(0) << "VRWebGL: ERROR: " << funcName << ", bad image data.";
             return;
@@ -1684,15 +1693,15 @@ void VRWebGLRenderingContext::texImageHelperHTMLImageElement(TexImageFunctionID 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, HTMLImageElement* image, ExceptionState& exceptionState)
 {
-    texImageHelperHTMLImageElement(TexImage2D, 
-        target, level, internalformat, format, type, 0, 
+    texImageHelperHTMLImageElement(TexImage2D,
+        target, level, internalformat, format, type, 0,
         0, 0, image, sentinelEmptyRect(), 1, 0, exceptionState);
 }
 
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, HTMLCanvasElement* canvas, ExceptionState& exceptionState)
 {
-	VLOG(0) << "VRWebGL: ERROR: textImage2D with HTMLCanvasElement is still not supported. Sorry :(.";	
+	VLOG(0) << "VRWebGL: ERROR: textImage2D with HTMLCanvasElement is still not supported. Sorry :(.";
 	// TODO
     // // texImageCanvasByGPU relies on copyTextureCHROMIUM which doesn't support float/integer/sRGB internal format.
     // // FIXME: relax the constrains if copyTextureCHROMIUM is upgraded to handle more formats.
@@ -1712,7 +1721,7 @@ PassRefPtr<Image> VRWebGLRenderingContext::videoFrameToImage(HTMLVideoElement* v
     IntSize size(video->videoWidth(), video->videoHeight());
     ImageBuffer* buf = m_generatedImageCache.imageBuffer(size);
     if (!buf) {
-        VLOG(0) << "VRWebGL: ERROR: textImage2D out of memory. Sorry :(.";  
+        VLOG(0) << "VRWebGL: ERROR: textImage2D out of memory. Sorry :(.";
         return nullptr;
     }
     IntRect destRect(0, 0, size.width(), size.height());
@@ -1783,12 +1792,12 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
     std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_updateSurfaceTexture::newInstance(video->textureId());
     // VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
     VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D end";  
+    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D end";
 
     // Assign the external texture id to the current bound texture.
     if (m_textureCurrentlyBound)
     {
-        if (m_textureCurrentlyBound->externalTextureId() != video->textureId()) 
+        if (m_textureCurrentlyBound->externalTextureId() != video->textureId())
         {
             m_textureCurrentlyBound->setExternalTextureId(video->textureId());
         }
@@ -1802,12 +1811,12 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
     std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_updateSurfaceTexture::newInstance(webview->textureId());
     // VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
     VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
-    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D end";  
+    // VLOG(0) << "VRWebGL: VRWebGLRenderingContext::texImage2D end";
 
 
     if (m_textureCurrentlyBound)
     {
-        if (m_textureCurrentlyBound->externalTextureId() != webview->textureId()) 
+        if (m_textureCurrentlyBound->externalTextureId() != webview->textureId())
         {
             m_textureCurrentlyBound->setExternalTextureId(webview->textureId());
         }
@@ -1817,7 +1826,7 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
 void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint internalformat,
     GLenum format, GLenum type, ImageBitmap* bitmap, ExceptionState& exceptionState)
 {
-    VLOG(0) << "VRWebGL: ERROR: textImage2D with ImageBitmap is still not supported. Sorry :(.";  
+    VLOG(0) << "VRWebGL: ERROR: textImage2D with ImageBitmap is still not supported. Sorry :(.";
     // ASSERT(bitmap->bitmapImage());
     // OwnPtr<uint8_t[]> pixelData = bitmap->copyBitmapData(bitmap->isPremultiplied() ? PremultiplyAlpha : DontPremultiplyAlpha);
     // Vector<uint8_t> data;
@@ -2230,7 +2239,7 @@ void VRWebGLRenderingContext::setCameraProjectionMatrix(Vector<GLfloat>& value)
 
 void VRWebGLRenderingContext::setRenderEnabled(bool flag)
 {
-    VRWebGLCommandProcessor::getInstance()->setRenderEnabled(flag);    
+    VRWebGLCommandProcessor::getInstance()->setRenderEnabled(flag);
 }
 
 Gamepad* VRWebGLRenderingContext::getGamepad()
@@ -2251,7 +2260,7 @@ Gamepad* VRWebGLRenderingContext::getGamepad()
         m_gamepad->setHand(gamepad->hand);
     }
     return m_gamepad;
-} 
+}
 
 // VRWebGLRenderingContext::VRWebGLRenderingContext(HTMLCanvasElement* canvas): m_canvas(canvas)
 // {
@@ -2268,13 +2277,13 @@ VRWebGLRenderingContext::VRWebGLRenderingContext():
 	void* result = VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_getString::newInstance(GL_EXTENSIONS));
 
 	String extensionsString((const GLubyte*)result);
-    extensionsString.split(' ', m_supportedExtensionNames);	
+    extensionsString.split(' ', m_supportedExtensionNames);
     // TODO: It seems that the right way to get all the extension available is to use the GLES3 way of asking for the number of extensions first and then go for each of the strings one by one: https://github.com/android-ndk/ndk/issues/279. Adding this extension manually for now but fix it asap.
     m_supportedExtensionNames.push_back("ANGLE_instanced_arrays");
 
     // TODO: We shouldn't need to do this when the extensions are properly handled.
 	VLOG(0) << "VRWebGL: Supported extensions: " << extensionsString;
-	for (size_t i = 0; i < m_supportedExtensionNames.size(); i++) 
+	for (size_t i = 0; i < m_supportedExtensionNames.size(); i++)
 	{
 		m_supportedExtensionNames[i].replace("GL_", "");
 		m_supportedExtensionNames[i].replace("EXT_", "");
@@ -2340,7 +2349,7 @@ void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum
     IntRect adjustedSourceImageRect = subRect;
     if (flipY) {
         adjustedSourceImageRect.setY(image->height() - adjustedSourceImageRect.maxY());
-    }    
+    }
 
     Vector<uint8_t> data;
     WebGLImageConversion::ImageExtractor imageExtractor(image, domSource, premultiplyAlpha, m_unpackColorspaceConversion == GL_NONE);
@@ -2358,7 +2367,7 @@ void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum
     } else {
 
         if (!WebGLImageConversion::packImageData(
-                image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat, 
+                image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat,
                 imageExtractor.imageWidth(), imageExtractor.imageHeight(), adjustedSourceImageRect, depth,
                 imageExtractor.imageSourceUnpackAlignment(), unpackImageHeight, data)) {
 	        VLOG(0) << "VRWebGL: ERROR: " << funcName << ", packImage error";
@@ -2403,7 +2412,7 @@ void VRWebGLRenderingContext::texImageImpl(TexImageFunctionID functionID, GLenum
 //     } else {
 //     	VLOG(0) << "VRWebGL: converting image..." << type << " == " << GL_UNSIGNED_BYTE << ", " << (int)sourceDataFormat << " == " << (int)WebGLImageConversion::DataFormatRGBA8 << ", " << format << " == " << GL_RGBA << ", " << (int)alphaOp << " == " << (int)WebGLImageConversion::AlphaDoNothing << ", " << (flipY ? "true" : "false");
 //         if (!WebGLImageConversion::packImageData(
-//                 image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat, 
+//                 image, imagePixelData, format, type, flipY, alphaOp, sourceDataFormat,
 //                 imageExtractor.imageWidth(), imageExtractor.imageHeight(), adjustedSourceImageRect, depth,
 //                 imageExtractor.imageSourceUnpackAlignment(), data)) {
 //             VLOG(0) << "VRWebGL: ERROR: texImage2D, packImage error";
@@ -2504,7 +2513,7 @@ void VRWebGLRenderingContext::texParameter(GLenum target, GLenum pname, GLfloat 
     if (isFloat) {
 		vrWebGLCommand = VRWebGLCommand_texParameterf::newInstance(target, pname, paramf);
     } else {
-        // Pass the texture to try to apply the correct target for external textures for filters. 
+        // Pass the texture to try to apply the correct target for external textures for filters.
 		vrWebGLCommand = VRWebGLCommand_texParameteri::newInstance(target, pname, parami, m_textureCurrentlyBound);
     }
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
