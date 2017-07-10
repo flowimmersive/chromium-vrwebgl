@@ -103,14 +103,14 @@ import android.speech.RecognitionListener;
 /**
  * This is a lightweight activity for tests that only require WebView functionality.
  */
-public class AwShellActivity extends Activity implements 
+public class AwShellActivity extends Activity implements
         SurfaceTexture.OnFrameAvailableListener,
         MediaPlayer.OnVideoSizeChangedListener,
         MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnPreparedListener,
         AudioManager.OnAudioFocusChangeListener,
-        SurfaceHolder.Callback {  
+        SurfaceHolder.Callback {
     private static final String TAG = "cr.AwShellActivity";
     private static final String PREFERENCES_NAME = "AwShellPrefs";
     private static final String INITIAL_URL = "No URL provided either in the intent nor in the config.json";
@@ -129,8 +129,8 @@ public class AwShellActivity extends Activity implements
 
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
-    private long nativePointer = 0;   
-    
+    private long nativePointer = 0;
+
     private class Video
     {
         public static final int PLAY = 1;
@@ -144,7 +144,7 @@ public class AwShellActivity extends Activity implements
     private ArrayList<Video> videos = new ArrayList<Video>();
     private AudioManager audioManager = null;
 
-    class WebView extends android.webkit.WebView 
+    class WebView extends android.webkit.WebView
     {
         public static final int WEBVIEW_TEXTURE_WIDTH = 800; //960;
         public static final int WEBVIEW_TEXTURE_HEIGHT = 533; //640;
@@ -164,16 +164,16 @@ public class AwShellActivity extends Activity implements
         public static final int CURSOR_ENTER = 1;
         public static final int CURSOR_MOVE = 2;
         public static final int CURSOR_EXIT = 3;
- 
+
         private Surface surface = null;
-        private SurfaceTexture surfaceTexture = null; 
+        private SurfaceTexture surfaceTexture = null;
         private int nativeTextureId = -1;
         private boolean transparent = false;
         public MotionEvent.PointerProperties[] pointerProperties = { new MotionEvent.PointerProperties() };
         public MotionEvent.PointerCoords[] pointerCoords = { new MotionEvent.PointerCoords() };
         public VRBrowserJSInterface vrbrowser = null;
 
-        public WebView( Context context, SurfaceTexture surfaceTexture, int nativeTextureId ) 
+        public WebView( Context context, SurfaceTexture surfaceTexture, int nativeTextureId )
         {
             super( context );
 
@@ -206,33 +206,33 @@ public class AwShellActivity extends Activity implements
                 @Override
                 public void onPageStarted(android.webkit.WebView view, String url, Bitmap favicon)
                 {
-                    dispatchEventToVRWebGL("loadstart", 
+                    dispatchEventToVRWebGL("loadstart",
                         "{ url: '" + url + "'}");
                 }
 
                 @Override
                 public void onPageFinished(android.webkit.WebView view, String url)
                 {
-                    dispatchEventToVRWebGL("loadend", 
+                    dispatchEventToVRWebGL("loadend",
                         "{ url: '" + url + "'}");
                 }
 
                 @Override
                 public void onLoadResource(android.webkit.WebView view, String url)
                 {
-                    dispatchEventToVRWebGL("loadresource", 
+                    dispatchEventToVRWebGL("loadresource",
                         "{ url: '" + url + "'}");
                 }
 
                 @Override
                 public void onReceivedError(android.webkit.WebView view,
-                    android.webkit.WebResourceRequest request, 
+                    android.webkit.WebResourceRequest request,
                     android.webkit.WebResourceError error)
                 {
-                    dispatchEventToVRWebGL("error", 
+                    dispatchEventToVRWebGL("error",
                         "{ " +
-                            "url: '" + request.getUrl() + "', " + 
-                            "isForMainFrame: " + request.isForMainFrame() + 
+                            "url: '" + request.getUrl() + "', " +
+                            "isForMainFrame: " + request.isForMainFrame() +
                                 ", " +
                             "isRedirect: " + request.isRedirect() + ", " +
                             "description: '" + error.getDescription() + "', " +
@@ -241,17 +241,17 @@ public class AwShellActivity extends Activity implements
                 }
 
                 @Override
-                public void onReceivedHttpError(android.webkit.WebView view, 
+                public void onReceivedHttpError(android.webkit.WebView view,
                     android.webkit.WebResourceRequest request,
                     android.webkit.WebResourceResponse errorResponse)
                 {
-                    dispatchEventToVRWebGL("httperror", 
+                    dispatchEventToVRWebGL("httperror",
                         "{ " +
-                            "url: '" + request.getUrl() + "', " + 
-                            "isForMainFrame: " + request.isForMainFrame() + 
+                            "url: '" + request.getUrl() + "', " +
+                            "isForMainFrame: " + request.isForMainFrame() +
                                 ", " +
                             "isRedirect: " + request.isRedirect() + ", " +
-                            "reasonPhrase: '" + 
+                            "reasonPhrase: '" +
                                 errorResponse.getReasonPhrase() + "', " +
                             "statusCode: " + errorResponse.getStatusCode() +
                         "}");
@@ -259,21 +259,21 @@ public class AwShellActivity extends Activity implements
 
                 @Override
                 public void onReceivedSslError (android.webkit.WebView view,
-                    android.webkit.SslErrorHandler handler, 
+                    android.webkit.SslErrorHandler handler,
                     android.net.http.SslError error)
                 {
-                    dispatchEventToVRWebGL("sslerror", 
+                    dispatchEventToVRWebGL("sslerror",
                         "{ " +
-                            "url: '" + error.getUrl() + "', " + 
+                            "url: '" + error.getUrl() + "', " +
                             "primaryError: " + error.getPrimaryError() +
                         "}");
                 }
 
             });
-            setWebChromeClient(new WebChromeClient() 
+            setWebChromeClient(new WebChromeClient()
             {
                 @Override
-                public void onProgressChanged(android.webkit.WebView view, int progress) 
+                public void onProgressChanged(android.webkit.WebView view, int progress)
                 {
                     dispatchEventToVRWebGL("loadprogress", "{ url: '" + view.getUrl() + "', progress: " + progress + "}");
                 }
@@ -296,12 +296,12 @@ public class AwShellActivity extends Activity implements
         }
 
         @Override
-        protected void onDraw( Canvas canvas ) 
+        protected void onDraw( Canvas canvas )
         {
-            if ( surface != null ) 
+            if ( surface != null )
             {
-                try 
-                {                    
+                try
+                {
                     // final Canvas surfaceCanvas = surface.lockHardwareCanvas();
                     final Canvas surfaceCanvas = surface.lockCanvas( null );
 
@@ -315,11 +315,11 @@ public class AwShellActivity extends Activity implements
                     surfaceCanvas.restore();
 
                     surface.unlockCanvasAndPost( surfaceCanvas );
-                } 
-                catch ( Surface.OutOfResourcesException e ) 
+                }
+                catch ( Surface.OutOfResourcesException e )
                 {
                     e.printStackTrace();
-                }    
+                }
             }
             // super.onDraw( canvas ); // Uncomment this to render the webview as a 2d view on top of everything.
         }
@@ -332,7 +332,7 @@ public class AwShellActivity extends Activity implements
         public int getTextureId()
         {
             return nativeTextureId;
-        } 
+        }
 
         public void setTransparent(boolean transparent)
         {
@@ -364,14 +364,14 @@ public class AwShellActivity extends Activity implements
             speechRecognizer.setRecognitionListener(this);
         }
 
-        void destroy() 
+        void destroy()
         {
             speechRecognizer.destroy();
         }
 
         @Override
         public void onBeginningOfSpeech()
-        {               
+        {
             // System.out.println("SpeechRecognitionListener.onBeginningOfSpeech");
             dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "speechstart", "{}");
         }
@@ -443,7 +443,7 @@ public class AwShellActivity extends Activity implements
         public void onReadyForSpeech(Bundle params)
         {
             // System.out.println("SpeechRecognitionListener.onReadyForSpeech");
-            dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "start", 
+            dispatchEventToVRWebGL(INDEX_SPEECH_RECOGNITION, id, "start",
                 "{}");
         }
 
@@ -530,7 +530,7 @@ public class AwShellActivity extends Activity implements
         }
     }
 
-    private String vrWebGLJSCode; 
+    private String vrWebGLJSCode;
     private String url;
     private boolean urlLoaded = false;
 
@@ -555,20 +555,20 @@ public class AwShellActivity extends Activity implements
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
-    private void requestExternalStorageReadPermission() 
+    private void requestExternalStorageReadPermission()
     {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
         {
             // Should we show an explanation?
-            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) 
+            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE))
             // {
 
             //     // Show an expanation to the user *asynchronously* -- don't block
             //     // this thread waiting for the user's response! After the user
             //     // sees the explanation, try again to request the permission.
 
-            // } 
-            // else 
+            // }
+            // else
             {
 
                 // No explanation needed, we can request the permission.
@@ -578,22 +578,22 @@ public class AwShellActivity extends Activity implements
                         READ_EXTERNAL_STORAGE_PERMISSION_ID);
             }
         }
-    }    
+    }
 
-    private void requestRecordAudioPermission() 
+    private void requestRecordAudioPermission()
     {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
         {
             // Should we show an explanation?
-            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) 
+            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE))
             // {
 
             //     // Show an expanation to the user *asynchronously* -- don't block
             //     // this thread waiting for the user's response! After the user
             //     // sees the explanation, try again to request the permission.
 
-            // } 
-            // else 
+            // }
+            // else
             {
 
                 // No explanation needed, we can request the permission.
@@ -603,7 +603,7 @@ public class AwShellActivity extends Activity implements
                         RECORD_AUDIO_PERMISSION_ID);
             }
         }
-    }    
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -628,7 +628,7 @@ public class AwShellActivity extends Activity implements
             TraceEvent.setATraceEnabled(true);
         }
 
-        layout = new FrameLayout(this); 
+        layout = new FrameLayout(this);
 
         // HACK: Try to identify when the keyboard is shown to be able to hide it and also start sending key events to it.
         layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -656,13 +656,13 @@ public class AwShellActivity extends Activity implements
                     webview.dispatchEventToVRWebGL("showkeyboard", "{}");
                 }
             }
-        });        
+        });
 
-        setContentView(layout);       
+        setContentView(layout);
 
         mAwTestContainerView = createAwTestContainerView();
 
-        layout.addView(mAwTestContainerView);           
+        layout.addView(mAwTestContainerView);
 
         // Ensure fullscreen immersion.
         setImmersiveSticky();
@@ -673,7 +673,7 @@ public class AwShellActivity extends Activity implements
                   @Override
                   public void onSystemUiVisibilityChange(int visibility) {
                     if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0 ||
-                        (visibility & 
+                        (visibility &
                             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0) {
                       setImmersiveSticky();
                     }
@@ -685,7 +685,7 @@ public class AwShellActivity extends Activity implements
         surfaceView = new SurfaceView( this );
         layout.addView(surfaceView);
         surfaceView.setZOrderMediaOverlay(true);
-        surfaceView.getHolder().addCallback( this );   
+        surfaceView.getHolder().addCallback( this );
 
         // Load the VRWebGL.js file
         try
@@ -713,7 +713,7 @@ public class AwShellActivity extends Activity implements
         String configString = null;
         // The intent, when provided, has more priority than the config asset file.
         configString = getConfigStringFromIntent(getIntent());
-        if (configString != null) 
+        if (configString != null)
         {
             try
             {
@@ -736,7 +736,7 @@ public class AwShellActivity extends Activity implements
                     config = new JSONObject(configString);
                     System.out.println("VRWebGL: config created from config.json asset file.");
                 }
-                catch(JSONException e) 
+                catch(JSONException e)
                 {
                     System.out.println("VRWebGL: WARNING: JSONException while parsing the config.json content: '" + configString + "': " + e.getCause() + " - " + e.getMessage());
                 }
@@ -753,14 +753,14 @@ public class AwShellActivity extends Activity implements
         if (!TextUtils.isEmpty(intentURL)) {
             url = intentURL;
         }
-        if (config != null) 
+        if (config != null)
         {
             try
             {
                 url = config.has("url") ? config.getString("url") : url;
                 clearCache = config.has("clearCache") ? config.getBoolean("clearCache") : clearCache;
             }
-            catch(JSONException e) 
+            catch(JSONException e)
             {
                 System.out.println("VRWebGL: WARNING: JSONException while trying to retrieve the config properties: " + e.getCause() + " - " + e.getMessage());
             }
@@ -777,7 +777,7 @@ public class AwShellActivity extends Activity implements
         audioManager = (AudioManager) getSystemService( Context.AUDIO_SERVICE );
 
         // Create the native side
-        nativePointer = nativeOnCreate( this );        
+        nativePointer = nativeOnCreate( this );
     }
 
     @Override protected void onStart()
@@ -842,11 +842,11 @@ public class AwShellActivity extends Activity implements
 
             @Override
             public void onPageStarted(String url) {
-                // Reset 
+                // Reset
                 jsInjected = false;
                 nativeOnPageStarted();
 
-                synchronized(AwShellActivity.this) 
+                synchronized(AwShellActivity.this)
                 {
                     // Remove all the webviews.
                     for (WebView webview: webviews)
@@ -896,7 +896,7 @@ public class AwShellActivity extends Activity implements
                     {
                         receiver.confirm();
                     }
-                }, 1, "Ok", null, null).show();                
+                }, 1, "Ok", null, null).show();
             }
 
             @Override
@@ -911,12 +911,12 @@ public class AwShellActivity extends Activity implements
                         {
                             receiver.confirm(editText.getText().toString());
                         }
-                        else 
+                        else
                         {
                             receiver.cancel();
                         }
                     }
-                }, 2, "Ok", "Cancel", null).show();                
+                }, 2, "Ok", "Cancel", null).show();
             }
 
             @Override
@@ -926,17 +926,17 @@ public class AwShellActivity extends Activity implements
                     @Override
                     public void onClick(DialogInterface dialog, int which)
                     {
-                        if (which == DialogInterface.BUTTON_POSITIVE) 
+                        if (which == DialogInterface.BUTTON_POSITIVE)
                         {
                             receiver.confirm();
                         }
-                        else 
+                        else
                         {
                             receiver.cancel();
                         }
 
                     }
-                }, 2, "Yes", "No", null).show();                
+                }, 2, "Yes", "No", null).show();
             }
 
             @Override
@@ -951,8 +951,8 @@ public class AwShellActivity extends Activity implements
             public AwWebResourceResponse shouldInterceptRequest(
                     AwContentsClient.AwWebResourceRequest request) {
                 // TODO: This is a dirty hack. As it seems that the evalueJavaScript when the main page is loaded does not work because
-                // the injected JS is wiped out, we will inject it when another resource is requested. This may or may not work in many 
-                // cases depending on when the resource is requested. 
+                // the injected JS is wiped out, we will inject it when another resource is requested. This may or may not work in many
+                // cases depending on when the resource is requested.
                 // Waiting for a better answer from the chromium forums.
                 if (!AwShellActivity.this.url.toLowerCase().contains("file://") && !request.url.equals(AwShellActivity.this.url) && !jsInjected)
                 {
@@ -999,8 +999,8 @@ public class AwShellActivity extends Activity implements
             }
 
             @Override
-            public void onReceivedError(int errorCode, String description, String failingUrl) { 
-                Utils.createAlertDialog(AwShellActivity.this, "ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();                
+            public void onReceivedError(int errorCode, String description, String failingUrl) {
+                Utils.createAlertDialog(AwShellActivity.this, "ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();
             }
 
             // @Override
@@ -1008,7 +1008,7 @@ public class AwShellActivity extends Activity implements
             //     String failingUrl = request.url;
             //     int errorCode = error.errorCode;
             //     String description = error.description;
-            //     Utils.createAlertDialog(AwShellActivity.this, "ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();                
+            //     Utils.createAlertDialog(AwShellActivity.this, "ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();
             // }
 
             @Override
@@ -1018,7 +1018,7 @@ public class AwShellActivity extends Activity implements
                 if (failingUrl.toLowerCase().contains("favicon.ico")) return;
                 int errorCode = response.getStatusCode();
                 String description = response.getReasonPhrase();
-                Utils.createAlertDialog(AwShellActivity.this, "HTTP ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();                
+                Utils.createAlertDialog(AwShellActivity.this, "HTTP ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();
             }
         };
 
@@ -1059,10 +1059,10 @@ public class AwShellActivity extends Activity implements
 
     private static String getConfigStringFromIntent(Intent intent) {
         String configString = null;
-        if (intent != null) 
+        if (intent != null)
         {
             Bundle extras = intent.getExtras();
-            if (extras != null) 
+            if (extras != null)
             {
                 configString = extras.getString("config");
             }
@@ -1078,7 +1078,7 @@ public class AwShellActivity extends Activity implements
         }
     }
 
-    @Override 
+    @Override
     public boolean dispatchKeyEvent( KeyEvent event )
     {
         if ( nativePointer != 0 )
@@ -1099,7 +1099,7 @@ public class AwShellActivity extends Activity implements
         return mAwTestContainerView.dispatchKeyEvent(event);
     }
 
-    @Override 
+    @Override
     public boolean dispatchTouchEvent( MotionEvent event )
     {
         if ( nativePointer != 0 )
@@ -1109,17 +1109,17 @@ public class AwShellActivity extends Activity implements
             float y = event.getRawY();
             if ( action == MotionEvent.ACTION_UP )
             {
-//              Log.v( TAG, "GLES3JNIActivity::dispatchTouchEvent( " + action + ", " + x + ", " + y + " )" );
+                Log.v( TAG, "GLES3JNIActivity::dispatchTouchEvent( " + action + ", " + x + ", " + y + " )" );
             }
-            // nativeOnTouchEvent( nativePointer, action, x, y );
+            nativeOnTouchEvent( nativePointer, action, x, y );
         }
 
-        // for (WebView webview: webviews)
-        // {
-        //     webview.dispatchTouchEvent(event);
-        // }
+        for (WebView webview: webviews)
+        {
+            webview.dispatchTouchEvent(event);
+        }
 
-        return false; // mAwTestContainerView.dispatchTouchEvent(event);
+        return mAwTestContainerView.dispatchTouchEvent(event);
     }
 
     @Override
@@ -1127,7 +1127,7 @@ public class AwShellActivity extends Activity implements
     {
         return mAwTestContainerView.dispatchGenericMotionEvent(event);
     }
-    
+
     @Override public void surfaceCreated( SurfaceHolder holder )
     {
         if ( nativePointer != 0 )
@@ -1155,7 +1155,7 @@ public class AwShellActivity extends Activity implements
             surfaceHolder = holder;
         }
     }
-    
+
     @Override public void surfaceDestroyed( SurfaceHolder holder )
     {
         if ( nativePointer != 0 )
@@ -1180,15 +1180,15 @@ public class AwShellActivity extends Activity implements
             break;
         case AudioManager.AUDIOFOCUS_LOSS:              // focus lost permanently
             // stop() if isPlaying
-            Log.d(TAG, "onAudioFocusChangedListener: AUDIOFOCUS_LOSS");     
+            Log.d(TAG, "onAudioFocusChangedListener: AUDIOFOCUS_LOSS");
             break;
         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:    // focus lost temporarily
             // pause() if isPlaying
-            Log.d(TAG, "onAudioFocusChangedListener: AUDIOFOCUS_LOSS_TRANSIENT");   
+            Log.d(TAG, "onAudioFocusChangedListener: AUDIOFOCUS_LOSS_TRANSIENT");
             break;
         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:   // focus lost temporarily
             // lower stream volume
-            Log.d(TAG, "onAudioFocusChangedListener: AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");      
+            Log.d(TAG, "onAudioFocusChangedListener: AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
             break;
         default:
             break;
@@ -1226,28 +1226,28 @@ public class AwShellActivity extends Activity implements
             dispatchEventToVRWebGL(INDEX_VIDEO, video.nativeTextureId, "canplaythrough", "{}");
         }
     }
-    
+
     // The video related API. Most of these methods will be called from the native side
     private void requestAudioFocus()
     {
         // Request audio focus
         int result = audioManager.requestAudioFocus( this, AudioManager.STREAM_MUSIC,
             AudioManager.AUDIOFOCUS_GAIN );
-        // if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ) 
+        // if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED )
         // {
         //     Log.d(TAG,"startVideo(): GRANTED audio focus");
         // }
-        // else if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED ) 
+        // else if ( result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED )
         // {
         //     Log.d(TAG,"startVideo(): FAILED to gain audio focus");
         // }
     }
-    
+
     private void releaseAudioFocus()
     {
         audioManager.abandonAudioFocus( this );
     }
-    
+
     private void stopVideo(SurfaceTexture surfaceTexture) {
         Log.d(TAG, "stopVideo()" );
         Video video = findVideoBySurfaceTexture(surfaceTexture);
@@ -1350,13 +1350,13 @@ public class AwShellActivity extends Activity implements
             video.mediaPlayer.setVolume(volume, volume);
             video.mediaPlayer.setLooping(loop);
         }
-    }       
+    }
 
     private void dispatchVideoPlaybackEvent(SurfaceTexture surfaceTexture, int event, float volume, boolean loop)
     {
         switch(event)
         {
-            case Video.PLAY: 
+            case Video.PLAY:
                 playVideoOnUIThread(surfaceTexture, volume, loop);
                 break;
             case Video.PAUSE:
@@ -1377,7 +1377,7 @@ public class AwShellActivity extends Activity implements
     private void setVideoSrc(SurfaceTexture surfaceTexture, String src) {
         // Request audio focus
         requestAudioFocus();
-    
+
         Video video = findVideoBySurfaceTexture(surfaceTexture);
 
         if (video != null)
@@ -1390,7 +1390,7 @@ public class AwShellActivity extends Activity implements
                     AssetFileDescriptor assetFileDescriptor = getAssets().openFd(src);
                     video.mediaPlayer.setDataSource(assetFileDescriptor.getFileDescriptor(), assetFileDescriptor.getStartOffset(), assetFileDescriptor.getLength());
                 }
-                else 
+                else
                 {
                     video.mediaPlayer.setDataSource(src);
                 }
@@ -1407,7 +1407,7 @@ public class AwShellActivity extends Activity implements
     }
 
 
-    private void newVideo(SurfaceTexture surfaceTexture, int nativeTextureId) 
+    private void newVideo(SurfaceTexture surfaceTexture, int nativeTextureId)
     {
         Video video = new Video();
         video.surfaceTexture = surfaceTexture;
@@ -1427,7 +1427,7 @@ public class AwShellActivity extends Activity implements
         }
     }
 
-    private void deleteVideo(SurfaceTexture surfaceTexture) 
+    private void deleteVideo(SurfaceTexture surfaceTexture)
     {
         Video video = findVideoBySurfaceTexture(surfaceTexture);
         if (video != null)
@@ -1435,7 +1435,7 @@ public class AwShellActivity extends Activity implements
             video.mediaPlayer.release();
             synchronized(this)
             {
-                videos.remove(video);        
+                videos.remove(video);
             }
         }
     }
@@ -1512,7 +1512,7 @@ public class AwShellActivity extends Activity implements
         });
     }
 
-    public void deleteWebView(SurfaceTexture surfaceTexture) 
+    public void deleteWebView(SurfaceTexture surfaceTexture)
     {
         WebView webview = findWebViewBySurfaceTexture(surfaceTexture);
         if (webview != null)
@@ -1710,7 +1710,7 @@ public class AwShellActivity extends Activity implements
         });
     }
 
-    private void deleteSpeechRecognition(final long id) 
+    private void deleteSpeechRecognition(final long id)
     {
         runOnUiThread( new Runnable() {
             @Override
@@ -1728,7 +1728,7 @@ public class AwShellActivity extends Activity implements
         });
     }
 
-    private void startSpeechRecognition(final long id) 
+    private void startSpeechRecognition(final long id)
     {
         runOnUiThread( new Runnable() {
             @Override
@@ -1742,7 +1742,7 @@ public class AwShellActivity extends Activity implements
         });
     }
 
-    private void stopSpeechRecognition(final long id) 
+    private void stopSpeechRecognition(final long id)
     {
         runOnUiThread( new Runnable() {
             @Override
@@ -1763,7 +1763,7 @@ public class AwShellActivity extends Activity implements
     }
 
     // Native calls
-    
+
     // Activity lifecycle
     private native long nativeOnCreate( Activity obj );
     private native void nativeOnStart( long nativePointer );
@@ -1781,7 +1781,7 @@ public class AwShellActivity extends Activity implements
 
     // Input
     private native void nativeOnKeyEvent( long nativePointer, int keyCode, int action );
-    private native void nativeOnTouchEvent( long nativePointer, int action, float x, float y );    
+    private native void nativeOnTouchEvent( long nativePointer, int action, float x, float y );
 
     // Video
     private void logHeapUsageFromNative()
