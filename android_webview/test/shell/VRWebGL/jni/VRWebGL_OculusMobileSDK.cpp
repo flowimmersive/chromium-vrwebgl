@@ -609,9 +609,9 @@ static void ovrGeometry_CreateVAO( ovrGeometry * geometry )
   {
     if ( geometry->VertexAttribs[i].Index != -1 )
     {
-            
+
             ALOGV("VRWEBGL: glEnableVertexAttribArray(%d)", geometry->VertexAttribs[i].Index);
-            
+
       GL( glEnableVertexAttribArray( geometry->VertexAttribs[i].Index ) );
       GL( glVertexAttribPointer( geometry->VertexAttribs[i].Index, geometry->VertexAttribs[i].Size,
           geometry->VertexAttribs[i].Type, geometry->VertexAttribs[i].Normalized,
@@ -819,7 +819,7 @@ static bool ovrFramebuffer_Create( ovrFramebuffer * frameBuffer, const ovrTextur
 
   frameBuffer->ColorTextureSwapChain = vrapi_CreateTextureSwapChain( VRAPI_TEXTURE_TYPE_2D, colorFormat, width, height, 1, true );
   frameBuffer->TextureSwapChainLength = vrapi_GetTextureSwapChainLength( frameBuffer->ColorTextureSwapChain );
-  frameBuffer->DepthBuffers = (GLuint *)malloc( frameBuffer->TextureSwapChainLength * sizeof( GLuint ) ); 
+  frameBuffer->DepthBuffers = (GLuint *)malloc( frameBuffer->TextureSwapChainLength * sizeof( GLuint ) );
   frameBuffer->FrameBuffers = (GLuint *)malloc( frameBuffer->TextureSwapChainLength * sizeof( GLuint ) );
 
   PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC glRenderbufferStorageMultisampleEXT =
@@ -1054,7 +1054,7 @@ static float ovrScene_RandomFloat( ovrScene * scene )
 static void ovrScene_Create( ovrScene * scene )
 {
   ovrProgram_Create( &scene->Program, VERTEX_SHADER, FRAGMENT_SHADER );
-    
+
   ovrGeometry_CreateCube( &scene->Cube );
 
   // Create the instance transform attribute buffer.
@@ -1120,7 +1120,7 @@ static void ovrScene_Create( ovrScene * scene )
     scene->CubeRotations[insert].y = ovrScene_RandomFloat( scene );
     scene->CubeRotations[insert].z = ovrScene_RandomFloat( scene );
   }
-    
+
     // LUDEI BEGIN
 #if RENDER_NATIVE_TRIANGLE
     GL( scene->fragmentShaderId = glCreateShader(35632) );
@@ -1373,8 +1373,8 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
     GL( glBindVertexArray( 0 ) );
     GL( glUseProgram( 0 ) );
 #endif
-        
-        
+
+
         // VRWEBGL BEGIN
 
         // Draw just a simple triangle. This code is just a proof of concept to fully understand how and where the rendering should happen
@@ -1390,8 +1390,8 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
         GL( glBindBuffer(34962, 0) );
         GL( glUseProgram(0) );
 #endif
-      
-#ifdef VRWEBGL_SHOW_LOG        
+
+#ifdef VRWEBGL_SHOW_LOG
         java->Env->CallVoidMethod(appThread->ActivityObject, appThread->logHeapUsageMethodID);
 #endif
 
@@ -1406,7 +1406,7 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
         VRWebGLCommandProcessor::getInstance()->renderFrame();
 
         // VRWEBGL END
-        
+
     // Explicitly clear the border texels to black because OpenGL-ES does not support GL_CLAMP_TO_BORDER.
     {
       // Clear to fully opaque black.
@@ -1830,7 +1830,7 @@ static void EnumerateInputDevices(ovrApp* app)
           {
             OnRemoteDisconnected( app, ovrApp::RemoteDeviceID );
             ovrApp::RemoteDeviceID = curCaps.DeviceID;
-            OnRemoteConnected( app, ovrApp::RemoteDeviceID );            
+            OnRemoteConnected( app, ovrApp::RemoteDeviceID );
           }
         }
         break;
@@ -1866,9 +1866,9 @@ static void UpdateRemoteDevice(ovrApp* app, const double predictedDisplayTime)
     // float roll;
     // Quatf r( remoteTracking.HeadPose.Pose.Orientation );
     // r.GetEulerAngles< Axis_Y, Axis_X, Axis_Z >( &yaw, &pitch, &roll );
-    
-    //LOG_WITH_TAG( "MLBUPose", "Pose.r = ( %.2f, %.2f, %.2f, %.2f ), ypr( %.2f, %.2f, %.2f ), t( %.2f, %.2f, %.2f )", 
-    //  r.x, r.y, r.z, r.w, 
+
+    //LOG_WITH_TAG( "MLBUPose", "Pose.r = ( %.2f, %.2f, %.2f, %.2f ), ypr( %.2f, %.2f, %.2f ), t( %.2f, %.2f, %.2f )",
+    //  r.x, r.y, r.z, r.w,
     //  Mathf::RadToDegreeFactor * yaw, Mathf::RadToDegreeFactor * pitch, Mathf::RadToDegreeFactor * roll,
     //  remoteTracking.HeadPose.Pose.Position.x, remoteTracking.HeadPose.Pose.Position.y, remoteTracking.HeadPose.Pose.Position.z );
 
@@ -1921,7 +1921,7 @@ static void UpdateRemoteDevice(ovrApp* app, const double predictedDisplayTime)
 
       // ALOGV("Status: touch = %d, %lf, %lf. Battery: %d", ovrApp::Gamepad->buttons[0].touched, ovrApp::Gamepad->axes[0], ovrApp::Gamepad->axes[1],remoteInputState.BatteryPercentRemaining);
 
-      pthread_mutex_unlock( &ovrApp::GamepadMutex );     
+      pthread_mutex_unlock( &ovrApp::GamepadMutex );
     }
     else
     {
@@ -2281,7 +2281,7 @@ void * AppThreadFunction( void * parm )
   ovrApp appState;
   ovrApp_Clear( &appState );
   appState.Java = java;
-  
+
   ovrEgl_CreateContext( &appState.Egl, NULL );
 
   ovrPerformanceParms perfParms = vrapi_DefaultPerformanceParms();
@@ -2306,7 +2306,7 @@ void * AppThreadFunction( void * parm )
     ovrApp::Gamepad->pose.hasOrientation = true;
     ovrApp::Gamepad->pose.hasPosition = false;
     ovrApp::GamepadCopy.reset(new blink::WebGamepad());
-    // VRWEBGL END    
+    // VRWEBGL END
 
 
 #if MULTI_THREADED
@@ -2362,12 +2362,12 @@ void * AppThreadFunction( void * parm )
     {
       continue;
     }
-        
+
     // Create the scene if not yet created.
     // The scene is created here to be able to show a loading icon.
 #if USE_SCENE
     if ( !ovrScene_IsCreated( &appState.Scene ) )
-#else 
+#else
         if ( !appState.Initialized )
 #endif
     {
@@ -2394,7 +2394,7 @@ void * AppThreadFunction( void * parm )
         ovrApp::EyeParameters.width = vrapi_GetSystemPropertyInt(&java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_WIDTH);
         ovrApp::EyeParameters.height = vrapi_GetSystemPropertyInt(&java, VRAPI_SYS_PROP_SUGGESTED_EYE_TEXTURE_HEIGHT);
         ovrApp::EyeParameters.interpupillaryDistance = headModelParms.InterpupillaryDistance;
-        pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );     
+        pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );
         // VRWebGL END
 
 
@@ -2429,9 +2429,9 @@ void * AppThreadFunction( void * parm )
 
       pthread_mutex_lock( &ovrApp::HeadTrackingInfoMutex );
       ovrApp::Pose = tracking.HeadPose;
-      pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );     
+      pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );
         // VRWEBGL END
-        
+
 #if USE_SCENE
     // Advance the simulation based on the predicted display time.
     ovrSimulation_Advance( &appState.Simulation, predictedDisplayTime );
@@ -2496,7 +2496,7 @@ static void ovrAppThread_Create( ovrAppThread * appThread, JNIEnv * env, jobject
     // Get the references to the java methods that might be called from the native side
     appThread->renderEnabled = true;
     appThread->activityObjectJClass = env->GetObjectClass(appThread->ActivityObject);
-    appThread->logHeapUsageMethodID = env->GetMethodID(appThread->activityObjectJClass, "logHeapUsageFromNative", "()V");    
+    appThread->logHeapUsageMethodID = env->GetMethodID(appThread->activityObjectJClass, "logHeapUsageFromNative", "()V");
     // VRWEBGL END
 
   const int createErr = pthread_create( &appThread->Thread, NULL, AppThreadFunction, appThread );
@@ -2560,13 +2560,13 @@ void VRWebGLCommandProcessor::getPose(VRWebGLPose& pose)
     //                ovrRigidBodyPosef HeadPose;
     //            } ovrTracking;
     // THIS CODE IS JUST FOR REFERENCE PURPOSES! END
-    // ==============================================    
+    // ==============================================
     pthread_mutex_lock( &ovrApp::HeadTrackingInfoMutex );
     pose.orientation[0] = ovrApp::Pose.Pose.Orientation.x;
     pose.orientation[1] = ovrApp::Pose.Pose.Orientation.y;
     pose.orientation[2] = ovrApp::Pose.Pose.Orientation.z;
     pose.orientation[3] = ovrApp::Pose.Pose.Orientation.w;
-    pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );     
+    pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );
 }
 
 void VRWebGLCommandProcessor::getEyeParameters(const std::string& eye, VRWebGLEyeParameters& eyeParameters)
@@ -2579,7 +2579,7 @@ void VRWebGLCommandProcessor::getEyeParameters(const std::string& eye, VRWebGLEy
     eyeParameters.width = ovrApp::EyeParameters.width;
     eyeParameters.height = ovrApp::EyeParameters.height;
     eyeParameters.interpupillaryDistance = ovrApp::EyeParameters.interpupillaryDistance;
-    pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );       
+    pthread_mutex_unlock( &ovrApp::HeadTrackingInfoMutex );
 }
 
 void VRWebGLCommandProcessor::setCameraProjectionMatrix(GLfloat* cameraProjectionMatrix)
@@ -2589,7 +2589,7 @@ void VRWebGLCommandProcessor::setCameraProjectionMatrix(GLfloat* cameraProjectio
     pthread_mutex_lock( &ovrRenderer::NewNearFarMutex );
     ovrRenderer::NewNear = near;
     ovrRenderer::NewFar = far;
-    pthread_mutex_unlock( &ovrRenderer::NewNearFarMutex );      
+    pthread_mutex_unlock( &ovrRenderer::NewNearFarMutex );
 }
 
 void VRWebGLCommandProcessor::setRenderEnabled(bool flag)
@@ -2602,10 +2602,14 @@ void VRWebGLCommandProcessor::setRenderEnabled(bool flag)
 
 std::shared_ptr<blink::WebGamepad> VRWebGLCommandProcessor::getGamepad()
 {
-  pthread_mutex_lock( &ovrApp::GamepadMutex );
-  *ovrApp::GamepadCopy = *ovrApp::Gamepad;
-  pthread_mutex_unlock( &ovrApp::GamepadMutex );     
-  return ovrApp::GamepadCopy;
+  if(ovrApp::RemoteDeviceID != ovrDeviceIdType_Invalid)
+  {
+    pthread_mutex_lock( &ovrApp::GamepadMutex );
+    *ovrApp::GamepadCopy = *ovrApp::Gamepad;
+    pthread_mutex_unlock( &ovrApp::GamepadMutex );
+    return ovrApp::GamepadCopy;
+  }
+  return nullptr;
 }
 
 // VRWEBGL END
@@ -2813,7 +2817,3 @@ extern "C"
         ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
     }
 }
-
-
-
-
