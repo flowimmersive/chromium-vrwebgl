@@ -1458,7 +1458,10 @@ void VRWebGLRenderingContext::scissor(GLint x, GLint y, GLsizei width, GLsizei h
 		// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 		VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
 		// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::scissor end";
-	}
+	} else {
+        std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_scissor::newInstance(0, 0, m_vrWebGLEyeParameters.width,  m_vrWebGLEyeParameters.height);
+        VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
+    }
 }
 
 void VRWebGLRenderingContext::shaderSource(VRWebGLShader* shader, const String& string)
