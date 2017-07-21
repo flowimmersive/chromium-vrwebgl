@@ -1,10 +1,10 @@
 (function() {
 
-	// The following code has been taken from the png loader by Devon Govett (https://github.com/devongovett/png.js). 
-	// It includes both the ZLIB.js and PNG.js with a simple modification to make it simpler 
+	// The following code has been taken from the png loader by Devon Govett (https://github.com/devongovett/png.js).
+	// It includes both the ZLIB.js and PNG.js with a simple modification to make it simpler
 	// (and removed all non necessary functions like render, animate, etc).
 	// As the VRWebGLRenderingContext does not support HTMLCanvaseElement texImage2D overloading, canvas elements are
-	// transformed to base64. The encoded string could be used to create an HTMLImageElement but in Chromium 57 and above it 
+	// transformed to base64. The encoded string could be used to create an HTMLImageElement but in Chromium 57 and above it
 	// seems that the loading of an image64 image is done asynchronously so a new method has been adopted: decode the PNG
 	// image inside the base64 convertion and use the pixels to call the texImage2D overloading function that takes a UInt8Array instead.
 	// Check the texImage2D overloading in the code below to better understand why this code is needed.
@@ -14,20 +14,20 @@
 	/*
 	# MIT LICENSE
 	# Copyright (c) 2011 Devon Govett
-	# 
-	# Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-	# software and associated documentation files (the "Software"), to deal in the Software 
-	# without restriction, including without limitation the rights to use, copy, modify, merge, 
-	# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons 
+	#
+	# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+	# software and associated documentation files (the "Software"), to deal in the Software
+	# without restriction, including without limitation the rights to use, copy, modify, merge,
+	# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
 	# to whom the Software is furnished to do so, subject to the following conditions:
-	# 
-	# The above copyright notice and this permission notice shall be included in all copies or 
+	#
+	# The above copyright notice and this permission notice shall be included in all copies or
 	# substantial portions of the Software.
-	# 
-	# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
-	# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-	# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-	# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+	#
+	# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+	# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+	# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 	# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	*/
 
@@ -247,7 +247,7 @@
 	    0x50001, 0x50011, 0x50009, 0x50019, 0x50005, 0x50015, 0x5000d, 0x5001d,
 	    0x50003, 0x50013, 0x5000b, 0x5001b, 0x50007, 0x50017, 0x5000f, 0x00000
 	  ]), 5];
-	  
+
 	  function error(e) {
 	      throw new Error(e)
 	  }
@@ -909,7 +909,7 @@
 			};
 		}
 		else {
-			// FAKE WEBVR 1.0 API 
+			// FAKE WEBVR 1.0 API
 			// This is a fake WebVR API polyfill so VRWebGL works on WebVR based web apps.
 			// WebVR polyfills will find these definitions and think WebVR is available (when is clearly not).
 			window.VRDisplay = function() {};
@@ -936,7 +936,7 @@
 						gamepads[i] = originalGamepads[i];
 						if (freeIndex === -1 && gamepads[i] === null) {
 							// Even though we have found a free index, keep going to copy all the originalGamepads to the gamepads array.
-							freeIndex = i; 
+							freeIndex = i;
 						}
 					}
 					// If all the slots were taken, add the gamepad to the end.
@@ -966,9 +966,9 @@
 		var vrWebGLVideos = [];
 		var vrWebGLWebViews = [];
 		var vrWebGLSpeechRecognitions = [];
-		var vrWebGLArrays = [ 
-			vrWebGLVideos, 
-			vrWebGLWebViews, 
+		var vrWebGLArrays = [
+			vrWebGLVideos,
+			vrWebGLWebViews,
 			vrWebGLSpeechRecognitions ];
 
 		function vrWebGLRequestAnimationFrame() {
@@ -1006,7 +1006,7 @@
 		// Replace the original WebGLRenderingContext for the VRWebGLRenderingContext
 		var originalWebGLRenderingContext = window.WebGLRenderingContext;
 		window.WebGLRenderingContext = window.VRWebGLRenderingContext;
-
+        /*
 		// Store the original VRWebGL texImage2D function prototype as we will slightly change it but still call it.
 		var originalVRWebGLTexImage2D = window.VRWebGLRenderingContext.prototype.texImage2D;
 		window.VRWebGLRenderingContext.prototype.texImage2D = function() {
@@ -1035,7 +1035,7 @@
 					var ia = new Uint8Array(ab);
 					for (var i = 0; i < byteString.length; i++) {
 					  ia[i] = byteString.charCodeAt(i);
-					}					
+					}
 					var png = new PNG(ia);
 					var pixels = png.decodePixels();
 					argumentsArray[6] = argumentsArray[3]; // format
@@ -1045,10 +1045,10 @@
 					argumentsArray[5] = 0; // border
 					argumentsArray[8] = pixels;
 					return originalVRWebGLTexImage2D.apply(this, argumentsArray);
-					
+
 					// OPTION 2: Convert the canvas to an image.
 					// This option worked in Chromium 54 but seems to be broken in 57 and above as the loading of the image
-					// seems to be asynchronous and we need it to be synchronous. That is why OPTION 1 has been implemented. 
+					// seems to be asynchronous and we need it to be synchronous. That is why OPTION 1 has been implemented.
 					// var image = new Image();
 					// image.src = canvasInBase64;
 					// argumentsArray[5] = image;
@@ -1058,6 +1058,7 @@
 			}
 			return originalVRWebGLTexImage2D.apply(this, argumentsArray);
 		}
+        */
 
 		// Store the original HTMLCanvasElement getContext function as we want to inject ours.
 		var originalHTMLCanvasElementPrototypeGetContextFunction = HTMLCanvasElement.prototype.getContext;
@@ -1128,8 +1129,8 @@
 				}
 				return this;
 			};
-		}	
-			
+		}
+
 		// Setup to be able to create VRWebGLVideo or VRWebGLWebView using
 		// document.createElement("video"/"webview").
 		// Replace the original document.createElement function with our own to be able to create the correct video element for VRWebGL
@@ -1143,15 +1144,15 @@
 
 			// VRWebGLVideo instance can only be created if a URL parameter
 			// is passed.
-			if (location.search.includes("vrwebglvideo") && 
-					typeof(argumentsArray[0]) === "string" && 
+			if (location.search.includes("vrwebglvideo") &&
+					typeof(argumentsArray[0]) === "string" &&
 					argumentsArray[0] === "video") {
 				var vrWebGLVideo = new VRWebGLVideo();
 				vrWebGLVideos.push(vrWebGLVideo);
 				addEventHandlingToObject(vrWebGLVideo);
 				return vrWebGLVideo;
 			}
-			else if (typeof(argumentsArray[0]) === "string" && 
+			else if (typeof(argumentsArray[0]) === "string" &&
 					argumentsArray[0] === "webview") {
 				var vrWebGLWebView = new VRWebGLWebView();
 				vrWebGLWebViews.push(vrWebGLWebView);
@@ -1165,7 +1166,7 @@
 
 		// A new function in the document to be able to make sure that
 		// an element is correctly destroyed. In our case, VRWebGLVideo,
-		// VRWebGLWebView and even VRWebGLSpeechRecognition instances 
+		// VRWebGLWebView and even VRWebGLSpeechRecognition instances
 		// that are kept in their corresponding arrays.
 		document.deleteElement = function(obj) {
 			// Look for the video or the webview to correctly remove it from
@@ -1185,7 +1186,7 @@
 
 		// Return any of the instances in the arrays by id.
 		function findById(index, id) {
-			if (index < 0 || index >= vrWebGLArrays.length) 
+			if (index < 0 || index >= vrWebGLArrays.length)
 				throw "ERROR: The provided index '" + index + "' is out of scope.";
 			var obj = null;
 			var vrWebGLArray = vrWebGLArrays[index];
@@ -1203,7 +1204,7 @@
 		// requested by a URL parameter. Add the created instance to be able to
 		// use them afterward when events are dispatched.
 		if (location.search.includes("vrwebglspeechrecognition")) {
-			var originalWindowWebkitSpeechRecognition = 
+			var originalWindowWebkitSpeechRecognition =
 				window.webkitSpeechRecognition;
 			window.webkitSpeechRecognition = function() {
 				var vrWebGLSpeechRecognition = new VRWebGLSpeechRecognition();

@@ -1715,6 +1715,15 @@ void VRWebGLRenderingContext::texImage2D(GLenum target, GLint level, GLint inter
     //     return;
     // }
 
+    // TODO: should be called only if !canUseTexImageCanvasByGPU
+    texImageImpl(TexImage2D, target, level, internalformat, 0, 0, 0, format, type,
+                 canvas
+                     ->copiedImage(FrontBuffer, PreferAcceleration,
+                                   SnapshotReasonWebGLTexImage2D)
+                     .get(),
+                 WebGLImageConversion::HtmlDomCanvas, m_unpackFlipY,
+                 m_unpackPremultiplyAlpha, getTextureSourceSize(canvas), 1, 0);
+
     // texImage2DBase(target, level, internalformat, canvas->width(), canvas->height(), 0, format, type, 0);
     // texImageCanvasByGPU(TexImage2DByGPU, texture, target, level, internalformat, type, 0, 0, 0, canvas);
 }
