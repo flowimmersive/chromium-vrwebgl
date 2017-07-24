@@ -15,7 +15,7 @@ calls.
 #endif
 #define ALOGE(...) __android_log_print( ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__ )
 
-// Not using this but left it as a reminder of the pain I went through 
+// Not using this but left it as a reminder of the pain I went through
 // to get this done. Also, prepared for some new extensions that could be
 // added in the future.
 
@@ -23,7 +23,7 @@ calls.
 // PFNGLDRAWELEMENTSINSTANCEDANGLEPROC glDrawElementsInstancedANGLE = 0;
 // PFNGLVERTEXATTRIBDIVISORANGLEPROC glVertexAttribDivisorANGLE = 0;
 
-void VRWebGL_initializeExtensions() 
+void VRWebGL_initializeExtensions()
 {
 	// ALOGE("VRWebGL_initializeExtensions: glDrawArraysInstancedANGLE = %p",glDrawArraysInstancedANGLE);
 	// ALOGE("VRWebGL_initializeExtensions: glDrawElementsInstancedANGLE = %p",glDrawElementsInstancedANGLE);
@@ -420,7 +420,7 @@ void VRWebGL_glDeleteTextures(GLsizei n, const GLuint * textures)
 void VRWebGL_glDeleteProgram(GLuint program)
 {
 	glDeleteProgram(program);
-}	
+}
 
 void VRWebGL_glDeleteShader(GLuint shader)
 {
@@ -536,6 +536,10 @@ void VRWebGL_glDrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum typ
 
 void VRWebGL_glVertexAttribDivisorANGLE(GLuint index, GLuint divisor)
 {
-	glVertexAttribDivisor(index, divisor);	
-	// glVertexAttribDivisorANGLE(index, divisor);	
+	glVertexAttribDivisor(index, divisor);
+	// glVertexAttribDivisorANGLE(index, divisor);
+}
+
+void VRWebGL_glPolygonOffset(GLfloat factor, GLfloat units) {
+    glPolygonOffset(factor, units);
 }

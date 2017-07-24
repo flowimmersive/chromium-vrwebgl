@@ -27,13 +27,13 @@ built if it makes any references to GL calls. Of course, during linkage, they wi
 VRWebGLCommand_activeTexture::VRWebGLCommand_activeTexture(GLenum texture): m_texture(texture)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_activeTexture> VRWebGLCommand_activeTexture::newInstance(GLenum texture)
 {
     return std::shared_ptr<VRWebGLCommand_activeTexture>(new VRWebGLCommand_activeTexture(texture));
 }
 
-bool VRWebGLCommand_activeTexture::isSynchronous() const 
+bool VRWebGLCommand_activeTexture::isSynchronous() const
 {
     return false;
 }
@@ -43,16 +43,16 @@ bool VRWebGLCommand_activeTexture::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_activeTexture::process() 
+void* VRWebGLCommand_activeTexture::process()
 {
     VRWebGL_glActiveTexture(m_texture);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " texture = << " << m_texture;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_activeTexture::name() const 
+std::string VRWebGLCommand_activeTexture::name() const
 {
     return "activeTexture";
 }
@@ -69,7 +69,7 @@ std::shared_ptr<VRWebGLCommand_attachShader> VRWebGLCommand_attachShader::newIns
     return std::shared_ptr<VRWebGLCommand_attachShader>(new VRWebGLCommand_attachShader(program, shader));
 }
 
-bool VRWebGLCommand_attachShader::isSynchronous() const 
+bool VRWebGLCommand_attachShader::isSynchronous() const
 {
     return false;
 }
@@ -79,14 +79,14 @@ bool VRWebGLCommand_attachShader::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_attachShader::process() 
+void* VRWebGLCommand_attachShader::process()
 {
     if (!m_processed)
     {
         GLuint program = m_program->id();
         GLuint shader = m_shader->id();
         VRWebGL_glAttachShader(program, shader);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " shader = " << shader;
 #endif
         m_processed = true;
@@ -94,7 +94,7 @@ void* VRWebGLCommand_attachShader::process()
     return 0;
 }
 
-std::string VRWebGLCommand_attachShader::name() const 
+std::string VRWebGLCommand_attachShader::name() const
 {
     return "attachShader";
 }
@@ -111,7 +111,7 @@ std::shared_ptr<VRWebGLCommand_bindAttribLocation> VRWebGLCommand_bindAttribLoca
     return std::shared_ptr<VRWebGLCommand_bindAttribLocation>(new VRWebGLCommand_bindAttribLocation(program, index, name));
 }
 
-bool VRWebGLCommand_bindAttribLocation::isSynchronous() const 
+bool VRWebGLCommand_bindAttribLocation::isSynchronous() const
 {
     return false;
 }
@@ -121,34 +121,34 @@ bool VRWebGLCommand_bindAttribLocation::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_bindAttribLocation::process() 
+void* VRWebGLCommand_bindAttribLocation::process()
 {
     GLuint program = m_program->id();
     VRWebGL_glBindAttribLocation(program, m_index, m_name.c_str());
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " index = " << m_index << " name = " << m_name.c_str();
-#endif  
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_bindAttribLocation::name() const 
+std::string VRWebGLCommand_bindAttribLocation::name() const
 {
     return "bindAttribLocation";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
 VRWebGLCommand_bindBuffer::VRWebGLCommand_bindBuffer(GLenum target, VRWebGLBuffer* buffer): m_target(target), m_buffer(buffer)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_bindBuffer> VRWebGLCommand_bindBuffer::newInstance(GLenum target, VRWebGLBuffer* buffer)
 {
     return std::shared_ptr<VRWebGLCommand_bindBuffer>(new VRWebGLCommand_bindBuffer(target, buffer));
 }
 
-bool VRWebGLCommand_bindBuffer::isSynchronous() const 
+bool VRWebGLCommand_bindBuffer::isSynchronous() const
 {
     return false;
 }
@@ -158,17 +158,17 @@ bool VRWebGLCommand_bindBuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_bindBuffer::process() 
+void* VRWebGLCommand_bindBuffer::process()
 {
     GLuint buffer = m_buffer != 0 ? m_buffer->id() : 0;
     VRWebGL_glBindBuffer(m_target, buffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " buffer = " << buffer;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_bindBuffer::name() const 
+std::string VRWebGLCommand_bindBuffer::name() const
 {
     return "bindBuffer";
 }
@@ -179,13 +179,13 @@ std::string VRWebGLCommand_bindBuffer::name() const
 VRWebGLCommand_bindFramebuffer::VRWebGLCommand_bindFramebuffer(GLenum target, VRWebGLFramebuffer* framebuffer): m_target(target), m_framebuffer(framebuffer)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_bindFramebuffer> VRWebGLCommand_bindFramebuffer::newInstance(GLenum target, VRWebGLFramebuffer* framebuffer)
 {
     return std::shared_ptr<VRWebGLCommand_bindFramebuffer>(new VRWebGLCommand_bindFramebuffer(target, framebuffer));
 }
 
-bool VRWebGLCommand_bindFramebuffer::isSynchronous() const 
+bool VRWebGLCommand_bindFramebuffer::isSynchronous() const
 {
     return false;
 }
@@ -195,17 +195,17 @@ bool VRWebGLCommand_bindFramebuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_bindFramebuffer::process() 
+void* VRWebGLCommand_bindFramebuffer::process()
 {
     GLuint framebuffer = m_framebuffer != 0 ? m_framebuffer->id() : VRWebGLCommandProcessor::getInstance()->getFramebuffer();
     VRWebGL_glBindFramebuffer(m_target, framebuffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " framebuffer = " << framebuffer;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_bindFramebuffer::name() const 
+std::string VRWebGLCommand_bindFramebuffer::name() const
 {
     return "bindFramebuffer";
 }
@@ -216,13 +216,13 @@ std::string VRWebGLCommand_bindFramebuffer::name() const
 VRWebGLCommand_bindRenderbuffer::VRWebGLCommand_bindRenderbuffer(GLenum target, VRWebGLRenderbuffer* renderbuffer): m_target(target), m_renderbuffer(renderbuffer)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_bindRenderbuffer> VRWebGLCommand_bindRenderbuffer::newInstance(GLenum target, VRWebGLRenderbuffer* renderbuffer)
 {
     return std::shared_ptr<VRWebGLCommand_bindRenderbuffer>(new VRWebGLCommand_bindRenderbuffer(target, renderbuffer));
 }
 
-bool VRWebGLCommand_bindRenderbuffer::isSynchronous() const 
+bool VRWebGLCommand_bindRenderbuffer::isSynchronous() const
 {
     return false;
 }
@@ -232,17 +232,17 @@ bool VRWebGLCommand_bindRenderbuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_bindRenderbuffer::process() 
+void* VRWebGLCommand_bindRenderbuffer::process()
 {
     GLuint renderbuffer = m_renderbuffer != 0 ? m_renderbuffer->id() : 0;
     VRWebGL_glBindRenderbuffer(m_target, renderbuffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " renderbuffer = " << renderbuffer;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_bindRenderbuffer::name() const 
+std::string VRWebGLCommand_bindRenderbuffer::name() const
 {
     return "bindRenderbuffer";
 }
@@ -259,7 +259,7 @@ std::shared_ptr<VRWebGLCommand_bindTexture> VRWebGLCommand_bindTexture::newInsta
     return std::shared_ptr<VRWebGLCommand_bindTexture>(new VRWebGLCommand_bindTexture(target, texture));
 }
 
-bool VRWebGLCommand_bindTexture::isSynchronous() const 
+bool VRWebGLCommand_bindTexture::isSynchronous() const
 {
     return false;
 }
@@ -269,19 +269,19 @@ bool VRWebGLCommand_bindTexture::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_bindTexture::process() 
+void* VRWebGLCommand_bindTexture::process()
 {
     GLuint externalTextureId = m_texture != 0 ? m_texture->externalTextureId() : 0;
     GLuint textureId = m_texture != 0 ? externalTextureId != 0 ? externalTextureId : m_texture->id() : 0;
     GLenum target = externalTextureId != 0 ? GL_TEXTURE_EXTERNAL_OES : m_target;
     VRWebGL_glBindTexture(target, textureId);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = << " << target << " texture = " << texture;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_bindTexture::name() const 
+std::string VRWebGLCommand_bindTexture::name() const
 {
     return "bindTexture";
 }
@@ -298,7 +298,7 @@ std::shared_ptr<VRWebGLCommand_blendColor> VRWebGLCommand_blendColor::newInstanc
     return std::shared_ptr<VRWebGLCommand_blendColor>(new VRWebGLCommand_blendColor(red, green, blue, alpha));
 }
 
-bool VRWebGLCommand_blendColor::isSynchronous() const 
+bool VRWebGLCommand_blendColor::isSynchronous() const
 {
     return false;
 }
@@ -308,16 +308,16 @@ bool VRWebGLCommand_blendColor::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_blendColor::process() 
+void* VRWebGLCommand_blendColor::process()
 {
     VRWebGL_glBlendColor(m_red, m_green, m_blue, m_alpha);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " red = " << m_red << " green = " << m_green << " blue = " << m_blue << " alpha = " << m_alpha;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_blendColor::name() const 
+std::string VRWebGLCommand_blendColor::name() const
 {
     return "blendColor";
 }
@@ -334,7 +334,7 @@ std::shared_ptr<VRWebGLCommand_blendEquation> VRWebGLCommand_blendEquation::newI
     return std::shared_ptr<VRWebGLCommand_blendEquation>(new VRWebGLCommand_blendEquation(mode));
 }
 
-bool VRWebGLCommand_blendEquation::isSynchronous() const 
+bool VRWebGLCommand_blendEquation::isSynchronous() const
 {
     return false;
 }
@@ -344,16 +344,16 @@ bool VRWebGLCommand_blendEquation::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_blendEquation::process() 
+void* VRWebGLCommand_blendEquation::process()
 {
     VRWebGL_glBlendEquation(m_mode);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_blendEquation::name() const 
+std::string VRWebGLCommand_blendEquation::name() const
 {
     return "blendEquation";
 }
@@ -370,7 +370,7 @@ std::shared_ptr<VRWebGLCommand_blendEquationSeparate> VRWebGLCommand_blendEquati
     return std::shared_ptr<VRWebGLCommand_blendEquationSeparate>(new VRWebGLCommand_blendEquationSeparate(modeRGB, modeAlpha));
 }
 
-bool VRWebGLCommand_blendEquationSeparate::isSynchronous() const 
+bool VRWebGLCommand_blendEquationSeparate::isSynchronous() const
 {
     return false;
 }
@@ -380,16 +380,16 @@ bool VRWebGLCommand_blendEquationSeparate::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_blendEquationSeparate::process() 
+void* VRWebGLCommand_blendEquationSeparate::process()
 {
     VRWebGL_glBlendEquationSeparate(m_modeRGB, m_modeAlpha);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " modeRGB = " << m_modeRGB << " modeAlpha = " << m_modeAlpha;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_blendEquationSeparate::name() const 
+std::string VRWebGLCommand_blendEquationSeparate::name() const
 {
     return "blendEquationSeparate";
 }
@@ -406,7 +406,7 @@ std::shared_ptr<VRWebGLCommand_blendFunc> VRWebGLCommand_blendFunc::newInstance(
     return std::shared_ptr<VRWebGLCommand_blendFunc>(new VRWebGLCommand_blendFunc(sfactor, dfactor));
 }
 
-bool VRWebGLCommand_blendFunc::isSynchronous() const 
+bool VRWebGLCommand_blendFunc::isSynchronous() const
 {
     return false;
 }
@@ -416,16 +416,16 @@ bool VRWebGLCommand_blendFunc::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_blendFunc::process() 
+void* VRWebGLCommand_blendFunc::process()
 {
     VRWebGL_glBlendFunc(m_sfactor, m_dfactor);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " sfactor = " << m_sfactor <<" dfactor = " << m_dfactor;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_blendFunc::name() const 
+std::string VRWebGLCommand_blendFunc::name() const
 {
     return "blendFunc";
 }
@@ -442,7 +442,7 @@ std::shared_ptr<VRWebGLCommand_blendFuncSeparate> VRWebGLCommand_blendFuncSepara
     return std::shared_ptr<VRWebGLCommand_blendFuncSeparate>(new VRWebGLCommand_blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha));
 }
 
-bool VRWebGLCommand_blendFuncSeparate::isSynchronous() const 
+bool VRWebGLCommand_blendFuncSeparate::isSynchronous() const
 {
     return false;
 }
@@ -452,16 +452,16 @@ bool VRWebGLCommand_blendFuncSeparate::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_blendFuncSeparate::process() 
+void* VRWebGLCommand_blendFuncSeparate::process()
 {
     VRWebGL_glBlendFuncSeparate(m_srcRGB, m_dstRGB, m_srcAlpha, m_dstAlpha);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " srcRGB = " << m_srcRGB << " dstRGB = " << m_dstRGB << " srcAlpha = " << m_srcAlpha << " dstAlpha = " << m_dstAlpha;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_blendFuncSeparate::name() const 
+std::string VRWebGLCommand_blendFuncSeparate::name() const
 {
     return "blendFuncSeparate";
 }
@@ -474,7 +474,7 @@ VRWebGLCommand_bufferData::VRWebGLCommand_bufferData(GLenum target, GLsizeiptr s
     m_data = new GLbyte[size];
     memcpy(m_data, data, size);
 }
-    
+
 std::shared_ptr<VRWebGLCommand_bufferData> VRWebGLCommand_bufferData::newInstance(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
 {
     return std::shared_ptr<VRWebGLCommand_bufferData>(new VRWebGLCommand_bufferData(target, size, data, usage));
@@ -486,7 +486,7 @@ VRWebGLCommand_bufferData::~VRWebGLCommand_bufferData()
     m_data = 0;
 }
 
-bool VRWebGLCommand_bufferData::isSynchronous() const 
+bool VRWebGLCommand_bufferData::isSynchronous() const
 {
     return false;
 }
@@ -496,20 +496,20 @@ bool VRWebGLCommand_bufferData::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_bufferData::process() 
+void* VRWebGLCommand_bufferData::process()
 {
     if (!m_processed)
     {
         VRWebGL_glBufferData(m_target, m_size, (GLvoid*)m_data, m_usage);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " size = " << m_size << " usage = " << m_usage;
-#endif  
+#endif
         m_processed = true;
-    }  
+    }
     return 0;
 }
 
-std::string VRWebGLCommand_bufferData::name() const 
+std::string VRWebGLCommand_bufferData::name() const
 {
     return "bufferData";
 }
@@ -522,7 +522,7 @@ VRWebGLCommand_bufferSubData::VRWebGLCommand_bufferSubData(GLenum target, GLintp
     m_data = new GLbyte[size];
     memcpy(m_data, data, size);
 }
-    
+
 std::shared_ptr<VRWebGLCommand_bufferSubData> VRWebGLCommand_bufferSubData::newInstance(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid * data)
 {
     return std::shared_ptr<VRWebGLCommand_bufferSubData>(new VRWebGLCommand_bufferSubData(target, offset, size, data));
@@ -534,7 +534,7 @@ VRWebGLCommand_bufferSubData::~VRWebGLCommand_bufferSubData()
     m_data = 0;
 }
 
-bool VRWebGLCommand_bufferSubData::isSynchronous() const 
+bool VRWebGLCommand_bufferSubData::isSynchronous() const
 {
     return false;
 }
@@ -544,16 +544,16 @@ bool VRWebGLCommand_bufferSubData::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_bufferSubData::process() 
+void* VRWebGLCommand_bufferSubData::process()
 {
     VRWebGL_glBufferSubData(m_target, m_offset, m_size, (GLvoid*)m_data);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " offset = " << m_offset  << " size = " << m_size;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_bufferSubData::name() const 
+std::string VRWebGLCommand_bufferSubData::name() const
 {
     return "bufferSubData";
 }
@@ -570,7 +570,7 @@ std::shared_ptr<VRWebGLCommand_checkFramebufferStatus> VRWebGLCommand_checkFrame
     return std::shared_ptr<VRWebGLCommand_checkFramebufferStatus>(new VRWebGLCommand_checkFramebufferStatus(target));
 }
 
-bool VRWebGLCommand_checkFramebufferStatus::isSynchronous() const 
+bool VRWebGLCommand_checkFramebufferStatus::isSynchronous() const
 {
     return true;
 }
@@ -580,33 +580,33 @@ bool VRWebGLCommand_checkFramebufferStatus::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_checkFramebufferStatus::process() 
+void* VRWebGLCommand_checkFramebufferStatus::process()
 {
     m_status = VRWebGL_glCheckFramebufferStatus(m_target);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " status " << m_status;
-#endif    
+#endif
     return &m_status;
 }
 
-std::string VRWebGLCommand_checkFramebufferStatus::name() const 
+std::string VRWebGLCommand_checkFramebufferStatus::name() const
 {
     return "checkFramebufferStatus";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
 VRWebGLCommand_clear::VRWebGLCommand_clear(GLbitfield mask): m_mask(mask)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_clear> VRWebGLCommand_clear::newInstance(GLbitfield mask)
 {
     return std::shared_ptr<VRWebGLCommand_clear>(new VRWebGLCommand_clear(mask));
 }
 
-bool VRWebGLCommand_clear::isSynchronous() const 
+bool VRWebGLCommand_clear::isSynchronous() const
 {
     return false;
 }
@@ -616,24 +616,24 @@ bool VRWebGLCommand_clear::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_clear::process() 
+void* VRWebGLCommand_clear::process()
 {
     if (!m_processed)
     {
         VRWebGL_glClear(m_mask);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mask = " << m_mask;
-#endif    
+#endif
         m_processed = true;
     }
-    else 
+    else
     {
         m_processed = false;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_clear::name() const 
+std::string VRWebGLCommand_clear::name() const
 {
     return "clear";
 }
@@ -650,7 +650,7 @@ std::shared_ptr<VRWebGLCommand_clearColor> VRWebGLCommand_clearColor::newInstanc
     return std::shared_ptr<VRWebGLCommand_clearColor>(new VRWebGLCommand_clearColor(red, green, blue, alpha));
 }
 
-bool VRWebGLCommand_clearColor::isSynchronous() const 
+bool VRWebGLCommand_clearColor::isSynchronous() const
 {
     return false;
 }
@@ -660,20 +660,20 @@ bool VRWebGLCommand_clearColor::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_clearColor::process() 
+void* VRWebGLCommand_clearColor::process()
 {
     if (!m_processed)
     {
         VRWebGL_glClearColor(m_red, m_green, m_blue, m_alpha);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " red = " << m_red << " green = " << m_green << " blue = " << m_blue << " alpha = " << m_alpha;
 #endif
-        m_processed = true;    
+        m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_clearColor::name() const 
+std::string VRWebGLCommand_clearColor::name() const
 {
     return "clearColor";
 }
@@ -690,7 +690,7 @@ std::shared_ptr<VRWebGLCommand_clearDepthf> VRWebGLCommand_clearDepthf::newInsta
     return std::shared_ptr<VRWebGLCommand_clearDepthf>(new VRWebGLCommand_clearDepthf(depth));
 }
 
-bool VRWebGLCommand_clearDepthf::isSynchronous() const 
+bool VRWebGLCommand_clearDepthf::isSynchronous() const
 {
     return false;
 }
@@ -700,16 +700,16 @@ bool VRWebGLCommand_clearDepthf::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_clearDepthf::process() 
+void* VRWebGLCommand_clearDepthf::process()
 {
     VRWebGL_glClearDepthf(m_depth);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " depth = " << m_depth;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_clearDepthf::name() const 
+std::string VRWebGLCommand_clearDepthf::name() const
 {
     return "clearDepthf";
 }
@@ -726,7 +726,7 @@ std::shared_ptr<VRWebGLCommand_clearStencil> VRWebGLCommand_clearStencil::newIns
     return std::shared_ptr<VRWebGLCommand_clearStencil>(new VRWebGLCommand_clearStencil(s));
 }
 
-bool VRWebGLCommand_clearStencil::isSynchronous() const 
+bool VRWebGLCommand_clearStencil::isSynchronous() const
 {
     return false;
 }
@@ -736,16 +736,16 @@ bool VRWebGLCommand_clearStencil::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_clearStencil::process() 
+void* VRWebGLCommand_clearStencil::process()
 {
     VRWebGL_glClearStencil(m_s);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " s = " << m_s;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_clearStencil::name() const 
+std::string VRWebGLCommand_clearStencil::name() const
 {
     return "clearStencil";
 }
@@ -762,7 +762,7 @@ std::shared_ptr<VRWebGLCommand_colorMask> VRWebGLCommand_colorMask::newInstance(
     return std::shared_ptr<VRWebGLCommand_colorMask>(new VRWebGLCommand_colorMask(red, green, blue, alpha));
 }
 
-bool VRWebGLCommand_colorMask::isSynchronous() const 
+bool VRWebGLCommand_colorMask::isSynchronous() const
 {
     return false;
 }
@@ -772,16 +772,16 @@ bool VRWebGLCommand_colorMask::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_colorMask::process() 
+void* VRWebGLCommand_colorMask::process()
 {
     VRWebGL_glColorMask(m_red, m_green, m_blue, m_alpha);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " red = " << m_red << " green = " << m_green << " blue = " << m_blue << " alpha = " << m_alpha;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_colorMask::name() const 
+std::string VRWebGLCommand_colorMask::name() const
 {
     return "colorMask";
 }
@@ -798,7 +798,7 @@ std::shared_ptr<VRWebGLCommand_compileShader> VRWebGLCommand_compileShader::newI
     return std::shared_ptr<VRWebGLCommand_compileShader>(new VRWebGLCommand_compileShader(shader));
 }
 
-bool VRWebGLCommand_compileShader::isSynchronous() const 
+bool VRWebGLCommand_compileShader::isSynchronous() const
 {
     return false;
 }
@@ -808,7 +808,7 @@ bool VRWebGLCommand_compileShader::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_compileShader::process() 
+void* VRWebGLCommand_compileShader::process()
 {
     if (!m_processed)
     {
@@ -830,15 +830,15 @@ void* VRWebGLCommand_compileShader::process()
         }
         m_shader->cached = true;
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " shader = " << shader;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_compileShader::name() const 
+std::string VRWebGLCommand_compileShader::name() const
 {
     return "compileShader";
 }
@@ -855,7 +855,7 @@ std::shared_ptr<VRWebGLCommand_createBuffer> VRWebGLCommand_createBuffer::newIns
     return std::shared_ptr<VRWebGLCommand_createBuffer>(new VRWebGLCommand_createBuffer(buffer));
 }
 
-bool VRWebGLCommand_createBuffer::isSynchronous() const 
+bool VRWebGLCommand_createBuffer::isSynchronous() const
 {
     return false;
 }
@@ -865,22 +865,22 @@ bool VRWebGLCommand_createBuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_createBuffer::process() 
+void* VRWebGLCommand_createBuffer::process()
 {
     if (!m_processed)
     {
         GLuint buffer;
         VRWebGL_glGenBuffers(1, &buffer);
         m_buffer->setId(buffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " buffer = " << buffer;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_createBuffer::name() const 
+std::string VRWebGLCommand_createBuffer::name() const
 {
     return "createBuffer";
 }
@@ -897,7 +897,7 @@ std::shared_ptr<VRWebGLCommand_createFramebuffer> VRWebGLCommand_createFramebuff
     return std::shared_ptr<VRWebGLCommand_createFramebuffer>(new VRWebGLCommand_createFramebuffer(framebuffer));
 }
 
-bool VRWebGLCommand_createFramebuffer::isSynchronous() const 
+bool VRWebGLCommand_createFramebuffer::isSynchronous() const
 {
     return false;
 }
@@ -907,22 +907,22 @@ bool VRWebGLCommand_createFramebuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_createFramebuffer::process() 
+void* VRWebGLCommand_createFramebuffer::process()
 {
     if (!m_processed)
     {
         GLuint framebuffer;
         VRWebGL_glGenFramebuffers(1, &framebuffer);
         m_framebuffer->setId(framebuffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " framebuffer = " << framebuffer;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_createFramebuffer::name() const 
+std::string VRWebGLCommand_createFramebuffer::name() const
 {
     return "createFramebuffer";
 }
@@ -939,7 +939,7 @@ std::shared_ptr<VRWebGLCommand_createProgram> VRWebGLCommand_createProgram::newI
     return std::shared_ptr<VRWebGLCommand_createProgram>(new VRWebGLCommand_createProgram(program));
 }
 
-bool VRWebGLCommand_createProgram::isSynchronous() const 
+bool VRWebGLCommand_createProgram::isSynchronous() const
 {
     return false;
 }
@@ -949,21 +949,21 @@ bool VRWebGLCommand_createProgram::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_createProgram::process() 
+void* VRWebGLCommand_createProgram::process()
 {
     if (!m_processed)
     {
         GLuint program = VRWebGL_glCreateProgram();
         m_program->setId(program);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_createProgram::name() const 
+std::string VRWebGLCommand_createProgram::name() const
 {
     return "createProgram";
 }
@@ -980,7 +980,7 @@ std::shared_ptr<VRWebGLCommand_createRenderbuffer> VRWebGLCommand_createRenderbu
     return std::shared_ptr<VRWebGLCommand_createRenderbuffer>(new VRWebGLCommand_createRenderbuffer(renderbuffer));
 }
 
-bool VRWebGLCommand_createRenderbuffer::isSynchronous() const 
+bool VRWebGLCommand_createRenderbuffer::isSynchronous() const
 {
     return false;
 }
@@ -990,22 +990,22 @@ bool VRWebGLCommand_createRenderbuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_createRenderbuffer::process() 
+void* VRWebGLCommand_createRenderbuffer::process()
 {
     if (!m_processed)
     {
         GLuint renderbuffer;
         VRWebGL_glGenFramebuffers(1, &renderbuffer);
         m_renderbuffer->setId(renderbuffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " renderbuffer = " << renderbuffer;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_createRenderbuffer::name() const 
+std::string VRWebGLCommand_createRenderbuffer::name() const
 {
     return "createRenderbuffer";
 }
@@ -1022,7 +1022,7 @@ std::shared_ptr<VRWebGLCommand_createShader> VRWebGLCommand_createShader::newIns
     return std::shared_ptr<VRWebGLCommand_createShader>(new VRWebGLCommand_createShader(shader, type));
 }
 
-bool VRWebGLCommand_createShader::isSynchronous() const 
+bool VRWebGLCommand_createShader::isSynchronous() const
 {
     return false;
 }
@@ -1032,25 +1032,25 @@ bool VRWebGLCommand_createShader::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_createShader::process() 
+void* VRWebGLCommand_createShader::process()
 {
     if (!m_processed)
     {
         GLuint id = VRWebGL_glCreateShader(m_type);
         m_shader->setId(id);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " type = " << m_type << " shader = " << id;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_createShader::name() const 
+std::string VRWebGLCommand_createShader::name() const
 {
     return "createShader";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -1063,7 +1063,7 @@ std::shared_ptr<VRWebGLCommand_createTexture> VRWebGLCommand_createTexture::newI
     return std::shared_ptr<VRWebGLCommand_createTexture>(new VRWebGLCommand_createTexture(texture));
 }
 
-bool VRWebGLCommand_createTexture::isSynchronous() const 
+bool VRWebGLCommand_createTexture::isSynchronous() const
 {
     return false;
 }
@@ -1073,22 +1073,22 @@ bool VRWebGLCommand_createTexture::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_createTexture::process() 
+void* VRWebGLCommand_createTexture::process()
 {
     if (!m_processed)
     {
         GLuint texture;
         VRWebGL_glGenTextures(1, &texture);
         m_texture->setId(texture);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " texture = " << texture;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_createTexture::name() const 
+std::string VRWebGLCommand_createTexture::name() const
 {
     return "createTexture";
 }
@@ -1105,7 +1105,7 @@ std::shared_ptr<VRWebGLCommand_cullFace> VRWebGLCommand_cullFace::newInstance(GL
     return std::shared_ptr<VRWebGLCommand_cullFace>(new VRWebGLCommand_cullFace(mode));
 }
 
-bool VRWebGLCommand_cullFace::isSynchronous() const 
+bool VRWebGLCommand_cullFace::isSynchronous() const
 {
     return false;
 }
@@ -1115,16 +1115,16 @@ bool VRWebGLCommand_cullFace::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_cullFace::process() 
+void* VRWebGLCommand_cullFace::process()
 {
     VRWebGL_glCullFace(m_mode);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_cullFace::name() const 
+std::string VRWebGLCommand_cullFace::name() const
 {
     return "cullFace";
 }
@@ -1141,7 +1141,7 @@ std::shared_ptr<VRWebGLCommand_deleteBuffer> VRWebGLCommand_deleteBuffer::newIns
     return std::shared_ptr<VRWebGLCommand_deleteBuffer>(new VRWebGLCommand_deleteBuffer(buffer));
 }
 
-bool VRWebGLCommand_deleteBuffer::isSynchronous() const 
+bool VRWebGLCommand_deleteBuffer::isSynchronous() const
 {
     return false;
 }
@@ -1151,21 +1151,21 @@ bool VRWebGLCommand_deleteBuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_deleteBuffer::process() 
+void* VRWebGLCommand_deleteBuffer::process()
 {
     if (!m_processed)
     {
         GLuint buffer = m_buffer->id();
         VRWebGL_glDeleteBuffers(1, &buffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " buffer = " << buffer;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_deleteBuffer::name() const 
+std::string VRWebGLCommand_deleteBuffer::name() const
 {
     return "deleteBuffer";
 }
@@ -1182,7 +1182,7 @@ std::shared_ptr<VRWebGLCommand_deleteFramebuffer> VRWebGLCommand_deleteFramebuff
     return std::shared_ptr<VRWebGLCommand_deleteFramebuffer>(new VRWebGLCommand_deleteFramebuffer(framebuffer));
 }
 
-bool VRWebGLCommand_deleteFramebuffer::isSynchronous() const 
+bool VRWebGLCommand_deleteFramebuffer::isSynchronous() const
 {
     return false;
 }
@@ -1192,21 +1192,21 @@ bool VRWebGLCommand_deleteFramebuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_deleteFramebuffer::process() 
+void* VRWebGLCommand_deleteFramebuffer::process()
 {
     if (!m_processed)
     {
         GLuint framebuffer = m_framebuffer->id();
         VRWebGL_glDeleteFramebuffers(1, &framebuffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " framebuffer = " << framebuffer;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_deleteFramebuffer::name() const 
+std::string VRWebGLCommand_deleteFramebuffer::name() const
 {
     return "deleteFramebuffer";
 }
@@ -1223,7 +1223,7 @@ std::shared_ptr<VRWebGLCommand_deleteProgram> VRWebGLCommand_deleteProgram::newI
     return std::shared_ptr<VRWebGLCommand_deleteProgram>(new VRWebGLCommand_deleteProgram(program));
 }
 
-bool VRWebGLCommand_deleteProgram::isSynchronous() const 
+bool VRWebGLCommand_deleteProgram::isSynchronous() const
 {
     return false;
 }
@@ -1233,21 +1233,21 @@ bool VRWebGLCommand_deleteProgram::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_deleteProgram::process() 
+void* VRWebGLCommand_deleteProgram::process()
 {
     if (!m_processed)
     {
         GLuint program = m_program->id();
         VRWebGL_glDeleteProgram(program);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_deleteProgram::name() const 
+std::string VRWebGLCommand_deleteProgram::name() const
 {
     return "deleteProgram";
 }
@@ -1264,7 +1264,7 @@ std::shared_ptr<VRWebGLCommand_deleteRenderbuffer> VRWebGLCommand_deleteRenderbu
     return std::shared_ptr<VRWebGLCommand_deleteRenderbuffer>(new VRWebGLCommand_deleteRenderbuffer(renderbuffer));
 }
 
-bool VRWebGLCommand_deleteRenderbuffer::isSynchronous() const 
+bool VRWebGLCommand_deleteRenderbuffer::isSynchronous() const
 {
     return false;
 }
@@ -1274,21 +1274,21 @@ bool VRWebGLCommand_deleteRenderbuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_deleteRenderbuffer::process() 
+void* VRWebGLCommand_deleteRenderbuffer::process()
 {
     if (!m_processed)
     {
         GLuint renderbuffer = m_renderbuffer->id();
         VRWebGL_glDeleteRenderbuffers(1, &renderbuffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " renderbuffer = " << renderbuffer;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_deleteRenderbuffer::name() const 
+std::string VRWebGLCommand_deleteRenderbuffer::name() const
 {
     return "deleteRenderbuffer";
 }
@@ -1305,7 +1305,7 @@ std::shared_ptr<VRWebGLCommand_deleteShader> VRWebGLCommand_deleteShader::newIns
     return std::shared_ptr<VRWebGLCommand_deleteShader>(new VRWebGLCommand_deleteShader(shader));
 }
 
-bool VRWebGLCommand_deleteShader::isSynchronous() const 
+bool VRWebGLCommand_deleteShader::isSynchronous() const
 {
     return false;
 }
@@ -1315,21 +1315,21 @@ bool VRWebGLCommand_deleteShader::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_deleteShader::process() 
+void* VRWebGLCommand_deleteShader::process()
 {
     if (!m_processed)
     {
         GLuint shader = m_shader->id();
         VRWebGL_glDeleteShader(shader);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " shader = " << shader;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_deleteShader::name() const 
+std::string VRWebGLCommand_deleteShader::name() const
 {
     return "deleteShader";
 }
@@ -1346,7 +1346,7 @@ std::shared_ptr<VRWebGLCommand_deleteTexture> VRWebGLCommand_deleteTexture::newI
     return std::shared_ptr<VRWebGLCommand_deleteTexture>(new VRWebGLCommand_deleteTexture(texture));
 }
 
-bool VRWebGLCommand_deleteTexture::isSynchronous() const 
+bool VRWebGLCommand_deleteTexture::isSynchronous() const
 {
     return false;
 }
@@ -1356,21 +1356,21 @@ bool VRWebGLCommand_deleteTexture::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_deleteTexture::process() 
+void* VRWebGLCommand_deleteTexture::process()
 {
     if (!m_processed)
     {
         GLuint texture = m_texture->id();
         VRWebGL_glDeleteTextures(1, &texture);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " texture = " << texture;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_deleteTexture::name() const 
+std::string VRWebGLCommand_deleteTexture::name() const
 {
     return "deleteTexture";
 }
@@ -1387,7 +1387,7 @@ std::shared_ptr<VRWebGLCommand_depthFunc> VRWebGLCommand_depthFunc::newInstance(
     return std::shared_ptr<VRWebGLCommand_depthFunc>(new VRWebGLCommand_depthFunc(func));
 }
 
-bool VRWebGLCommand_depthFunc::isSynchronous() const 
+bool VRWebGLCommand_depthFunc::isSynchronous() const
 {
     return false;
 }
@@ -1397,16 +1397,16 @@ bool VRWebGLCommand_depthFunc::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_depthFunc::process() 
+void* VRWebGLCommand_depthFunc::process()
 {
     VRWebGL_glDepthFunc(m_func);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " func = " << m_func;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_depthFunc::name() const 
+std::string VRWebGLCommand_depthFunc::name() const
 {
     return "depthFunc";
 }
@@ -1423,7 +1423,7 @@ std::shared_ptr<VRWebGLCommand_depthMask> VRWebGLCommand_depthMask::newInstance(
     return std::shared_ptr<VRWebGLCommand_depthMask>(new VRWebGLCommand_depthMask(flag));
 }
 
-bool VRWebGLCommand_depthMask::isSynchronous() const 
+bool VRWebGLCommand_depthMask::isSynchronous() const
 {
     return false;
 }
@@ -1433,16 +1433,16 @@ bool VRWebGLCommand_depthMask::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_depthMask::process() 
+void* VRWebGLCommand_depthMask::process()
 {
     VRWebGL_glDepthMask(m_flag);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " flag = " << (m_flag ? "true" : "false");
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_depthMask::name() const 
+std::string VRWebGLCommand_depthMask::name() const
 {
     return "depthMask";
 }
@@ -1459,7 +1459,7 @@ std::shared_ptr<VRWebGLCommand_depthRangef> VRWebGLCommand_depthRangef::newInsta
     return std::shared_ptr<VRWebGLCommand_depthRangef>(new VRWebGLCommand_depthRangef(nearVal, farVal));
 }
 
-bool VRWebGLCommand_depthRangef::isSynchronous() const 
+bool VRWebGLCommand_depthRangef::isSynchronous() const
 {
     return false;
 }
@@ -1469,16 +1469,16 @@ bool VRWebGLCommand_depthRangef::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_depthRangef::process() 
+void* VRWebGLCommand_depthRangef::process()
 {
     VRWebGL_glDepthRangef(m_nearVal, m_farVal);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " near = " << m_nearVal << " far = " << m_farVal;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_depthRangef::name() const 
+std::string VRWebGLCommand_depthRangef::name() const
 {
     return "depthRangef";
 }
@@ -1495,7 +1495,7 @@ std::shared_ptr<VRWebGLCommand_detachShader> VRWebGLCommand_detachShader::newIns
     return std::shared_ptr<VRWebGLCommand_detachShader>(new VRWebGLCommand_detachShader(program, shader));
 }
 
-bool VRWebGLCommand_detachShader::isSynchronous() const 
+bool VRWebGLCommand_detachShader::isSynchronous() const
 {
     return false;
 }
@@ -1505,18 +1505,18 @@ bool VRWebGLCommand_detachShader::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_detachShader::process() 
+void* VRWebGLCommand_detachShader::process()
 {
     GLuint program = m_program->id();
     GLuint shader = m_shader->id();
     VRWebGL_glDetachShader(program, shader);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " shader = " << shader;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_detachShader::name() const 
+std::string VRWebGLCommand_detachShader::name() const
 {
     return "detachShader";
 }
@@ -1533,7 +1533,7 @@ std::shared_ptr<VRWebGLCommand_disable> VRWebGLCommand_disable::newInstance(GLen
     return std::shared_ptr<VRWebGLCommand_disable>(new VRWebGLCommand_disable(cap));
 }
 
-bool VRWebGLCommand_disable::isSynchronous() const 
+bool VRWebGLCommand_disable::isSynchronous() const
 {
     return false;
 }
@@ -1543,16 +1543,16 @@ bool VRWebGLCommand_disable::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_disable::process() 
+void* VRWebGLCommand_disable::process()
 {
     VRWebGL_glDisable(m_cap);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " cap = " << m_cap;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_disable::name() const 
+std::string VRWebGLCommand_disable::name() const
 {
     return "disable";
 }
@@ -1569,7 +1569,7 @@ std::shared_ptr<VRWebGLCommand_disableVertexAttribArray> VRWebGLCommand_disableV
     return std::shared_ptr<VRWebGLCommand_disableVertexAttribArray>(new VRWebGLCommand_disableVertexAttribArray(index));
 }
 
-bool VRWebGLCommand_disableVertexAttribArray::isSynchronous() const 
+bool VRWebGLCommand_disableVertexAttribArray::isSynchronous() const
 {
     return false;
 }
@@ -1579,16 +1579,16 @@ bool VRWebGLCommand_disableVertexAttribArray::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_disableVertexAttribArray::process() 
+void* VRWebGLCommand_disableVertexAttribArray::process()
 {
     VRWebGL_glDisableVertexAttribArray(m_index);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " index = " << m_index;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_disableVertexAttribArray::name() const 
+std::string VRWebGLCommand_disableVertexAttribArray::name() const
 {
     return "disableVertexAttribArray";
 }
@@ -1605,7 +1605,7 @@ std::shared_ptr<VRWebGLCommand_drawArrays> VRWebGLCommand_drawArrays::newInstanc
     return std::shared_ptr<VRWebGLCommand_drawArrays>(new VRWebGLCommand_drawArrays(mode, first, count));
 }
 
-bool VRWebGLCommand_drawArrays::isSynchronous() const 
+bool VRWebGLCommand_drawArrays::isSynchronous() const
 {
     return false;
 }
@@ -1615,16 +1615,16 @@ bool VRWebGLCommand_drawArrays::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_drawArrays::process() 
+void* VRWebGLCommand_drawArrays::process()
 {
     VRWebGL_glDrawArrays(m_mode, m_first, m_count);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode << " first = " << m_first << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_drawArrays::name() const 
+std::string VRWebGLCommand_drawArrays::name() const
 {
     return "drawArrays";
 }
@@ -1641,7 +1641,7 @@ std::shared_ptr<VRWebGLCommand_drawElements> VRWebGLCommand_drawElements::newIns
     return std::shared_ptr<VRWebGLCommand_drawElements>(new VRWebGLCommand_drawElements(mode, count, type, offset));
 }
 
-bool VRWebGLCommand_drawElements::isSynchronous() const 
+bool VRWebGLCommand_drawElements::isSynchronous() const
 {
     return false;
 }
@@ -1651,16 +1651,16 @@ bool VRWebGLCommand_drawElements::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_drawElements::process() 
+void* VRWebGLCommand_drawElements::process()
 {
     VRWebGL_glDrawElements(m_mode, m_count, m_type, reinterpret_cast<void*>(static_cast<intptr_t>(m_offset)));
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode << " count = " << m_count << " type = " << m_type << " offsdet = " << m_offset;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_drawElements::name() const 
+std::string VRWebGLCommand_drawElements::name() const
 {
     return "drawElements";
 }
@@ -1677,7 +1677,7 @@ std::shared_ptr<VRWebGLCommand_enable> VRWebGLCommand_enable::newInstance(GLenum
     return std::shared_ptr<VRWebGLCommand_enable>(new VRWebGLCommand_enable(cap));
 }
 
-bool VRWebGLCommand_enable::isSynchronous() const 
+bool VRWebGLCommand_enable::isSynchronous() const
 {
     return false;
 }
@@ -1687,16 +1687,16 @@ bool VRWebGLCommand_enable::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_enable::process() 
+void* VRWebGLCommand_enable::process()
 {
     VRWebGL_glEnable(m_cap);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " cap = " << m_cap;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_enable::name() const 
+std::string VRWebGLCommand_enable::name() const
 {
     return "enable";
 }
@@ -1713,7 +1713,7 @@ std::shared_ptr<VRWebGLCommand_enableVertexAttribArray> VRWebGLCommand_enableVer
     return std::shared_ptr<VRWebGLCommand_enableVertexAttribArray>(new VRWebGLCommand_enableVertexAttribArray(index));
 }
 
-bool VRWebGLCommand_enableVertexAttribArray::isSynchronous() const 
+bool VRWebGLCommand_enableVertexAttribArray::isSynchronous() const
 {
     return false;
 }
@@ -1723,20 +1723,20 @@ bool VRWebGLCommand_enableVertexAttribArray::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_enableVertexAttribArray::process() 
+void* VRWebGLCommand_enableVertexAttribArray::process()
 {
     VRWebGL_glEnableVertexAttribArray(m_index);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " index = " << m_index;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_enableVertexAttribArray::name() const 
+std::string VRWebGLCommand_enableVertexAttribArray::name() const
 {
     return "enableVertexAttribArray";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -1749,7 +1749,7 @@ std::shared_ptr<VRWebGLCommand_framebufferRenderbuffer> VRWebGLCommand_framebuff
     return std::shared_ptr<VRWebGLCommand_framebufferRenderbuffer>(new VRWebGLCommand_framebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer));
 }
 
-bool VRWebGLCommand_framebufferRenderbuffer::isSynchronous() const 
+bool VRWebGLCommand_framebufferRenderbuffer::isSynchronous() const
 {
     return false;
 }
@@ -1759,21 +1759,21 @@ bool VRWebGLCommand_framebufferRenderbuffer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_framebufferRenderbuffer::process() 
+void* VRWebGLCommand_framebufferRenderbuffer::process()
 {
     GLuint renderbuffer = m_renderbuffer != 0 ? m_renderbuffer->id() : 0;
     VRWebGL_glFramebufferRenderbuffer(m_target, m_attachment, m_renderbuffertarget, renderbuffer);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " attachment = " << m_attachment << " renderbuffertarget = " << m_renderbuffertarget << " renderbuffer = " << renderbuffer;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_framebufferRenderbuffer::name() const 
+std::string VRWebGLCommand_framebufferRenderbuffer::name() const
 {
     return "framebufferRenderbuffer";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -1786,7 +1786,7 @@ std::shared_ptr<VRWebGLCommand_framebufferTexture2D> VRWebGLCommand_framebufferT
     return std::shared_ptr<VRWebGLCommand_framebufferTexture2D>(new VRWebGLCommand_framebufferTexture2D(target, attachment, textarget, texture, level));
 }
 
-bool VRWebGLCommand_framebufferTexture2D::isSynchronous() const 
+bool VRWebGLCommand_framebufferTexture2D::isSynchronous() const
 {
     return false;
 }
@@ -1796,21 +1796,21 @@ bool VRWebGLCommand_framebufferTexture2D::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_framebufferTexture2D::process() 
+void* VRWebGLCommand_framebufferTexture2D::process()
 {
     GLuint texture = m_texture != 0 ? m_texture->id() : 0;
     VRWebGL_glFramebufferTexture2D(m_target, m_attachment, m_textarget, texture, m_level);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " attachment = " << m_attachment << " textarget = " << m_textarget << " texture = " << texture << " level = " << m_level;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_framebufferTexture2D::name() const 
+std::string VRWebGLCommand_framebufferTexture2D::name() const
 {
     return "framebufferTexture2D";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -1823,7 +1823,7 @@ std::shared_ptr<VRWebGLCommand_frontFace> VRWebGLCommand_frontFace::newInstance(
     return std::shared_ptr<VRWebGLCommand_frontFace>(new VRWebGLCommand_frontFace(mode));
 }
 
-bool VRWebGLCommand_frontFace::isSynchronous() const 
+bool VRWebGLCommand_frontFace::isSynchronous() const
 {
     return false;
 }
@@ -1833,16 +1833,16 @@ bool VRWebGLCommand_frontFace::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_frontFace::process() 
+void* VRWebGLCommand_frontFace::process()
 {
     VRWebGL_glFrontFace(m_mode);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_frontFace::name() const 
+std::string VRWebGLCommand_frontFace::name() const
 {
     return "frontFace";
 }
@@ -1859,7 +1859,7 @@ std::shared_ptr<VRWebGLCommand_generateMipmap> VRWebGLCommand_generateMipmap::ne
     return std::shared_ptr<VRWebGLCommand_generateMipmap>(new VRWebGLCommand_generateMipmap(target));
 }
 
-bool VRWebGLCommand_generateMipmap::isSynchronous() const 
+bool VRWebGLCommand_generateMipmap::isSynchronous() const
 {
     return false;
 }
@@ -1869,24 +1869,24 @@ bool VRWebGLCommand_generateMipmap::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_generateMipmap::process() 
+void* VRWebGLCommand_generateMipmap::process()
 {
     if (!m_processed)
     {
         VRWebGL_glGenerateMipmap(m_target);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target;
-#endif  
+#endif
         m_processed = true;
-    }  
+    }
     return 0;
 }
 
-std::string VRWebGLCommand_generateMipmap::name() const 
+std::string VRWebGLCommand_generateMipmap::name() const
 {
     return "generateMipmap";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -1899,7 +1899,7 @@ std::shared_ptr<VRWebGLCommand_getActiveAttrib> VRWebGLCommand_getActiveAttrib::
     return std::shared_ptr<VRWebGLCommand_getActiveAttrib>(new VRWebGLCommand_getActiveAttrib(program, index, bufSize, length, size, type, name));
 }
 
-bool VRWebGLCommand_getActiveAttrib::isSynchronous() const 
+bool VRWebGLCommand_getActiveAttrib::isSynchronous() const
 {
     return true;
 }
@@ -1913,7 +1913,7 @@ bool VRWebGLCommand_getActiveAttrib::canBeProcessedImmediately() const
 #endif
 }
 
-void* VRWebGLCommand_getActiveAttrib::process() 
+void* VRWebGLCommand_getActiveAttrib::process()
 {
 #if !defined(VRWEBGL_USE_CACHE) || defined(VRWEBGL_SHOW_LOG)
     GLuint program = m_program->id();
@@ -1925,22 +1925,22 @@ void* VRWebGLCommand_getActiveAttrib::process()
         *m_length = activeInfo->name.size();
         strcpy(m_name, activeInfo->name.c_str());
         *m_type = activeInfo->type;
-        *m_size = activeInfo->size; 
+        *m_size = activeInfo->size;
     }
 #else
     VRWebGL_glGetActiveAttrib(program, m_index, m_bufSize, m_length, m_size, m_type, m_name);
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " index = " << m_index << " bufSize = " << m_bufSize << " length = " << *m_length << " size = " << *m_size << " type = " << *m_type << " name = " << m_name;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_getActiveAttrib::name() const 
+std::string VRWebGLCommand_getActiveAttrib::name() const
 {
     return "getActiveAttrib";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -1953,7 +1953,7 @@ std::shared_ptr<VRWebGLCommand_getActiveUniform> VRWebGLCommand_getActiveUniform
     return std::shared_ptr<VRWebGLCommand_getActiveUniform>(new VRWebGLCommand_getActiveUniform(program, index, bufSize, length, size, type, name));
 }
 
-bool VRWebGLCommand_getActiveUniform::isSynchronous() const 
+bool VRWebGLCommand_getActiveUniform::isSynchronous() const
 {
     return true;
 }
@@ -1967,7 +1967,7 @@ bool VRWebGLCommand_getActiveUniform::canBeProcessedImmediately() const
 #endif
 }
 
-void* VRWebGLCommand_getActiveUniform::process() 
+void* VRWebGLCommand_getActiveUniform::process()
 {
 #if !defined(VRWEBGL_USE_CACHE) || defined(VRWEBGL_SHOW_LOG)
     GLuint program = m_program->id();
@@ -1979,22 +1979,22 @@ void* VRWebGLCommand_getActiveUniform::process()
         *m_length = activeInfo->name.size();
         strcpy(m_name, activeInfo->name.c_str());
         *m_type = activeInfo->type;
-        *m_size = activeInfo->size; 
+        *m_size = activeInfo->size;
     }
 #else
     VRWebGL_glGetActiveUniform(program, m_index, m_bufSize, m_length, m_size, m_type, m_name);
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " index = " << m_index << " bufSize = " << m_bufSize << " length = " << *m_length << " size = " << *m_size << " type = " << *m_type << " name = " << m_name;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_getActiveUniform::name() const 
+std::string VRWebGLCommand_getActiveUniform::name() const
 {
     return "getActiveUniform";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2007,7 +2007,7 @@ std::shared_ptr<VRWebGLCommand_getAttribLocation> VRWebGLCommand_getAttribLocati
     return std::shared_ptr<VRWebGLCommand_getAttribLocation>(new VRWebGLCommand_getAttribLocation(program, name));
 }
 
-bool VRWebGLCommand_getAttribLocation::isSynchronous() const 
+bool VRWebGLCommand_getAttribLocation::isSynchronous() const
 {
     return true;
 }
@@ -2021,7 +2021,7 @@ bool VRWebGLCommand_getAttribLocation::canBeProcessedImmediately() const
 #endif
 }
 
-void* VRWebGLCommand_getAttribLocation::process() 
+void* VRWebGLCommand_getAttribLocation::process()
 {
 #if !defined(VRWEBGL_USE_CACHE) || defined(VRWEBGL_SHOW_LOG)
     GLuint program = m_program->id();
@@ -2031,17 +2031,17 @@ void* VRWebGLCommand_getAttribLocation::process()
 #else
     m_attribLocation = VRWebGL_glGetAttribLocation(program, m_name.c_str());
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " name = " << m_name.c_str() << " attribLocation = " << m_attribLocation;
-#endif    
+#endif
     return &m_attribLocation;
 }
 
-std::string VRWebGLCommand_getAttribLocation::name() const 
+std::string VRWebGLCommand_getAttribLocation::name() const
 {
     return "getAttribLocation";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2054,7 +2054,7 @@ std::shared_ptr<VRWebGLCommand_getError> VRWebGLCommand_getError::newInstance()
     return std::shared_ptr<VRWebGLCommand_getError>(new VRWebGLCommand_getError());
 }
 
-bool VRWebGLCommand_getError::isSynchronous() const 
+bool VRWebGLCommand_getError::isSynchronous() const
 {
     return true;
 }
@@ -2064,20 +2064,20 @@ bool VRWebGLCommand_getError::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_getError::process() 
+void* VRWebGLCommand_getError::process()
 {
     m_error = VRWebGL_glGetError();
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " error = " << m_error;
-#endif    
+#endif
     return &m_error;
 }
 
-std::string VRWebGLCommand_getError::name() const 
+std::string VRWebGLCommand_getError::name() const
 {
     return "getError";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2090,7 +2090,7 @@ std::shared_ptr<VRWebGLCommand_getBooleanv> VRWebGLCommand_getBooleanv::newInsta
     return std::shared_ptr<VRWebGLCommand_getBooleanv>(new VRWebGLCommand_getBooleanv(pname));
 }
 
-bool VRWebGLCommand_getBooleanv::isSynchronous() const 
+bool VRWebGLCommand_getBooleanv::isSynchronous() const
 {
     return true;
 }
@@ -2100,16 +2100,16 @@ bool VRWebGLCommand_getBooleanv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_getBooleanv::process() 
+void* VRWebGLCommand_getBooleanv::process()
 {
     VRWebGL_glGetBooleanv(m_pname, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " pname = " << m_pname;
-#endif    
+#endif
     return m_value;
 }
 
-std::string VRWebGLCommand_getBooleanv::name() const 
+std::string VRWebGLCommand_getBooleanv::name() const
 {
     return "getBooleanv";
 }
@@ -2126,7 +2126,7 @@ std::shared_ptr<VRWebGLCommand_getFloatv> VRWebGLCommand_getFloatv::newInstance(
     return std::shared_ptr<VRWebGLCommand_getFloatv>(new VRWebGLCommand_getFloatv(pname));
 }
 
-bool VRWebGLCommand_getFloatv::isSynchronous() const 
+bool VRWebGLCommand_getFloatv::isSynchronous() const
 {
     return true;
 }
@@ -2136,16 +2136,16 @@ bool VRWebGLCommand_getFloatv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_getFloatv::process() 
+void* VRWebGLCommand_getFloatv::process()
 {
     VRWebGL_glGetFloatv(m_pname, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " pname = " << m_pname;
-#endif    
+#endif
     return m_value;
 }
 
-std::string VRWebGLCommand_getFloatv::name() const 
+std::string VRWebGLCommand_getFloatv::name() const
 {
     return "getFloatv";
 }
@@ -2162,7 +2162,7 @@ std::shared_ptr<VRWebGLCommand_getIntegerv> VRWebGLCommand_getIntegerv::newInsta
     return std::shared_ptr<VRWebGLCommand_getIntegerv>(new VRWebGLCommand_getIntegerv(pname));
 }
 
-bool VRWebGLCommand_getIntegerv::isSynchronous() const 
+bool VRWebGLCommand_getIntegerv::isSynchronous() const
 {
     return true;
 }
@@ -2172,16 +2172,16 @@ bool VRWebGLCommand_getIntegerv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_getIntegerv::process() 
+void* VRWebGLCommand_getIntegerv::process()
 {
     VRWebGL_glGetIntegerv(m_pname, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " pname = " << m_pname;
-#endif    
+#endif
     return m_value;
 }
 
-std::string VRWebGLCommand_getIntegerv::name() const 
+std::string VRWebGLCommand_getIntegerv::name() const
 {
     return "getIntegerv";
 }
@@ -2198,7 +2198,7 @@ std::shared_ptr<VRWebGLCommand_getProgramiv> VRWebGLCommand_getProgramiv::newIns
     return std::shared_ptr<VRWebGLCommand_getProgramiv>(new VRWebGLCommand_getProgramiv(program, pname));
 }
 
-bool VRWebGLCommand_getProgramiv::isSynchronous() const 
+bool VRWebGLCommand_getProgramiv::isSynchronous() const
 {
     return true;
 }
@@ -2212,7 +2212,7 @@ bool VRWebGLCommand_getProgramiv::canBeProcessedImmediately() const
 #endif
 }
 
-void* VRWebGLCommand_getProgramiv::process() 
+void* VRWebGLCommand_getProgramiv::process()
 {
 #if !defined(VRWEBGL_USE_CACHE) || defined(VRWEBGL_SHOW_LOG)
     GLuint program = m_program->id();
@@ -2222,7 +2222,7 @@ void* VRWebGLCommand_getProgramiv::process()
     {
         case GL_LINK_STATUS:
             m_programParameter = m_program->getLinkStatus();
-            break; 
+            break;
         case GL_ACTIVE_ATTRIBUTES:
             m_programParameter = m_program->getNumberOfActiveAttributes();
             break;
@@ -2240,21 +2240,21 @@ void* VRWebGLCommand_getProgramiv::process()
             break;
         default:
             VLOG(0) << "VRWebGL: getProgramiv requesting the pname '" << std::hex << m_pname << std::dec <<"' that is not currently supported in the cache mechanism.";
-    } 
+    }
 #else
     VRWebGL_glGetProgramiv(program, m_pname, &m_programParameter);
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " pname = " << m_pname << " programParameter = " << m_programParameter;
-#endif    
+#endif
     return &m_programParameter;
 }
 
-std::string VRWebGLCommand_getProgramiv::name() const 
+std::string VRWebGLCommand_getProgramiv::name() const
 {
     return "getProgramiv";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2267,7 +2267,7 @@ std::shared_ptr<VRWebGLCommand_getProgramInfoLog> VRWebGLCommand_getProgramInfoL
     return std::shared_ptr<VRWebGLCommand_getProgramInfoLog>(new VRWebGLCommand_getProgramInfoLog(program));
 }
 
-bool VRWebGLCommand_getProgramInfoLog::isSynchronous() const 
+bool VRWebGLCommand_getProgramInfoLog::isSynchronous() const
 {
     return true;
 }
@@ -2281,7 +2281,7 @@ bool VRWebGLCommand_getProgramInfoLog::canBeProcessedImmediately() const
 #endif
 }
 
-void* VRWebGLCommand_getProgramInfoLog::process() 
+void* VRWebGLCommand_getProgramInfoLog::process()
 {
 #if !defined(VRWEBGL_USE_CACHE) || defined(VRWEBGL_SHOW_LOG)
     GLuint program = m_program->id();
@@ -2294,13 +2294,13 @@ void* VRWebGLCommand_getProgramInfoLog::process()
     VRWebGL_glGetProgramInfoLog(program, sizeof(infoLog) / sizeof(GLchar), &length, infoLog);
     m_programInfoLog = infoLog;
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " infoLog = " << m_programInfoLog.c_str();
-#endif    
+#endif
     return (void*)(m_programInfoLog.c_str());
 }
 
-std::string VRWebGLCommand_getProgramInfoLog::name() const 
+std::string VRWebGLCommand_getProgramInfoLog::name() const
 {
     return "getProgramInfoLog";
 }
@@ -2317,7 +2317,7 @@ std::shared_ptr<VRWebGLCommand_getShaderiv> VRWebGLCommand_getShaderiv::newInsta
     return std::shared_ptr<VRWebGLCommand_getShaderiv>(new VRWebGLCommand_getShaderiv(shader, pname));
 }
 
-bool VRWebGLCommand_getShaderiv::isSynchronous() const 
+bool VRWebGLCommand_getShaderiv::isSynchronous() const
 {
     return true;
 }
@@ -2331,7 +2331,7 @@ bool VRWebGLCommand_getShaderiv::canBeProcessedImmediately() const
 #endif
 }
 
-void* VRWebGLCommand_getShaderiv::process() 
+void* VRWebGLCommand_getShaderiv::process()
 {
 #if !defined(VRWEBGL_USE_CACHE) || defined(VRWEBGL_SHOW_LOG)
     GLuint shader = m_shader->id();
@@ -2341,24 +2341,24 @@ void* VRWebGLCommand_getShaderiv::process()
     {
         case GL_COMPILE_STATUS:
             m_shaderParameter = m_shader->getCompileStatus();
-            break; 
+            break;
         case GL_SHADER_TYPE:
             m_shaderParameter = m_shader->getType();
             break;
         case GL_DELETE_STATUS:
             m_shaderParameter = m_shader->isDeleted();
             break;
-    } 
+    }
 #else
     VRWebGL_glGetShaderiv(shader, m_pname, &m_shaderParameter);
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " shader = " << shader << " pname = " << m_pname << " result = " << m_shaderParameter;
-#endif    
+#endif
     return &m_shaderParameter;
 }
 
-std::string VRWebGLCommand_getShaderiv::name() const 
+std::string VRWebGLCommand_getShaderiv::name() const
 {
     return "getShaderiv";
 }
@@ -2375,7 +2375,7 @@ std::shared_ptr<VRWebGLCommand_getShaderInfoLog> VRWebGLCommand_getShaderInfoLog
     return std::shared_ptr<VRWebGLCommand_getShaderInfoLog>(new VRWebGLCommand_getShaderInfoLog(shader));
 }
 
-bool VRWebGLCommand_getShaderInfoLog::isSynchronous() const 
+bool VRWebGLCommand_getShaderInfoLog::isSynchronous() const
 {
     return true;
 }
@@ -2389,7 +2389,7 @@ bool VRWebGLCommand_getShaderInfoLog::canBeProcessedImmediately() const
 #endif
 }
 
-void* VRWebGLCommand_getShaderInfoLog::process() 
+void* VRWebGLCommand_getShaderInfoLog::process()
 {
 #if !defined(VRWEBGL_USE_CACHE) || defined(VRWEBGL_SHOW_LOG)
     GLuint shader = m_shader->id();
@@ -2402,13 +2402,13 @@ void* VRWebGLCommand_getShaderInfoLog::process()
     VRWebGL_glGetShaderInfoLog(shader, sizeof(infoLog) / sizeof(GLchar), &length, infoLog);
     m_shaderInfoLog = infoLog;
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " shader = " << shader << " infoLog = " << m_shaderInfoLog.c_str();
-#endif    
+#endif
     return (void*)(m_shaderInfoLog.c_str());
 }
 
-std::string VRWebGLCommand_getShaderInfoLog::name() const 
+std::string VRWebGLCommand_getShaderInfoLog::name() const
 {
     return "getShaderInfoLog";
 }
@@ -2425,7 +2425,7 @@ std::shared_ptr<VRWebGLCommand_getShaderPrecisionFormat> VRWebGLCommand_getShade
     return std::shared_ptr<VRWebGLCommand_getShaderPrecisionFormat>(new VRWebGLCommand_getShaderPrecisionFormat(shaderType, precisionType));
 }
 
-bool VRWebGLCommand_getShaderPrecisionFormat::isSynchronous() const 
+bool VRWebGLCommand_getShaderPrecisionFormat::isSynchronous() const
 {
     return true;
 }
@@ -2435,16 +2435,16 @@ bool VRWebGLCommand_getShaderPrecisionFormat::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_getShaderPrecisionFormat::process() 
+void* VRWebGLCommand_getShaderPrecisionFormat::process()
 {
     VRWebGL_glGetShaderPrecisionFormat(m_shaderType, m_precisionType, m_rangeAndPrecision, &m_rangeAndPrecision[2]);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " shaderType = " << m_shaderType << " precisionType = " << m_precisionType;
-#endif    
+#endif
     return (void*)(m_rangeAndPrecision);
 }
 
-std::string VRWebGLCommand_getShaderPrecisionFormat::name() const 
+std::string VRWebGLCommand_getShaderPrecisionFormat::name() const
 {
     return "getShaderPrecisionFormat";
 }
@@ -2461,7 +2461,7 @@ std::shared_ptr<VRWebGLCommand_getUniformLocation> VRWebGLCommand_getUniformLoca
     return std::shared_ptr<VRWebGLCommand_getUniformLocation>(new VRWebGLCommand_getUniformLocation(uniformLocation, program, name));
 }
 
-bool VRWebGLCommand_getUniformLocation::isSynchronous() const 
+bool VRWebGLCommand_getUniformLocation::isSynchronous() const
 {
     return false;
 }
@@ -2471,23 +2471,23 @@ bool VRWebGLCommand_getUniformLocation::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_getUniformLocation::process() 
+void* VRWebGLCommand_getUniformLocation::process()
 {
     GLuint program = m_program->id();
     GLint uniformLocation = VRWebGL_glGetUniformLocation(program, m_name.c_str());
     m_uniformLocation->setLocation(uniformLocation);
     VRWebGLCommandProcessor::getInstance()->setMatrixUniformLocationForName(program, uniformLocation, m_name);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program << " name = " << m_name.c_str() << " uniformLocation = " << uniformLocation;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_getUniformLocation::name() const 
+std::string VRWebGLCommand_getUniformLocation::name() const
 {
     return "getUniformLocation";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2500,7 +2500,7 @@ std::shared_ptr<VRWebGLCommand_lineWidth> VRWebGLCommand_lineWidth::newInstance(
     return std::shared_ptr<VRWebGLCommand_lineWidth>(new VRWebGLCommand_lineWidth(width));
 }
 
-bool VRWebGLCommand_lineWidth::isSynchronous() const 
+bool VRWebGLCommand_lineWidth::isSynchronous() const
 {
     return false;
 }
@@ -2510,16 +2510,16 @@ bool VRWebGLCommand_lineWidth::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_lineWidth::process() 
+void* VRWebGLCommand_lineWidth::process()
 {
     VRWebGL_glLineWidth(m_width);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " width = " << m_width;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_lineWidth::name() const 
+std::string VRWebGLCommand_lineWidth::name() const
 {
     return "lineWidth";
 }
@@ -2536,7 +2536,7 @@ std::shared_ptr<VRWebGLCommand_linkProgram> VRWebGLCommand_linkProgram::newInsta
     return std::shared_ptr<VRWebGLCommand_linkProgram>(new VRWebGLCommand_linkProgram(program));
 }
 
-bool VRWebGLCommand_linkProgram::isSynchronous() const 
+bool VRWebGLCommand_linkProgram::isSynchronous() const
 {
     return false;
 }
@@ -2546,13 +2546,13 @@ bool VRWebGLCommand_linkProgram::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_linkProgram::process() 
+void* VRWebGLCommand_linkProgram::process()
 {
     if (!m_processed)
     {
         GLuint program = m_program->id();
         VRWebGL_glLinkProgram(program);
-#ifdef VRWEBGL_USE_CACHE   
+#ifdef VRWEBGL_USE_CACHE
         // Cache the link status
         GLint linkStatus;
         VRWebGL_glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
@@ -2568,7 +2568,7 @@ void* VRWebGLCommand_linkProgram::process()
             m_program->setInfoLog(infoLog);
             delete [] infoLog;
             infoLog = 0;
-        }        
+        }
         // Cache the active uniforms
         GLint numberOfActiveUniforms;
         VRWebGL_glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numberOfActiveUniforms);
@@ -2630,15 +2630,15 @@ void* VRWebGLCommand_linkProgram::process()
         }
         m_program->cached = true;
 #endif
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_linkProgram::name() const 
+std::string VRWebGLCommand_linkProgram::name() const
 {
     return "linkProgram";
 }
@@ -2655,7 +2655,7 @@ std::shared_ptr<VRWebGLCommand_pixelStorei> VRWebGLCommand_pixelStorei::newInsta
     return std::shared_ptr<VRWebGLCommand_pixelStorei>(new VRWebGLCommand_pixelStorei(pname, param));
 }
 
-bool VRWebGLCommand_pixelStorei::isSynchronous() const 
+bool VRWebGLCommand_pixelStorei::isSynchronous() const
 {
     return false;
 }
@@ -2665,16 +2665,16 @@ bool VRWebGLCommand_pixelStorei::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_pixelStorei::process() 
+void* VRWebGLCommand_pixelStorei::process()
 {
     VRWebGL_glPixelStorei(m_pname, m_param);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " pname = " << m_pname << " param = " << m_param;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_pixelStorei::name() const 
+std::string VRWebGLCommand_pixelStorei::name() const
 {
     return "pixelStorei";
 }
@@ -2691,7 +2691,7 @@ std::shared_ptr<VRWebGLCommand_readPixels> VRWebGLCommand_readPixels::newInstanc
     return std::shared_ptr<VRWebGLCommand_readPixels>(new VRWebGLCommand_readPixels(x, y, width, height, format, type, data));
 }
 
-bool VRWebGLCommand_readPixels::isSynchronous() const 
+bool VRWebGLCommand_readPixels::isSynchronous() const
 {
     return true;
 }
@@ -2701,16 +2701,16 @@ bool VRWebGLCommand_readPixels::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_readPixels::process() 
+void* VRWebGLCommand_readPixels::process()
 {
     VRWebGL_glReadPixels(m_x, m_y, m_width, m_height, m_format, m_type, m_data);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " x = " << m_x << " y = " << m_y << " width = " << m_width << " height = " << " format = " << m_format << " type = " << m_type;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_readPixels::name() const 
+std::string VRWebGLCommand_readPixels::name() const
 {
     return "readPixels";
 }
@@ -2727,7 +2727,7 @@ std::shared_ptr<VRWebGLCommand_renderbufferStorage> VRWebGLCommand_renderbufferS
     return std::shared_ptr<VRWebGLCommand_renderbufferStorage>(new VRWebGLCommand_renderbufferStorage(target, internalformat, width, height));
 }
 
-bool VRWebGLCommand_renderbufferStorage::isSynchronous() const 
+bool VRWebGLCommand_renderbufferStorage::isSynchronous() const
 {
     return false;
 }
@@ -2737,16 +2737,16 @@ bool VRWebGLCommand_renderbufferStorage::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_renderbufferStorage::process() 
+void* VRWebGLCommand_renderbufferStorage::process()
 {
     VRWebGL_glRenderbufferStorage(m_target, m_internalformat, m_width, m_height);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " internalformat = " << m_internalformat << " width = " << m_width << " height = " << m_height;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_renderbufferStorage::name() const 
+std::string VRWebGLCommand_renderbufferStorage::name() const
 {
     return "renderbufferStorage";
 }
@@ -2763,7 +2763,7 @@ std::shared_ptr<VRWebGLCommand_scissor> VRWebGLCommand_scissor::newInstance(GLin
     return std::shared_ptr<VRWebGLCommand_scissor>(new VRWebGLCommand_scissor(x, y, width, height));
 }
 
-bool VRWebGLCommand_scissor::isSynchronous() const 
+bool VRWebGLCommand_scissor::isSynchronous() const
 {
     return false;
 }
@@ -2773,16 +2773,16 @@ bool VRWebGLCommand_scissor::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_scissor::process() 
+void* VRWebGLCommand_scissor::process()
 {
     VRWebGL_glScissor(m_x, m_y, m_width, m_height);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " x = " << m_x << " y = " << m_y << " width = " << m_width << " height = " << m_height;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_scissor::name() const 
+std::string VRWebGLCommand_scissor::name() const
 {
     return "scissor";
 }
@@ -2807,7 +2807,7 @@ VRWebGLCommand_shaderSource::~VRWebGLCommand_shaderSource()
     m_source = 0;
 }
 
-bool VRWebGLCommand_shaderSource::isSynchronous() const 
+bool VRWebGLCommand_shaderSource::isSynchronous() const
 {
     return false;
 }
@@ -2817,25 +2817,25 @@ bool VRWebGLCommand_shaderSource::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_shaderSource::process() 
+void* VRWebGLCommand_shaderSource::process()
 {
     if (!m_processed)
     {
         GLuint shader = m_shader->id();
         VRWebGL_glShaderSource(shader, 1, (const GLchar**)&m_source, &m_length);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " shader = " << shader << " length = " << m_length;
-#endif    
+#endif
         m_processed = true;
     }
     return 0;
 }
 
-std::string VRWebGLCommand_shaderSource::name() const 
+std::string VRWebGLCommand_shaderSource::name() const
 {
     return "shaderSource";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2848,7 +2848,7 @@ std::shared_ptr<VRWebGLCommand_texParameteri> VRWebGLCommand_texParameteri::newI
     return std::shared_ptr<VRWebGLCommand_texParameteri>(new VRWebGLCommand_texParameteri(target, pname, param, texture));
 }
 
-bool VRWebGLCommand_texParameteri::isSynchronous() const 
+bool VRWebGLCommand_texParameteri::isSynchronous() const
 {
     return false;
 }
@@ -2858,26 +2858,26 @@ bool VRWebGLCommand_texParameteri::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_texParameteri::process() 
+void* VRWebGLCommand_texParameteri::process()
 {
     // A hack to fix the assignment of the correct filter to the external textures.
     if (m_texture && m_texture->externalTextureId() != 0 && (m_pname == GL_TEXTURE_MIN_FILTER || m_pname == GL_TEXTURE_MAG_FILTER))
     {
         m_target = GL_TEXTURE_EXTERNAL_OES;
     }
-    
+
     VRWebGL_glTexParameteri(m_target, m_pname, m_param);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " pname = " << m_pname << " param = " << m_param;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_texParameteri::name() const 
+std::string VRWebGLCommand_texParameteri::name() const
 {
     return "texParameteri";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2890,7 +2890,7 @@ std::shared_ptr<VRWebGLCommand_texParameterf> VRWebGLCommand_texParameterf::newI
     return std::shared_ptr<VRWebGLCommand_texParameterf>(new VRWebGLCommand_texParameterf(target, pname, param));
 }
 
-bool VRWebGLCommand_texParameterf::isSynchronous() const 
+bool VRWebGLCommand_texParameterf::isSynchronous() const
 {
     return false;
 }
@@ -2900,26 +2900,26 @@ bool VRWebGLCommand_texParameterf::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_texParameterf::process() 
+void* VRWebGLCommand_texParameterf::process()
 {
     VRWebGL_glTexParameterf(m_target, m_pname, m_param);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " pname = " << m_pname << " param = " << m_param;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_texParameterf::name() const 
+std::string VRWebGLCommand_texParameterf::name() const
 {
     return "texParameterf";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
 VRWebGLCommand_texImage2D::VRWebGLCommand_texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * data): m_target(target), m_level(level), m_internalformat(internalformat), m_width(width), m_height(height), m_border(border), m_format(format), m_type(type)
 {
-    if (data != 0) 
+    if (data != 0)
     {
         GLsizei bytesPerPixel = 4;
         switch(internalformat)
@@ -2955,7 +2955,7 @@ VRWebGLCommand_texImage2D::~VRWebGLCommand_texImage2D()
     m_data = 0;
 }
 
-bool VRWebGLCommand_texImage2D::isSynchronous() const 
+bool VRWebGLCommand_texImage2D::isSynchronous() const
 {
     return false;
 }
@@ -2965,24 +2965,24 @@ bool VRWebGLCommand_texImage2D::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_texImage2D::process() 
+void* VRWebGLCommand_texImage2D::process()
 {
     if (!m_processed)
     {
         VRWebGL_glTexImage2D(m_target, m_level, m_internalformat, m_width, m_height, m_border, m_format, m_type, m_data);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " target = " << m_target << " level = " << m_level << " internalformat = " << m_internalformat << " width = " << m_width << " height = " << m_height << " border = " << m_border << " format = " << m_format << " type = " << m_type;
-#endif  
+#endif
         m_processed = true;
-    }  
+    }
     return 0;
 }
 
-std::string VRWebGLCommand_texImage2D::name() const 
+std::string VRWebGLCommand_texImage2D::name() const
 {
     return "texImage2D";
 }
-    
+
 // ======================================================================================
 // ======================================================================================
 
@@ -2995,7 +2995,7 @@ std::shared_ptr<VRWebGLCommand_uniform1i> VRWebGLCommand_uniform1i::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform1i>(new VRWebGLCommand_uniform1i(location, x));
 }
 
-bool VRWebGLCommand_uniform1i::isSynchronous() const 
+bool VRWebGLCommand_uniform1i::isSynchronous() const
 {
     return false;
 }
@@ -3005,17 +3005,17 @@ bool VRWebGLCommand_uniform1i::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform1i::process() 
+void* VRWebGLCommand_uniform1i::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform1i(location, m_x);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform1i::name() const 
+
+std::string VRWebGLCommand_uniform1i::name() const
 {
     return "uniform1i";
 }
@@ -3040,7 +3040,7 @@ VRWebGLCommand_uniform1iv::~VRWebGLCommand_uniform1iv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform1iv::isSynchronous() const 
+bool VRWebGLCommand_uniform1iv::isSynchronous() const
 {
     return false;
 }
@@ -3050,17 +3050,17 @@ bool VRWebGLCommand_uniform1iv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform1iv::process() 
+void* VRWebGLCommand_uniform1iv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform1iv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform1iv::name() const 
+
+std::string VRWebGLCommand_uniform1iv::name() const
 {
     return "uniform1iv";
 }
@@ -3077,7 +3077,7 @@ std::shared_ptr<VRWebGLCommand_uniform1f> VRWebGLCommand_uniform1f::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform1f>(new VRWebGLCommand_uniform1f(location, x));
 }
 
-bool VRWebGLCommand_uniform1f::isSynchronous() const 
+bool VRWebGLCommand_uniform1f::isSynchronous() const
 {
     return false;
 }
@@ -3087,17 +3087,17 @@ bool VRWebGLCommand_uniform1f::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform1f::process() 
+void* VRWebGLCommand_uniform1f::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform1f(location, m_x);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform1f::name() const 
+
+std::string VRWebGLCommand_uniform1f::name() const
 {
     return "uniform1f";
 }
@@ -3122,7 +3122,7 @@ VRWebGLCommand_uniform1fv::~VRWebGLCommand_uniform1fv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform1fv::isSynchronous() const 
+bool VRWebGLCommand_uniform1fv::isSynchronous() const
 {
     return false;
 }
@@ -3132,17 +3132,17 @@ bool VRWebGLCommand_uniform1fv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform1fv::process() 
+void* VRWebGLCommand_uniform1fv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform1fv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform1fv::name() const 
+
+std::string VRWebGLCommand_uniform1fv::name() const
 {
     return "uniform1fv";
 }
@@ -3159,7 +3159,7 @@ std::shared_ptr<VRWebGLCommand_uniform2f> VRWebGLCommand_uniform2f::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform2f>(new VRWebGLCommand_uniform2f(location, x, y));
 }
 
-bool VRWebGLCommand_uniform2f::isSynchronous() const 
+bool VRWebGLCommand_uniform2f::isSynchronous() const
 {
     return false;
 }
@@ -3169,17 +3169,17 @@ bool VRWebGLCommand_uniform2f::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform2f::process() 
+void* VRWebGLCommand_uniform2f::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform2f(location, m_x, m_y);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x << " y = " << m_y;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform2f::name() const 
+
+std::string VRWebGLCommand_uniform2f::name() const
 {
     return "uniform2f";
 }
@@ -3204,7 +3204,7 @@ VRWebGLCommand_uniform2fv::~VRWebGLCommand_uniform2fv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform2fv::isSynchronous() const 
+bool VRWebGLCommand_uniform2fv::isSynchronous() const
 {
     return false;
 }
@@ -3214,17 +3214,17 @@ bool VRWebGLCommand_uniform2fv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform2fv::process() 
+void* VRWebGLCommand_uniform2fv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform2fv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform2fv::name() const 
+
+std::string VRWebGLCommand_uniform2fv::name() const
 {
     return "uniform2fv";
 }
@@ -3241,7 +3241,7 @@ std::shared_ptr<VRWebGLCommand_uniform2i> VRWebGLCommand_uniform2i::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform2i>(new VRWebGLCommand_uniform2i(location, x, y));
 }
 
-bool VRWebGLCommand_uniform2i::isSynchronous() const 
+bool VRWebGLCommand_uniform2i::isSynchronous() const
 {
     return false;
 }
@@ -3251,17 +3251,17 @@ bool VRWebGLCommand_uniform2i::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform2i::process() 
+void* VRWebGLCommand_uniform2i::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform2i(location, m_x, m_y);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x << " y = " << m_y;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform2i::name() const 
+
+std::string VRWebGLCommand_uniform2i::name() const
 {
     return "uniform2i";
 }
@@ -3286,7 +3286,7 @@ VRWebGLCommand_uniform2iv::~VRWebGLCommand_uniform2iv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform2iv::isSynchronous() const 
+bool VRWebGLCommand_uniform2iv::isSynchronous() const
 {
     return false;
 }
@@ -3296,17 +3296,17 @@ bool VRWebGLCommand_uniform2iv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform2iv::process() 
+void* VRWebGLCommand_uniform2iv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform2iv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform2iv::name() const 
+
+std::string VRWebGLCommand_uniform2iv::name() const
 {
     return "uniform2iv";
 }
@@ -3323,7 +3323,7 @@ std::shared_ptr<VRWebGLCommand_uniform3f> VRWebGLCommand_uniform3f::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform3f>(new VRWebGLCommand_uniform3f(location, x, y, z));
 }
 
-bool VRWebGLCommand_uniform3f::isSynchronous() const 
+bool VRWebGLCommand_uniform3f::isSynchronous() const
 {
     return false;
 }
@@ -3333,17 +3333,17 @@ bool VRWebGLCommand_uniform3f::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform3f::process() 
+void* VRWebGLCommand_uniform3f::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform3f(location, m_x, m_y, m_z);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x << " y = " << m_y << " z = " << m_z;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform3f::name() const 
+
+std::string VRWebGLCommand_uniform3f::name() const
 {
     return "uniform3f";
 }
@@ -3368,7 +3368,7 @@ VRWebGLCommand_uniform3fv::~VRWebGLCommand_uniform3fv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform3fv::isSynchronous() const 
+bool VRWebGLCommand_uniform3fv::isSynchronous() const
 {
     return false;
 }
@@ -3378,17 +3378,17 @@ bool VRWebGLCommand_uniform3fv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform3fv::process() 
+void* VRWebGLCommand_uniform3fv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform3fv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform3fv::name() const 
+
+std::string VRWebGLCommand_uniform3fv::name() const
 {
     return "uniform3fv";
 }
@@ -3405,7 +3405,7 @@ std::shared_ptr<VRWebGLCommand_uniform3i> VRWebGLCommand_uniform3i::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform3i>(new VRWebGLCommand_uniform3i(location, x, y, z));
 }
 
-bool VRWebGLCommand_uniform3i::isSynchronous() const 
+bool VRWebGLCommand_uniform3i::isSynchronous() const
 {
     return false;
 }
@@ -3415,17 +3415,17 @@ bool VRWebGLCommand_uniform3i::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform3i::process() 
+void* VRWebGLCommand_uniform3i::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform3i(location, m_x, m_y, m_z);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x << " y = " << m_y << " z = " << m_z;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform3i::name() const 
+
+std::string VRWebGLCommand_uniform3i::name() const
 {
     return "uniform3i";
 }
@@ -3450,7 +3450,7 @@ VRWebGLCommand_uniform3iv::~VRWebGLCommand_uniform3iv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform3iv::isSynchronous() const 
+bool VRWebGLCommand_uniform3iv::isSynchronous() const
 {
     return false;
 }
@@ -3460,17 +3460,17 @@ bool VRWebGLCommand_uniform3iv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform3iv::process() 
+void* VRWebGLCommand_uniform3iv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform3iv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
 #endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform3iv::name() const 
+
+std::string VRWebGLCommand_uniform3iv::name() const
 {
     return "uniform3iv";
 }
@@ -3487,7 +3487,7 @@ std::shared_ptr<VRWebGLCommand_uniform4f> VRWebGLCommand_uniform4f::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform4f>(new VRWebGLCommand_uniform4f(location, x, y, z, w));
 }
 
-bool VRWebGLCommand_uniform4f::isSynchronous() const 
+bool VRWebGLCommand_uniform4f::isSynchronous() const
 {
     return false;
 }
@@ -3497,17 +3497,17 @@ bool VRWebGLCommand_uniform4f::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform4f::process() 
+void* VRWebGLCommand_uniform4f::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform4f(location, m_x, m_y, m_z, m_w);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x << " y = " << m_y << " z = " << m_z << " w = " << m_w;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform4f::name() const 
+
+std::string VRWebGLCommand_uniform4f::name() const
 {
     return "uniform4f";
 }
@@ -3532,7 +3532,7 @@ VRWebGLCommand_uniform4fv::~VRWebGLCommand_uniform4fv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform4fv::isSynchronous() const 
+bool VRWebGLCommand_uniform4fv::isSynchronous() const
 {
     return false;
 }
@@ -3542,17 +3542,17 @@ bool VRWebGLCommand_uniform4fv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform4fv::process() 
+void* VRWebGLCommand_uniform4fv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform4fv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform4fv::name() const 
+
+std::string VRWebGLCommand_uniform4fv::name() const
 {
     return "uniform4fv";
 }
@@ -3569,7 +3569,7 @@ std::shared_ptr<VRWebGLCommand_uniform4i> VRWebGLCommand_uniform4i::newInstance(
     return std::shared_ptr<VRWebGLCommand_uniform4i>(new VRWebGLCommand_uniform4i(location, x, y, z, w));
 }
 
-bool VRWebGLCommand_uniform4i::isSynchronous() const 
+bool VRWebGLCommand_uniform4i::isSynchronous() const
 {
     return false;
 }
@@ -3579,17 +3579,17 @@ bool VRWebGLCommand_uniform4i::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform4i::process() 
+void* VRWebGLCommand_uniform4i::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform4i(location, m_x, m_y, m_z, m_w);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " x = " << m_x << " y = " << m_y << " z = " << m_z << " w = " << m_w;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform4i::name() const 
+
+std::string VRWebGLCommand_uniform4i::name() const
 {
     return "uniform4i";
 }
@@ -3614,7 +3614,7 @@ VRWebGLCommand_uniform4iv::~VRWebGLCommand_uniform4iv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniform4iv::isSynchronous() const 
+bool VRWebGLCommand_uniform4iv::isSynchronous() const
 {
     return false;
 }
@@ -3624,17 +3624,17 @@ bool VRWebGLCommand_uniform4iv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniform4iv::process() 
+void* VRWebGLCommand_uniform4iv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniform4iv(location, m_count, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count;
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniform4iv::name() const 
+
+std::string VRWebGLCommand_uniform4iv::name() const
 {
     return "uniform4iv";
 }
@@ -3659,7 +3659,7 @@ VRWebGLCommand_uniformMatrix2fv::~VRWebGLCommand_uniformMatrix2fv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniformMatrix2fv::isSynchronous() const 
+bool VRWebGLCommand_uniformMatrix2fv::isSynchronous() const
 {
     return false;
 }
@@ -3669,17 +3669,17 @@ bool VRWebGLCommand_uniformMatrix2fv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniformMatrix2fv::process() 
+void* VRWebGLCommand_uniformMatrix2fv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniformMatrix2fv(location, m_count, m_transpose, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count << " transpose = " << (m_transpose ? "true" : "false");
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniformMatrix2fv::name() const 
+
+std::string VRWebGLCommand_uniformMatrix2fv::name() const
 {
     return "uniformMatrix2fv";
 }
@@ -3704,7 +3704,7 @@ VRWebGLCommand_uniformMatrix3fv::~VRWebGLCommand_uniformMatrix3fv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniformMatrix3fv::isSynchronous() const 
+bool VRWebGLCommand_uniformMatrix3fv::isSynchronous() const
 {
     return false;
 }
@@ -3714,17 +3714,17 @@ bool VRWebGLCommand_uniformMatrix3fv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniformMatrix3fv::process() 
+void* VRWebGLCommand_uniformMatrix3fv::process()
 {
     GLint location = m_location->location();
     VRWebGL_glUniformMatrix3fv(location, m_count, m_transpose, m_value);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count << " transpose = " << (m_transpose ? "true" : "false");
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniformMatrix3fv::name() const 
+
+std::string VRWebGLCommand_uniformMatrix3fv::name() const
 {
     return "uniformMatrix3fv";
 }
@@ -3749,7 +3749,7 @@ VRWebGLCommand_uniformMatrix4fv::~VRWebGLCommand_uniformMatrix4fv()
     m_value = 0;
 }
 
-bool VRWebGLCommand_uniformMatrix4fv::isSynchronous() const 
+bool VRWebGLCommand_uniformMatrix4fv::isSynchronous() const
 {
     return false;
 }
@@ -3759,23 +3759,23 @@ bool VRWebGLCommand_uniformMatrix4fv::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_uniformMatrix4fv::process() 
+void* VRWebGLCommand_uniformMatrix4fv::process()
 {
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: VRWebGLCommand_uniformMatrix4fv::process() begins";
-#endif    
-    
+#endif
+
     GLuint program = m_program->id();
     GLint location = m_location->location();
     VRWebGLCommandProcessor* commandProcessor = VRWebGLCommandProcessor::getInstance();
     if (commandProcessor->isProjectionMatrixUniformLocation(program, location))
     {
         VRWebGL_glUniformMatrix4fv(location, m_count, m_transpose, commandProcessor->getProjectionMatrix());
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " VR projection matrix replaced!";
-#endif    
+#endif
     }
-    else 
+    else
     {
         bool isModelViewProjectionMatrixUniformLocation = commandProcessor->isModelViewProjectionMatrixUniformLocation(program, location);
         if (commandProcessor->isModelViewMatrixUniformLocation(program, location) || isModelViewProjectionMatrixUniformLocation)
@@ -3803,22 +3803,22 @@ void* VRWebGLCommand_uniformMatrix4fv::process()
 
             VRWebGL_glUniformMatrix4fv(location, m_count, m_transpose, result);
 
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
             VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " VR modelview matrix added!" << (isModelViewProjectionMatrixUniformLocation ? " (with model and projection matrix combination)." : "");
-#endif    
+#endif
         }
         else
         {
             VRWebGL_glUniformMatrix4fv(location, m_count, m_transpose, m_value);
         }
     }
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count << " transpose = " << (m_transpose ? "true" : "false");
-#endif    
+#endif
     return 0;
 }
-    
-std::string VRWebGLCommand_uniformMatrix4fv::name() const 
+
+std::string VRWebGLCommand_uniformMatrix4fv::name() const
 {
     return "uniformMatrix4fv";
 }
@@ -3835,7 +3835,7 @@ std::shared_ptr<VRWebGLCommand_useProgram> VRWebGLCommand_useProgram::newInstanc
     return std::shared_ptr<VRWebGLCommand_useProgram>(new VRWebGLCommand_useProgram(program));
 }
 
-bool VRWebGLCommand_useProgram::isSynchronous() const 
+bool VRWebGLCommand_useProgram::isSynchronous() const
 {
     return false;
 }
@@ -3845,17 +3845,17 @@ bool VRWebGLCommand_useProgram::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_useProgram::process() 
+void* VRWebGLCommand_useProgram::process()
 {
     GLuint program = m_program != 0 ? m_program->id() : 0;
     VRWebGL_glUseProgram(program);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " program = " << program;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_useProgram::name() const 
+std::string VRWebGLCommand_useProgram::name() const
 {
     return "useProgram";
 }
@@ -3872,7 +3872,7 @@ std::shared_ptr<VRWebGLCommand_vertexAttribPointer> VRWebGLCommand_vertexAttribP
     return std::shared_ptr<VRWebGLCommand_vertexAttribPointer>(new VRWebGLCommand_vertexAttribPointer(index, size, type, normalized, stride, offset));
 }
 
-bool VRWebGLCommand_vertexAttribPointer::isSynchronous() const 
+bool VRWebGLCommand_vertexAttribPointer::isSynchronous() const
 {
     return false;
 }
@@ -3882,16 +3882,16 @@ bool VRWebGLCommand_vertexAttribPointer::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_vertexAttribPointer::process() 
+void* VRWebGLCommand_vertexAttribPointer::process()
 {
     VRWebGL_glVertexAttribPointer(m_index, m_size, m_type, m_normalized, m_stride, reinterpret_cast<void*>(static_cast<intptr_t>(m_offset)));
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name();
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_vertexAttribPointer::name() const 
+std::string VRWebGLCommand_vertexAttribPointer::name() const
 {
     return "vertexAttribPointer";
 }
@@ -3908,7 +3908,7 @@ std::shared_ptr<VRWebGLCommand_viewport> VRWebGLCommand_viewport::newInstance(GL
     return std::shared_ptr<VRWebGLCommand_viewport>(new VRWebGLCommand_viewport(x, y, width, height, useViewportFromCommandProcessor));
 }
 
-bool VRWebGLCommand_viewport::isSynchronous() const 
+bool VRWebGLCommand_viewport::isSynchronous() const
 {
     return false;
 }
@@ -3918,20 +3918,20 @@ bool VRWebGLCommand_viewport::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_viewport::process() 
+void* VRWebGLCommand_viewport::process()
 {
     if (m_useViewportFromCommandProcessor)
     {
         VRWebGLCommandProcessor::getInstance()->getViewport(m_x, m_y, m_width, m_height);
     }
     VRWebGL_glViewport(m_x, m_y, m_width, m_height);
-#ifdef VRWEBGL_SHOW_LOG  
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " x = " << m_x << " y = " << m_y << " width = " << m_width << " height = " << m_height;
-#endif    
+#endif
     return 0;
 }
 
-std::string VRWebGLCommand_viewport::name() const 
+std::string VRWebGLCommand_viewport::name() const
 {
     return "viewport";
 }
@@ -3942,13 +3942,13 @@ std::string VRWebGLCommand_viewport::name() const
 VRWebGLCommand_getString::VRWebGLCommand_getString(GLenum pname): m_pname(pname)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_getString> VRWebGLCommand_getString::newInstance(GLenum pname)
 {
     return std::shared_ptr<VRWebGLCommand_getString>(new VRWebGLCommand_getString(pname));
 }
 
-bool VRWebGLCommand_getString::isSynchronous() const 
+bool VRWebGLCommand_getString::isSynchronous() const
 {
     return true;
 }
@@ -3958,16 +3958,16 @@ bool VRWebGLCommand_getString::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_getString::process() 
+void* VRWebGLCommand_getString::process()
 {
     const GLubyte* string = VRWebGL_glGetString(m_pname);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " string = << " << string;
 #endif
     return (void*)string;
 }
 
-std::string VRWebGLCommand_getString::name() const 
+std::string VRWebGLCommand_getString::name() const
 {
     return "getString";
 }
@@ -3978,7 +3978,7 @@ std::string VRWebGLCommand_getString::name() const
 VRWebGLCommand_initializeExtensions::VRWebGLCommand_initializeExtensions()
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_initializeExtensions> VRWebGLCommand_initializeExtensions::newInstance()
 {
     return std::shared_ptr<VRWebGLCommand_initializeExtensions>(new VRWebGLCommand_initializeExtensions());
@@ -3989,7 +3989,7 @@ bool VRWebGLCommand_initializeExtensions::isForUpdate() const
     return true;
 }
 
-bool VRWebGLCommand_initializeExtensions::isSynchronous() const 
+bool VRWebGLCommand_initializeExtensions::isSynchronous() const
 {
     return false;
 }
@@ -3999,16 +3999,16 @@ bool VRWebGLCommand_initializeExtensions::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_initializeExtensions::process() 
+void* VRWebGLCommand_initializeExtensions::process()
 {
     VRWebGL_initializeExtensions();
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name();
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_initializeExtensions::name() const 
+std::string VRWebGLCommand_initializeExtensions::name() const
 {
     return "initializeExtensions";
 }
@@ -4019,13 +4019,13 @@ std::string VRWebGLCommand_initializeExtensions::name() const
 VRWebGLCommand_drawArraysInstancedANGLE::VRWebGLCommand_drawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount): m_mode(mode), m_first(first), m_count(count), m_primcount(primcount)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_drawArraysInstancedANGLE> VRWebGLCommand_drawArraysInstancedANGLE::newInstance(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
     return std::shared_ptr<VRWebGLCommand_drawArraysInstancedANGLE>(new VRWebGLCommand_drawArraysInstancedANGLE(mode, first, count, primcount));
 }
 
-bool VRWebGLCommand_drawArraysInstancedANGLE::isSynchronous() const 
+bool VRWebGLCommand_drawArraysInstancedANGLE::isSynchronous() const
 {
     return false;
 }
@@ -4035,16 +4035,16 @@ bool VRWebGLCommand_drawArraysInstancedANGLE::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_drawArraysInstancedANGLE::process() 
+void* VRWebGLCommand_drawArraysInstancedANGLE::process()
 {
     VRWebGL_glDrawArraysInstancedANGLE(m_mode, m_first, m_count, m_primcount);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode << " first = " << m_first << " count = " << m_count << " primcount = " << m_primcount;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_drawArraysInstancedANGLE::name() const 
+std::string VRWebGLCommand_drawArraysInstancedANGLE::name() const
 {
     return "drawArraysInstancedANGLE";
 }
@@ -4055,13 +4055,13 @@ std::string VRWebGLCommand_drawArraysInstancedANGLE::name() const
 VRWebGLCommand_drawElementsInstancedANGLE::VRWebGLCommand_drawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, long long offset, GLsizei primcount): m_mode(mode), m_count(count), m_type(type), m_offset(offset), m_primcount(primcount)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_drawElementsInstancedANGLE> VRWebGLCommand_drawElementsInstancedANGLE::newInstance(GLenum mode, GLsizei count, GLenum type, long long offset, GLsizei primcount)
 {
     return std::shared_ptr<VRWebGLCommand_drawElementsInstancedANGLE>(new VRWebGLCommand_drawElementsInstancedANGLE(mode, count, type, offset, primcount));
 }
 
-bool VRWebGLCommand_drawElementsInstancedANGLE::isSynchronous() const 
+bool VRWebGLCommand_drawElementsInstancedANGLE::isSynchronous() const
 {
     return false;
 }
@@ -4071,16 +4071,16 @@ bool VRWebGLCommand_drawElementsInstancedANGLE::canBeProcessedImmediately() cons
     return false;
 }
 
-void* VRWebGLCommand_drawElementsInstancedANGLE::process() 
+void* VRWebGLCommand_drawElementsInstancedANGLE::process()
 {
     VRWebGL_glDrawElementsInstancedANGLE(m_mode, m_count, m_type, reinterpret_cast<void*>(static_cast<intptr_t>(m_offset)), m_primcount);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " mode = " << m_mode << " count = " << m_count << " type = " << m_type << " offset = " << m_offset << " primcount = " << m_primcount;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_drawElementsInstancedANGLE::name() const 
+std::string VRWebGLCommand_drawElementsInstancedANGLE::name() const
 {
     return "drawElementsInstancedANGLE";
 }
@@ -4091,13 +4091,13 @@ std::string VRWebGLCommand_drawElementsInstancedANGLE::name() const
 VRWebGLCommand_vertexAttribDivisorANGLE::VRWebGLCommand_vertexAttribDivisorANGLE(GLuint index, GLuint divisor): m_index(index), m_divisor(divisor)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_vertexAttribDivisorANGLE> VRWebGLCommand_vertexAttribDivisorANGLE::newInstance(GLuint index, GLuint divisor)
 {
     return std::shared_ptr<VRWebGLCommand_vertexAttribDivisorANGLE>(new VRWebGLCommand_vertexAttribDivisorANGLE(index, divisor));
 }
 
-bool VRWebGLCommand_vertexAttribDivisorANGLE::isSynchronous() const 
+bool VRWebGLCommand_vertexAttribDivisorANGLE::isSynchronous() const
 {
     return false;
 }
@@ -4107,16 +4107,16 @@ bool VRWebGLCommand_vertexAttribDivisorANGLE::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_vertexAttribDivisorANGLE::process() 
+void* VRWebGLCommand_vertexAttribDivisorANGLE::process()
 {
     VRWebGL_glVertexAttribDivisorANGLE(m_index, m_divisor);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " index = " << m_index << " divisor = " << m_divisor;
 #endif
     return 0;
 }
 
-std::string VRWebGLCommand_vertexAttribDivisorANGLE::name() const 
+std::string VRWebGLCommand_vertexAttribDivisorANGLE::name() const
 {
     return "vertexAttribDivisorANGLE";
 }
@@ -4127,13 +4127,13 @@ VRWebGLCommand_setCameraWorldMatrix::VRWebGLCommand_setCameraWorldMatrix(const G
 {
     memcpy(m_matrix, matrix, sizeof(m_matrix));
 }
-    
+
 std::shared_ptr<VRWebGLCommand_setCameraWorldMatrix> VRWebGLCommand_setCameraWorldMatrix::newInstance(const GLfloat* matrix)
 {
     return std::shared_ptr<VRWebGLCommand_setCameraWorldMatrix>(new VRWebGLCommand_setCameraWorldMatrix(matrix));
 }
 
-bool VRWebGLCommand_setCameraWorldMatrix::isSynchronous() const 
+bool VRWebGLCommand_setCameraWorldMatrix::isSynchronous() const
 {
     return false;
 }
@@ -4143,12 +4143,12 @@ bool VRWebGLCommand_setCameraWorldMatrix::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_setCameraWorldMatrix::process() 
+void* VRWebGLCommand_setCameraWorldMatrix::process()
 {
     if (!m_processed)
     {
         VRWebGLCommandProcessor::getInstance()->setCameraWorldMatrix(m_matrix);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name();
 #endif
         m_processed = true;
@@ -4156,7 +4156,7 @@ void* VRWebGLCommand_setCameraWorldMatrix::process()
     return 0;
 }
 
-std::string VRWebGLCommand_setCameraWorldMatrix::name() const 
+std::string VRWebGLCommand_setCameraWorldMatrix::name() const
 {
     return "setCameraWorldMatrix";
 }
@@ -4166,13 +4166,13 @@ std::string VRWebGLCommand_setCameraWorldMatrix::name() const
 VRWebGLCommand_updateSurfaceTexture::VRWebGLCommand_updateSurfaceTexture(GLuint textureId): m_textureId(textureId)
 {
 }
-    
+
 std::shared_ptr<VRWebGLCommand_updateSurfaceTexture> VRWebGLCommand_updateSurfaceTexture::newInstance(GLuint textureId)
 {
     return std::shared_ptr<VRWebGLCommand_updateSurfaceTexture>(new VRWebGLCommand_updateSurfaceTexture(textureId));
 }
 
-bool VRWebGLCommand_updateSurfaceTexture::isSynchronous() const 
+bool VRWebGLCommand_updateSurfaceTexture::isSynchronous() const
 {
     return false;
 }
@@ -4182,14 +4182,14 @@ bool VRWebGLCommand_updateSurfaceTexture::canBeProcessedImmediately() const
     return false;
 }
 
-void* VRWebGLCommand_updateSurfaceTexture::process() 
+void* VRWebGLCommand_updateSurfaceTexture::process()
 {
     if (!m_processed)
     {
         GLenum target = GL_TEXTURE_EXTERNAL_OES;
         VRWebGL_glBindTexture(target, m_textureId);
         VRWebGLCommandProcessor::getInstance()->updateSurfaceTexture(m_textureId);
-#ifdef VRWEBGL_SHOW_LOG    
+#ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << ", textureId = " << m_textureId;
 #endif
         m_processed = true;
@@ -4197,7 +4197,42 @@ void* VRWebGLCommand_updateSurfaceTexture::process()
     return 0;
 }
 
-std::string VRWebGLCommand_updateSurfaceTexture::name() const 
+std::string VRWebGLCommand_updateSurfaceTexture::name() const
 {
     return "updateSurfaceTexture";
+}
+
+VRWebGLCommand_polygonOffset::VRWebGLCommand_polygonOffset(GLfloat factor, GLfloat units): m_factor(factor), m_units(units)
+{
+}
+
+std::shared_ptr<VRWebGLCommand_polygonOffset> VRWebGLCommand_polygonOffset::newInstance(GLfloat factor, GLfloat units)
+{
+    return std::shared_ptr<VRWebGLCommand_polygonOffset>(new VRWebGLCommand_polygonOffset(factor, units));
+}
+
+bool VRWebGLCommand_polygonOffset::isSynchronous() const
+{
+    return false;
+}
+
+bool VRWebGLCommand_polygonOffset::canBeProcessedImmediately() const
+{
+    return false;
+}
+
+void* VRWebGLCommand_polygonOffset::process()
+{
+
+    VRWebGL_glPolygonOffset(m_factor, m_units);
+#ifdef VRWEBGL_SHOW_LOG
+    VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << ", factor = " << m_factor <<" , units = " << m_units;
+#endif
+
+    return 0;
+}
+
+std::string VRWebGLCommand_polygonOffset::name() const
+{
+    return "polygonOffset";
 }

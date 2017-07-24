@@ -1440,6 +1440,12 @@ void VRWebGLRenderingContext::readPixels(GLint x, GLint y, GLsizei width, GLsize
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::readPixels end";
 }
 
+void VRWebGLRenderingContext::polygonOffset(GLfloat factor, GLfloat units) {
+  std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_polygonOffset::newInstance(factor, units);
+  VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
+}
+
+
 void VRWebGLRenderingContext::renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::renderbufferStorage begin";

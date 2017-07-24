@@ -17,7 +17,7 @@
 #include "core/dom/TypedFlexibleArrayBufferView.h"
 
 // TODO: Remove any reference to this macro as it was an initial testing solution while the Oculud Mobile SDK thread was still not ready.
-// #define VRWEBGL_SIMULATE_OPENGL_THREAD   
+// #define VRWEBGL_SIMULATE_OPENGL_THREAD
 
 namespace blink {
 
@@ -46,7 +46,7 @@ class VRPose;
 class VREyeParameters;
 class Gamepad;
 
-class VRWebGLRenderingContext : public GarbageCollectedFinalized<VRWebGLRenderingContext>, public ScriptWrappable 
+class VRWebGLRenderingContext : public GarbageCollectedFinalized<VRWebGLRenderingContext>, public ScriptWrappable
 {
     DEFINE_WRAPPERTYPEINFO();
 public:
@@ -61,7 +61,7 @@ public:
 
     // IDL methods
     void activeTexture(GLenum texture);
-    void attachShader(ScriptState*, VRWebGLProgram*, VRWebGLShader*);    
+    void attachShader(ScriptState*, VRWebGLProgram*, VRWebGLShader*);
     void bindAttribLocation(VRWebGLProgram* program, GLuint index, const String& name);
     void bindBuffer(ScriptState*, GLenum target, VRWebGLBuffer*);
     void bindFramebuffer(ScriptState* scriptState, GLenum target, VRWebGLFramebuffer* buffer);
@@ -127,6 +127,7 @@ public:
     void lineWidth(GLfloat width);
     void linkProgram(VRWebGLProgram*);
     void pixelStorei(GLenum pname, GLint param);
+    void polygonOffset(GLfloat factor, GLfloat units);
     void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, DOMArrayBufferView* pixels);
     void renderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
     void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
@@ -267,9 +268,9 @@ private:
 
     template <typename T>
     bool validateTexImageSubRectangle(
-        const char* functionName, TexImageFunctionID functionID, T* image, 
+        const char* functionName, TexImageFunctionID functionID, T* image,
         const IntRect& subRect, GLsizei depth, GLint unpackImageHeight,
-        bool* selectingSubRectangle) 
+        bool* selectingSubRectangle)
     {
         // DCHECK(functionName);
         // DCHECK(selectingSubRectangle);
@@ -342,7 +343,7 @@ private:
 	HashSet<UntracedMember<VRWebGLObject>> m_vrWebGLObjects;
 	// Member<HTMLCanvasElement> m_canvas;
 
-#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD   
+#ifdef VRWEBGL_SIMULATE_OPENGL_THREAD
     pthread_t m_openGLThread;
 #endif
 
@@ -353,7 +354,7 @@ private:
     GLint m_packAlignment;
     GLint m_unpackAlignment;
     GLenum m_unpackColorspaceConversion;
-    LRUImageBufferCache m_generatedImageCache;   
+    LRUImageBufferCache m_generatedImageCache;
     Member<VRWebGLProgram> m_programCurrentlyInUse;
     Member<VRWebGLFramebuffer> m_framebufferCurrentlyBound;
     Member<VRWebGLTexture> m_textureCurrentlyBound;
