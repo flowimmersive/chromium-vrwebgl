@@ -2291,11 +2291,13 @@ private:
     GLsizei m_count;
     GLboolean m_transpose;
     GLfloat* m_value;
+    // used to indicate that matrix should remain unchanged
+    GLboolean m_unchanged;
 
-    VRWebGLCommand_uniformMatrix4fv(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    VRWebGLCommand_uniformMatrix4fv(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value, GLboolean unchanged);
 
 public:
-    static std::shared_ptr<VRWebGLCommand_uniformMatrix4fv> newInstance(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    static std::shared_ptr<VRWebGLCommand_uniformMatrix4fv> newInstance(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value, GLboolean unchanged);
 
     virtual ~VRWebGLCommand_uniformMatrix4fv();
 

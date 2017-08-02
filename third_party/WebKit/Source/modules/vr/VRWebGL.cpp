@@ -3732,15 +3732,15 @@ std::string VRWebGLCommand_uniformMatrix3fv::name() const
 // ======================================================================================
 // ======================================================================================
 
-VRWebGLCommand_uniformMatrix4fv::VRWebGLCommand_uniformMatrix4fv(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value): m_program(program), m_location(location), m_count(count), m_transpose(transpose)
+VRWebGLCommand_uniformMatrix4fv::VRWebGLCommand_uniformMatrix4fv(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value, GLboolean unchanged): m_program(program), m_location(location), m_count(count), m_transpose(transpose), m_unchanged(unchanged)
 {
     m_value = new GLfloat[count * 16];
     memcpy(m_value, value, count * 16 * sizeof(GLfloat));
 }
 
-std::shared_ptr<VRWebGLCommand_uniformMatrix4fv> VRWebGLCommand_uniformMatrix4fv::newInstance(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value)
+std::shared_ptr<VRWebGLCommand_uniformMatrix4fv> VRWebGLCommand_uniformMatrix4fv::newInstance(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value, GLboolean unchanged)
 {
-    return std::shared_ptr<VRWebGLCommand_uniformMatrix4fv>(new VRWebGLCommand_uniformMatrix4fv(program, location, count, transpose, value));
+    return std::shared_ptr<VRWebGLCommand_uniformMatrix4fv>(new VRWebGLCommand_uniformMatrix4fv(program, location, count, transpose, value, unchanged));
 }
 
 VRWebGLCommand_uniformMatrix4fv::~VRWebGLCommand_uniformMatrix4fv()
@@ -3765,8 +3765,13 @@ void* VRWebGLCommand_uniformMatrix4fv::process()
     VLOG(0) << "VRWebGL: VRWebGLCommand_uniformMatrix4fv::process() begins";
 #endif
 
-    GLuint program = m_program->id();
     GLint location = m_location->location();
+    if(m_unchanged) {
+        VRWebGL_glUniformMatrix4fv(location, m_count, m_transpose, m_value);
+        return 0;
+    }
+
+    GLuint program = m_program->id();
     VRWebGLCommandProcessor* commandProcessor = VRWebGLCommandProcessor::getInstance();
     if (commandProcessor->isProjectionMatrixUniformLocation(program, location))
     {

@@ -56,14 +56,14 @@ VRWebGLCommandProcessor::~VRWebGLCommandProcessor()
 void VRWebGLCommandProcessor::startFrame()
 {
     pthread_mutex_lock( &m_mutex );
-    
+
     if (m_insideAFrame)
     {
         std::string message = "Calling startFrame while inside an existing frame!";
         ALOGE("VRWebGL: %s", message.c_str());
         //			throw new IllegalStateException(message);
     }
-    
+
     m_insideAFrame = true;
 
     pthread_mutex_unlock( &m_mutex );
@@ -72,11 +72,11 @@ void VRWebGLCommandProcessor::startFrame()
 void* VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(const std::shared_ptr<VRWebGLCommand>& vrWebGLCommand)
 {
     void* result = 0;
-    
+
     pthread_mutex_lock( &m_mutex );
 
     ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(%s) begins", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
-    
+
     if (vrWebGLCommand->isSynchronous())
     {
         if (vrWebGLCommand->canBeProcessedImmediately())
@@ -101,14 +101,14 @@ void* VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(const std::share
             {
                 ALOGE("VRWebGL: A synchronous call has been made inside a frame. Not a great idea. Many of these calls might slow down the JS process as they block the JS thread until the result of the call is provided from the OpenGL thread.");
             }
-            
+
             m_synchronousVRWebGLCommandResult = 0;
 
             // while ( !m_synchronousVRWebGLCommandResult )
             // {
                 pthread_cond_wait( &m_synchronousVRWebGLCommandProcessed, &m_mutex );
             // }
-            
+
             result = m_synchronousVRWebGLCommandResult;
         }
     }
@@ -124,18 +124,18 @@ void* VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(const std::share
             m_vrWebGLCommandQueue.push_back(vrWebGLCommand);
         }
     }
-    
+
     ALOGV("VRWebGL: %s: VRWebGLCommandProcessor::queueVRWebGLCommandForProcessing(%s) ends", getCurrentThreadName().c_str(), vrWebGLCommand->name().c_str());
 
     pthread_mutex_unlock( &m_mutex );
-    
+
     return result;
 }
 
 void VRWebGLCommandProcessor::endFrame()
 {
     pthread_mutex_lock( &m_mutex );
-    
+
     if (!m_insideAFrame)
     {
         std::string message = "Calling endFrame outside of a frame!";
@@ -144,7 +144,7 @@ void VRWebGLCommandProcessor::endFrame()
     }
 
     m_insideAFrame = false;
-    
+
     while(!m_currentBatchRenderedForBothEyes || m_indexOfEyeBeingRendered == 0)
     {
         pthread_cond_wait( &m_bothEyesRendered, &m_mutex );
@@ -159,7 +159,7 @@ void VRWebGLCommandProcessor::endFrame()
     }
 
     m_synchronousVRWebGLCommandProcessedInUpdate = false;
-    
+
     pthread_mutex_unlock( &m_mutex );
 }
 
@@ -258,12 +258,12 @@ void VRWebGLCommandProcessor::renderFrame(bool process)
     // Increment the indexOfEyeBeingRendered to measure when the 2 calls, one for each eye, are made so we can notify to whoever is waiting for this condition
     m_indexOfEyeBeingRendered++;
     if (m_indexOfEyeBeingRendered == 1)
-    {        
+    {
         m_indexOfEyeBeingRendered = -1;
         m_currentBatchRenderedForBothEyes = true;
         pthread_cond_broadcast( &m_bothEyesRendered );
     }
-    
+
     pthread_mutex_unlock( &m_mutex );
 }
 
@@ -369,13 +369,13 @@ void VRWebGLCommandProcessor::setViewport(GLint x, GLint y, GLsizei width, GLsiz
     m_height = height;
 }
 
-void VRWebGLCommandProcessor::getViewport(GLint& x, GLint& y, GLsizei& width, GLsizei& height) const 
+void VRWebGLCommandProcessor::getViewport(GLint& x, GLint& y, GLsizei& width, GLsizei& height) const
 {
     x = m_x;
     y = m_y;
     width = m_width;
     height = m_height;
-}    
+}
 
 void VRWebGLCommandProcessor::setCameraWorldMatrix(const GLfloat* cameraWorldMatrix)
 {
@@ -396,7 +396,7 @@ const GLfloat* VRWebGLCommandProcessor::getCameraWorldMatrixWithTranslationOnly(
     return m_cameraWorldMatrixWithTranslationOnly;
 }
 
-void VRWebGLCommandProcessor::m_resetEverything() 
+void VRWebGLCommandProcessor::m_resetEverything()
 {
     m_vrWebGLCommandQueue.clear();
     m_vrWebGLCommandQueueBatch.clear();
@@ -418,56 +418,56 @@ void VRWebGLCommandProcessor::m_resetEverything()
 
     // PROJECTION
     m_projectionMatrixUniformNames.clear();
-    
+
     // WebGLLessons
     m_projectionMatrixUniformNames.push_back("uProjectionMatrix");
     m_projectionMatrixUniformNames.push_back("uPMatrix");
 
     // ThreeJS
     m_projectionMatrixUniformNames.push_back("projectionMatrix");
-    
+
     // PlayCanvas
-    m_projectionMatrixUniformNames.push_back("matrix_projection"); 
+    m_projectionMatrixUniformNames.push_back("matrix_projection");
     m_projectionMatrixUniformNames.push_back("matrix_viewProjection");
-    
+
     // Sketchfab
     m_projectionMatrixUniformNames.push_back("ProjectionMatrix");
-    
+
     // Goo
-    m_projectionMatrixUniformNames.push_back("projectionMatrix"); 
-    m_projectionMatrixUniformNames.push_back("viewProjectionMatrix"); 
+    // m_projectionMatrixUniformNames.push_back("projectionMatrix");
+    // m_projectionMatrixUniformNames.push_back("viewProjectionMatrix");
 
     // Soft shadow example
-    m_projectionMatrixUniformNames.push_back("camProj"); 
+    m_projectionMatrixUniformNames.push_back("camProj");
 
     // Tojiro's webgl examples
-    m_projectionMatrixUniformNames.push_back("projectionMat"); 
+    m_projectionMatrixUniformNames.push_back("projectionMat");
 
     // MODELVIEW
     m_modelViewMatrixUniformNames.clear();
-    
+
     // WebGLLessons
     m_modelViewMatrixUniformNames.push_back("uMVMatrix");
-    
+
     // ThreeJS
-    m_modelViewMatrixUniformNames.push_back("modelViewMatrix"); 
-    
+    m_modelViewMatrixUniformNames.push_back("modelViewMatrix");
+
     // PlayCanvas
-    m_modelViewMatrixUniformNames.push_back("matrix_view"); 
+    m_modelViewMatrixUniformNames.push_back("matrix_view");
     m_modelViewMatrixUniformNames.push_back("matrix_model");
-    
+
     // Sketchfab
-    m_modelViewMatrixUniformNames.push_back("ModelViewMatrix"); 
-    
+    m_modelViewMatrixUniformNames.push_back("ModelViewMatrix");
+
     // Goo
-    m_modelViewMatrixUniformNames.push_back("viewMatrix"); 
-    m_modelViewMatrixUniformNames.push_back("worldMatrix"); 
+    // m_modelViewMatrixUniformNames.push_back("viewMatrix");
+    // m_modelViewMatrixUniformNames.push_back("worldMatrix");
 
     // Soft shadow example
-    m_modelViewMatrixUniformNames.push_back("camView"); 
+    m_modelViewMatrixUniformNames.push_back("camView");
 
     // Tojiro's webgl examples
-    m_modelViewMatrixUniformNames.push_back("viewMat"); 
+    m_modelViewMatrixUniformNames.push_back("viewMat");
 
 
 
@@ -504,7 +504,7 @@ void VRWebGLCommandProcessor::setupJNI(JNIEnv* jniEnv, jobject mainActivityJObje
     m_javaVM->AttachCurrentThread( &m_jniEnv, NULL );
     m_mainActivityJObject = m_jniEnv->NewGlobalRef( mainActivityJObject );
     m_mainActivityJClass = m_jniEnv->GetObjectClass(m_mainActivityJObject);
-    
+
     m_newWebViewMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "newWebView", "(Landroid/graphics/SurfaceTexture;I)V");
     m_deleteWebViewMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "deleteWebView", "(Landroid/graphics/SurfaceTexture;)V");
     m_setWebViewSrcMethodID = jniEnv->GetMethodID(m_mainActivityJClass, "setWebViewSrc", "(Landroid/graphics/SurfaceTexture;Ljava/lang/String;)V");
@@ -914,14 +914,14 @@ std::pair<int, int> jsKeyCodeToJavaKeyCode_[] =
     std::pair<int, int>( 33,   0), // page up
     std::pair<int, int>( 34,   0), // page down
     std::pair<int, int>( 35,   0), // end
-    std::pair<int, int>( 36,   0), // home 
+    std::pair<int, int>( 36,   0), // home
     std::pair<int, int>( 37,   0), // left arrow
     std::pair<int, int>( 38,   0), // up arrow
     std::pair<int, int>( 39,   0), // right arrow
     std::pair<int, int>( 40,   0), // down arrow
     std::pair<int, int>( 45,   0), // insert
     std::pair<int, int>( 46,   0), // delete
-    std::pair<int, int>( 48,   0), // 0 
+    std::pair<int, int>( 48,   0), // 0
     std::pair<int, int>( 49,   0), // 1
     std::pair<int, int>( 50,   0), // 1
     std::pair<int, int>( 51,   0), // 1
@@ -934,7 +934,7 @@ std::pair<int, int> jsKeyCodeToJavaKeyCode_[] =
     std::pair<int, int>( 65,  29), // a
     std::pair<int, int>( 66,   0), // b
     std::pair<int, int>( 67,   0), // c
-    std::pair<int, int>( 68,   0), // d 
+    std::pair<int, int>( 68,   0), // d
     std::pair<int, int>( 69,   0), // e
     std::pair<int, int>( 70,   0), // f
     std::pair<int, int>( 71,   0), // g
@@ -1041,7 +1041,7 @@ void* VRWebGLCommand_dispatchWebViewKeyboardEvent::process()
             jniEnv->CallVoidMethod( mainActivityJObject, dispatchWebViewKeyboardEventMethodID, surfaceTexture->getJavaObject(), (jint)event, jsKeyCodeToJavaKeyCode[keycode]);
         }
     }
-    else 
+    else
     {
         ALOGE("ERROR: The provided keycode '%d' has not been found in the js to java keycode conversion table.", keycode);
     }
@@ -1830,4 +1830,3 @@ std::string VRWebGLCommand_getVideoHeight::name() const
 {
     return "getVideoHeight";
 }
-

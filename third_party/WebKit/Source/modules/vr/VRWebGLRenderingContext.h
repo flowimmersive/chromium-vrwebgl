@@ -170,8 +170,8 @@ public:
     void uniformMatrix2fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value);
     void uniformMatrix3fv(const VRWebGLUniformLocation*, GLboolean transpose, DOMFloat32Array* value);
     void uniformMatrix3fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value);
-    void uniformMatrix4fv(const VRWebGLUniformLocation*, GLboolean transpose, DOMFloat32Array* value);
-    void uniformMatrix4fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value);
+    void uniformMatrix4fv(const VRWebGLUniformLocation*, GLboolean transpose, DOMFloat32Array* value, GLboolean unchanged = false);
+    void uniformMatrix4fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value, GLboolean unchanged = false);
     void useProgram(ScriptState*, VRWebGLProgram*);
     void vertexAttribPointer(ScriptState*, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, long long offset);
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
