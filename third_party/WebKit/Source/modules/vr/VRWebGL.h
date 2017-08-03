@@ -2259,15 +2259,17 @@ public:
 class VRWebGLCommand_uniformMatrix3fv: public VRWebGLCommand
 {
 private:
+    const VRWebGLProgram* m_program;
     const VRWebGLUniformLocation* m_location;
     GLsizei m_count;
     GLboolean m_transpose;
     GLfloat* m_value;
+    GLboolean m_unchanged;
 
-    VRWebGLCommand_uniformMatrix3fv(const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    VRWebGLCommand_uniformMatrix3fv(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value,  GLboolean unchanged);
 
 public:
-    static std::shared_ptr<VRWebGLCommand_uniformMatrix3fv> newInstance(const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value);
+    static std::shared_ptr<VRWebGLCommand_uniformMatrix3fv> newInstance(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value,  GLboolean unchanged);
 
     virtual ~VRWebGLCommand_uniformMatrix3fv();
 

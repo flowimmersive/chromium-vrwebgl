@@ -285,6 +285,16 @@ void VRWebGLCommandProcessor::setMatrixUniformLocationForName(const GLuint progr
         ALOGE("VRWebGL: modelviewprojection matrix uniform '%s' found. Storing location '%d' for program '%d'", name.c_str(), location, program);
         m_modelViewProjectionMatrixProgramAndUniformLocations.push_back(VRWebGLProgramAndUniformLocation(program, location));
     }
+    else if (std::find(m_viewMatrixUniformNames.begin(), m_viewMatrixUniformNames.end(), name) != m_viewMatrixUniformNames.end())
+    {
+        ALOGE("VRWebGL: view matrix uniform '%s' found. Storing location '%d' for program '%d'", name.c_str(), location, program);
+        m_viewMatrixProgramAndUniformLocations.push_back(VRWebGLProgramAndUniformLocation(program, location));
+    }
+    else if (std::find(m_normalMatrixUniformNames.begin(), m_normalMatrixUniformNames.end(), name) != m_normalMatrixUniformNames.end())
+    {
+        ALOGE("VRWebGL: view matrix uniform '%s' found. Storing location '%d' for program '%d'", name.c_str(), location, program);
+        m_normalMatrixProgramAndUniformLocations.push_back(VRWebGLProgramAndUniformLocation(program, location));
+    }
 }
 
 bool VRWebGLCommandProcessor::isProjectionMatrixUniformLocation(const GLuint program, const GLint location) const
@@ -292,9 +302,19 @@ bool VRWebGLCommandProcessor::isProjectionMatrixUniformLocation(const GLuint pro
     return std::find(m_projectionMatrixProgramAndUniformLocations.begin(), m_projectionMatrixProgramAndUniformLocations.end(), VRWebGLProgramAndUniformLocation(program, location)) != m_projectionMatrixProgramAndUniformLocations.end();
 }
 
+bool VRWebGLCommandProcessor::isViewMatrixUniformLocation(const GLuint program, const GLint location) const
+{
+    return std::find(m_viewMatrixProgramAndUniformLocations.begin(), m_viewMatrixProgramAndUniformLocations.end(), VRWebGLProgramAndUniformLocation(program, location)) != m_viewMatrixProgramAndUniformLocations.end();
+}
+
 bool VRWebGLCommandProcessor::isModelViewMatrixUniformLocation(const GLuint program, const GLint location) const
 {
     return std::find(m_modelViewMatrixProgramAndUniformLocations.begin(), m_modelViewMatrixProgramAndUniformLocations.end(), VRWebGLProgramAndUniformLocation(program, location)) != m_modelViewMatrixProgramAndUniformLocations.end();
+}
+
+bool VRWebGLCommandProcessor::isNormalMatrixUniformLocation(const GLuint program, const GLint location) const
+{
+    return std::find(m_normalMatrixProgramAndUniformLocations.begin(), m_normalMatrixProgramAndUniformLocations.end(), VRWebGLProgramAndUniformLocation(program, location)) != m_normalMatrixProgramAndUniformLocations.end();
 }
 
 bool VRWebGLCommandProcessor::isModelViewProjectionMatrixUniformLocation(const GLuint program, const GLint location) const
@@ -418,61 +438,19 @@ void VRWebGLCommandProcessor::m_resetEverything()
 
     // PROJECTION
     m_projectionMatrixUniformNames.clear();
-
-    // WebGLLessons
-    m_projectionMatrixUniformNames.push_back("uProjectionMatrix");
-    m_projectionMatrixUniformNames.push_back("uPMatrix");
-
-    // ThreeJS
     m_projectionMatrixUniformNames.push_back("projectionMatrix");
 
-    // PlayCanvas
-    m_projectionMatrixUniformNames.push_back("matrix_projection");
-    m_projectionMatrixUniformNames.push_back("matrix_viewProjection");
-
-    // Sketchfab
-    m_projectionMatrixUniformNames.push_back("ProjectionMatrix");
-
-    // Goo
-    // m_projectionMatrixUniformNames.push_back("projectionMatrix");
-    // m_projectionMatrixUniformNames.push_back("viewProjectionMatrix");
-
-    // Soft shadow example
-    m_projectionMatrixUniformNames.push_back("camProj");
-
-    // Tojiro's webgl examples
-    m_projectionMatrixUniformNames.push_back("projectionMat");
 
     // MODELVIEW
     m_modelViewMatrixUniformNames.clear();
-
-    // WebGLLessons
-    m_modelViewMatrixUniformNames.push_back("uMVMatrix");
-
-    // ThreeJS
     m_modelViewMatrixUniformNames.push_back("modelViewMatrix");
 
-    // PlayCanvas
-    m_modelViewMatrixUniformNames.push_back("matrix_view");
-    m_modelViewMatrixUniformNames.push_back("matrix_model");
+    // VIEW
+    m_viewMatrixUniformNames.push_back("viewMatrix");
 
-    // Sketchfab
-    m_modelViewMatrixUniformNames.push_back("ModelViewMatrix");
+    // NORMAL
+    m_normalMatrixUniformNames.push_back("normalMatrix");
 
-    // Goo
-    // m_modelViewMatrixUniformNames.push_back("viewMatrix");
-    // m_modelViewMatrixUniformNames.push_back("worldMatrix");
-
-    // Soft shadow example
-    m_modelViewMatrixUniformNames.push_back("camView");
-
-    // Tojiro's webgl examples
-    m_modelViewMatrixUniformNames.push_back("viewMat");
-
-
-
-    // MODELVIEWPROJECTION
-    m_modelViewProjectionMatrixUniformNames.push_back("uMatMVP");
 
     // Reset the thread ids
     memset(m_threadIds, 0, sizeof(m_threadIds));

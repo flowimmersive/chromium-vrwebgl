@@ -663,6 +663,8 @@ typedef unrestricted float GLclampf;
     void uniformMatrix2fv(VRWebGLUniformLocation? location, GLboolean transpose, sequence<GLfloat> array);
     void uniformMatrix3fv(VRWebGLUniformLocation? location, GLboolean transpose, Float32Array array);
     void uniformMatrix3fv(VRWebGLUniformLocation? location, GLboolean transpose, sequence<GLfloat> array);
+    void uniformMatrix3fv(VRWebGLUniformLocation? location, GLboolean transpose, Float32Array array, GLboolean unchanged);
+    void uniformMatrix3fv(VRWebGLUniformLocation? location, GLboolean transpose, sequence<GLfloat> array, GLboolean unchanged);
     void uniformMatrix4fv(VRWebGLUniformLocation? location, GLboolean transpose, Float32Array array);
     void uniformMatrix4fv(VRWebGLUniformLocation? location, GLboolean transpose, sequence<GLfloat> array);
     void uniformMatrix4fv(VRWebGLUniformLocation? location, GLboolean transpose, Float32Array array, GLboolean unchanged);

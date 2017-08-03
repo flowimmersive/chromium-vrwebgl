@@ -40,7 +40,7 @@ void VRWebGL_multiplyMatrices4(const GLfloat* m, const GLfloat* n, GLfloat* o)
         te[ 11 ] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
         te[ 15 ] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
     }
-    else 
+    else
     {
         o[0] = m[0]*n[0]  + m[4]*n[1]  + m[8]*n[2]  + m[12]*n[3];
         o[1] = m[1]*n[0]  + m[5]*n[1]  + m[9]*n[2]  + m[13]*n[3];
@@ -59,7 +59,7 @@ void VRWebGL_multiplyMatrices4(const GLfloat* m, const GLfloat* n, GLfloat* o)
         o[14] = m[2]*n[12] + m[6]*n[13] + m[10]*n[14] + m[14]*n[15];
         o[15] = m[3]*n[12] + m[7]*n[13] + m[11]*n[14] + m[15]*n[15];
     }
-}  
+}
 
 void VRWebGL_inverseMatrix4(const GLfloat* m, GLfloat* o)
 {
@@ -203,7 +203,7 @@ void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* o)
     // GLfloat fTrace = m[0] + m[5] + m[10];
     // GLfloat fRoot;
 
-    // if ( fTrace > 0.0 ) 
+    // if ( fTrace > 0.0 )
     // {
     //     // |w| > 1/2, may as well choose w > 1/2
     //     fRoot = sqrt(fTrace + 1.0);  // 2w
@@ -212,8 +212,8 @@ void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* o)
     //     o[0] = (m[6] - m[9]) * fRoot;
     //     o[1] = (m[8] - m[2]) * fRoot;
     //     o[2] = (m[1] - m[4]) * fRoot;
-    // } 
-    // else 
+    // }
+    // else
     // {
     //     // |w| <= 1/2
     //     int i = 0;
@@ -223,7 +223,7 @@ void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* o)
     //       i = 2;
     //     int j = (i+1)%4;
     //     int k = (i+2)%4;
-        
+
     //     fRoot = sqrt(m[i*4+i]-m[j*4+j]-m[k*4+k] + 1.0);
     //     o[i] = 0.5 * fRoot;
     //     fRoot = 0.5 / fRoot;
@@ -232,4 +232,38 @@ void VRWebGL_quaternionFromMatrix4(const GLfloat* m, GLfloat* o)
     //     o[k] = (m[k*4+i] + m[i*4+k]) * fRoot;
     // }
 
+};
+
+void VRWebGL_mat4ToMat3(const GLfloat* m, GLfloat* o)
+{
+    o[0] = m[0];
+    o[1] = m[1];
+    o[2] = m[2];
+
+    o[3] = m[4];
+    o[4] = m[5];
+    o[5] = m[6];
+
+    o[6] = m[8];
+    o[7] = m[9];
+    o[8] = m[10];
+};
+
+void VRWebGL_mat3ToMat4(const GLfloat* m, GLfloat* o)
+{
+    o[3] = o[7] = o[11] = o[12] = o[13] = o[14] = 0.0;
+
+    o[0] = m[0];
+    o[1] = m[1];
+    o[2] = m[2];
+
+    o[4] = m[3];
+    o[5] = m[4];
+    o[6] = m[5];
+
+    o[8]  = m[6];
+    o[9]  = m[7];
+    o[10] = m[8];
+
+    o[15] = 1.0;
 };

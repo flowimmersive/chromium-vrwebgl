@@ -3687,15 +3687,15 @@ std::string VRWebGLCommand_uniformMatrix2fv::name() const
 // ======================================================================================
 // ======================================================================================
 
-VRWebGLCommand_uniformMatrix3fv::VRWebGLCommand_uniformMatrix3fv(const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value): m_location(location), m_count(count), m_transpose(transpose)
+VRWebGLCommand_uniformMatrix3fv::VRWebGLCommand_uniformMatrix3fv(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value,  GLboolean unchanged): m_program(program), m_location(location), m_count(count), m_transpose(transpose), m_unchanged(unchanged)
 {
     m_value = new GLfloat[count * 9];
     memcpy(m_value, value, count * 9 * sizeof(GLfloat));
 }
 
-std::shared_ptr<VRWebGLCommand_uniformMatrix3fv> VRWebGLCommand_uniformMatrix3fv::newInstance(const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value)
+std::shared_ptr<VRWebGLCommand_uniformMatrix3fv> VRWebGLCommand_uniformMatrix3fv::newInstance(const VRWebGLProgram* program, const VRWebGLUniformLocation* location, GLsizei count, GLboolean transpose, const GLfloat *value,  GLboolean unchanged)
 {
-    return std::shared_ptr<VRWebGLCommand_uniformMatrix3fv>(new VRWebGLCommand_uniformMatrix3fv(location, count, transpose, value));
+    return std::shared_ptr<VRWebGLCommand_uniformMatrix3fv>(new VRWebGLCommand_uniformMatrix3fv(program, location, count, transpose, value, unchanged));
 }
 
 VRWebGLCommand_uniformMatrix3fv::~VRWebGLCommand_uniformMatrix3fv()
@@ -3717,7 +3717,47 @@ bool VRWebGLCommand_uniformMatrix3fv::canBeProcessedImmediately() const
 void* VRWebGLCommand_uniformMatrix3fv::process()
 {
     GLint location = m_location->location();
-    VRWebGL_glUniformMatrix3fv(location, m_count, m_transpose, m_value);
+    GLuint program = m_program->id();
+    VRWebGLCommandProcessor* commandProcessor = VRWebGLCommandProcessor::getInstance();
+    bool isNormalMatrix = commandProcessor->isNormalMatrixUniformLocation(program, location);
+    if(isNormalMatrix && !m_unchanged)
+    {
+        // reconstuct new normal matrix with oculus view matrix
+        GLfloat normal4[16];
+        GLfloat normal4_transponse[16];
+        GLfloat normal4_inverseTransponse[16];
+
+        VRWebGL_mat3ToMat4(m_value, normal4);
+
+        VRWebGL_transposeMatrix4(normal4, normal4_transponse);
+        VRWebGL_inverseMatrix4(normal4_transponse, normal4_inverseTransponse);
+
+        const GLfloat* cameraWorldMatrix = commandProcessor->getCameraWorldMatrix();
+        const GLfloat* viewMatrix = commandProcessor->getViewMatrix();
+
+        GLfloat camRot[16];
+        memcpy(camRot, cameraWorldMatrix, 16*sizeof(GLfloat));
+        camRot[3] = camRot[7] = camRot[11] = 0.0;
+        camRot[12] = camRot[13] = camRot[14] = 0.0;
+        camRot[15] = 1.0;
+
+        VRWebGL_multiplyMatrices4(camRot, normal4_inverseTransponse, normal4);
+
+        GLfloat modelView[16];
+        VRWebGL_multiplyMatrices4(viewMatrix, normal4, modelView);
+
+        VRWebGL_transposeMatrix4(modelView, normal4_transponse);
+        VRWebGL_inverseMatrix4(normal4_transponse, normal4_inverseTransponse);
+
+        GLfloat normal3[9];
+        VRWebGL_mat4ToMat3(normal4_inverseTransponse, normal3);
+        VRWebGL_glUniformMatrix3fv(location, m_count, m_transpose, normal3);
+    }
+    else
+    {
+        VRWebGL_glUniformMatrix3fv(location, m_count, m_transpose, m_value);
+    }
+
 #ifdef VRWEBGL_SHOW_LOG
     VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " location = " << location << " count = " << m_count << " transpose = " << (m_transpose ? "true" : "false");
 #endif
@@ -3779,6 +3819,15 @@ void* VRWebGLCommand_uniformMatrix4fv::process()
 #ifdef VRWEBGL_SHOW_LOG
         VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << name() << " VR projection matrix replaced!";
 #endif
+    }
+    else if(commandProcessor->isViewMatrixUniformLocation(program, location))
+    {
+        const GLfloat* viewMatrix = commandProcessor->getViewMatrix();
+        const GLfloat* cameraWorldMatrixWithTranslationOnly = commandProcessor->getCameraWorldMatrixWithTranslationOnly();
+        static GLfloat result[16];
+        VRWebGL_multiplyMatrices4(viewMatrix, cameraWorldMatrixWithTranslationOnly, result);
+
+        VRWebGL_glUniformMatrix4fv(location, m_count, m_transpose, result);
     }
     else
     {

@@ -168,8 +168,8 @@ public:
     void uniform4iv(const VRWebGLUniformLocation* location, Vector<GLint>& v);
     void uniformMatrix2fv(const VRWebGLUniformLocation*, GLboolean transpose, DOMFloat32Array* value);
     void uniformMatrix2fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value);
-    void uniformMatrix3fv(const VRWebGLUniformLocation*, GLboolean transpose, DOMFloat32Array* value);
-    void uniformMatrix3fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value);
+    void uniformMatrix3fv(const VRWebGLUniformLocation*, GLboolean transpose, DOMFloat32Array* value, GLboolean unchanged = false);
+    void uniformMatrix3fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value, GLboolean unchanged = false);
     void uniformMatrix4fv(const VRWebGLUniformLocation*, GLboolean transpose, DOMFloat32Array* value, GLboolean unchanged = false);
     void uniformMatrix4fv(const VRWebGLUniformLocation*, GLboolean transpose, Vector<GLfloat>& value, GLboolean unchanged = false);
     void useProgram(ScriptState*, VRWebGLProgram*);

@@ -2101,19 +2101,19 @@ void VRWebGLRenderingContext::uniformMatrix2fv(const VRWebGLUniformLocation* loc
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::uniformMatrix2fv 2 end";
 }
 
-void VRWebGLRenderingContext::uniformMatrix3fv(const VRWebGLUniformLocation* location, GLboolean transpose, DOMFloat32Array* value)
+void VRWebGLRenderingContext::uniformMatrix3fv(const VRWebGLUniformLocation* location, GLboolean transpose, DOMFloat32Array* value, GLboolean unchanged)
 {
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::uniformMatrix3fv 1 begin";
-	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_uniformMatrix3fv::newInstance(location, value->length() / 9, transpose, value->data());
+	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_uniformMatrix3fv::newInstance(m_programCurrentlyInUse, location, value->length() / 9, transpose, value->data(), unchanged);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::uniformMatrix3fv 1 end";
 }
 
-void VRWebGLRenderingContext::uniformMatrix3fv(const VRWebGLUniformLocation* location, GLboolean transpose, Vector<GLfloat>& value)
+void VRWebGLRenderingContext::uniformMatrix3fv(const VRWebGLUniformLocation* location, GLboolean transpose, Vector<GLfloat>& value, GLboolean unchanged)
 {
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::uniformMatrix3fv 2 begin";
-	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_uniformMatrix3fv::newInstance(location, value.size() / 9, transpose, value.data());
+	std::shared_ptr<VRWebGLCommand> vrWebGLCommand = VRWebGLCommand_uniformMatrix3fv::newInstance(m_programCurrentlyInUse, location, value.size() / 9, transpose, value.data(), unchanged);
 	// VLOG(0) << "VRWebGL: " << VRWebGLCommandProcessor::getInstance()->getCurrentThreadName() << ": " << vrWebGLCommand->name();
 	VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(vrWebGLCommand);
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::uniformMatrix3fv 2 end";
