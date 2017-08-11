@@ -2180,7 +2180,7 @@ void VRWebGLRenderingContext::endFrame()
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::endFrame end";
 }
 
-Vector<GLfloat> VRWebGLRenderingContext::getModelViewMatrix()
+Vector<GLfloat> VRWebGLRenderingContext::getViewMatrix()
 {
 	// TODO: this call to get and set the view matrix in the command processor should be synchronous
 	const GLfloat* viewMatrix = VRWebGLCommandProcessor::getInstance()->getViewMatrix();
@@ -2189,6 +2189,17 @@ Vector<GLfloat> VRWebGLRenderingContext::getModelViewMatrix()
 		m_modelViewMatrix[i] = viewMatrix[i];
 	}
 	return m_modelViewMatrix;
+}
+
+Vector<GLfloat> VRWebGLRenderingContext::getProjectionMatrix()
+{
+	// TODO: this call to get and set the projection matrix in the command processor should be synchronous
+	const GLfloat* projectionMatrix = VRWebGLCommandProcessor::getInstance()->getProjectionMatrix();
+	for (size_t i = 0; i < 16; i++)
+	{
+		m_projectionMatrix[i] = projectionMatrix[i];
+	}
+	return m_projectionMatrix;
 }
 
 VRPose* VRWebGLRenderingContext::getPose()
@@ -2290,6 +2301,7 @@ VRWebGLRenderingContext::VRWebGLRenderingContext():
 	m_unpackFlipY(false),
 	m_generatedImageCache(4),
 	m_modelViewMatrix(16),
+    m_projectionMatrix(16),
     m_gamepad(nullptr)
 {
 	void* result = VRWebGLCommandProcessor::getInstance()->queueVRWebGLCommandForProcessing(VRWebGLCommand_getString::newInstance(GL_EXTENSIONS));

@@ -694,7 +694,8 @@ typedef unrestricted float GLclampf;
     // VRWebGL specific calls
     void startFrame();
     void endFrame();
-    sequence<GLfloat> getModelViewMatrix();
+    sequence<GLfloat> getViewMatrix();
+    sequence<GLfloat> getProjectionMatrix();
     VRPose getPose();
     VREyeParameters getEyeParameters(DOMString eye);
     void setCameraWorldMatrix(Float32Array array);
