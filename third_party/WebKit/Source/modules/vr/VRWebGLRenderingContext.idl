@@ -692,6 +692,7 @@ typedef unrestricted float GLclampf;
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
     // VRWebGL specific calls
+    GLboolean ready(GLboolean flag);
     void startFrame();
     void endFrame();
     sequence<GLfloat> getViewMatrix();

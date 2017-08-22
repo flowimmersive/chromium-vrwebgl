@@ -109,6 +109,7 @@ private:
     jmethodID m_getVideoHeightMethodID;
 
     bool m_reset = false;
+    bool m_ready = false;
 
     // Do not allow copy of instances.
     VRWebGLCommandProcessor(const VRWebGLCommandProcessor&) = delete;
@@ -188,6 +189,10 @@ public:
     void deleteSurfaceTexture(const std::shared_ptr<VRWebGLSurfaceTexture>& surfaceTexture);
 
     std::shared_ptr<VRWebGLSurfaceTexture> findSurfaceTextureByTextureId(unsigned textureId);
+
+    void ready(bool flag);
+    bool ready();
+
 
     jmethodID getNewWebViewMethodID() const;
 
