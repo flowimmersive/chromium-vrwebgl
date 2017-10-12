@@ -67,7 +67,7 @@ static const int GPU_LEVEL      = 3;
 
 // VRWEBGL BEGIN
 // #define RENDER_NATIVE_TRIANGLE  1
-#define USE_SCENE               1
+// #define USE_SCENE               1
 // VRWEBGL END
 
 // VRWEBGL BEGIN (forward declarations)
@@ -534,49 +534,36 @@ static void ovrGeometry_CreateCube( ovrGeometry * geometry )
 {
   struct ovrCubeVertices
   {
-    char positions[4][4];
-    unsigned char colors[4][4];
-    unsigned char uvs[4][2];
+    char positions[8][4];
+    unsigned char colors[8][4];
   };
 
   static const ovrCubeVertices cubeVertices =
   {
     // positions
     {
-        /*
-      { static_cast<char>(-127), +127, static_cast<char>(-127), +127 },
-      { +127, +127, static_cast<char>(-127), +127 },
-      { +127, +127, +127, +127 },
-      { static_cast<char>(-127), +127, +127, +127 }, // top
-
-      { static_cast<char>(-127), static_cast<char>(-127), static_cast<char>(-127), +127 },
-      { static_cast<char>(-127), static_cast<char>(-127), +127, +127 },
-      { +127, static_cast<char>(-127), +127, +127 },
-      { +127, static_cast<char>(-127), static_cast<char>(-127), +127 }  // bottom
-        */
-
-      { static_cast<char>(-127), +127, 0, +127 },
-      { static_cast<char>(-127), static_cast<char>(-127), 0, +127 },
-      { +127, static_cast<char>(-127), 0, +127 },
-      { +127, +127, 0, +127 },
+      { static_cast<char>(-127), +127, static_cast<char>(-127), +127 }, { +127, +127, static_cast<char>(-127), +127 }, { +127, +127, +127, +127 }, { static_cast<char>(-127), +127, +127, +127 }, // top
+      { static_cast<char>(-127), static_cast<char>(-127), static_cast<char>(-127), +127 }, { static_cast<char>(-127), static_cast<char>(-127), +127, +127 }, { +127, static_cast<char>(-127), +127, +127 }, { +127, static_cast<char>(-127), static_cast<char>(-127), +127 }  // bottom
     },
     // colors
     {
-      { 0, 0, 0, 255 }, {   255, 255,   255, 255 }, {   0,   0, 255, 255 }, { 255,   0,   0, 255 }
-    },
-    // uvs
-    {
-        { 0,   1}, { 0,  1}, {1,   0}, { 1,   1},
+      { 255,   0, 255, 255 }, {   0, 255,   0, 255 }, {   0,   0, 255, 255 }, { 255,   0,   0, 255 },
+      {   0,   0, 255, 255 }, {   0, 255,   0, 255 }, { 255,   0, 255, 255 }, { 255,   0,   0, 255 }
     },
   };
 
-  static const unsigned short cubeIndices[6] =
+  static const unsigned short cubeIndices[36] =
   {
-    0, 1, 2, 2, 3, 0
+    0, 1, 2, 2, 3, 0, // top
+    4, 5, 6, 6, 7, 4, // bottom
+    2, 6, 7, 7, 1, 2, // right
+    0, 4, 5, 5, 3, 0, // left
+    3, 5, 6, 6, 2, 3, // front
+    0, 1, 7, 7, 4, 0  // back
   };
 
   geometry->VertexCount = 8;
-  geometry->IndexCount = 6;
+  geometry->IndexCount = 36;
 
   geometry->VertexAttribs[0].Index = VERTEX_ATTRIBUTE_LOCATION_POSITION;
   geometry->VertexAttribs[0].Size = 4;
@@ -591,13 +578,6 @@ static void ovrGeometry_CreateCube( ovrGeometry * geometry )
   geometry->VertexAttribs[1].Normalized = true;
   geometry->VertexAttribs[1].Stride = sizeof( cubeVertices.colors[0] );
   geometry->VertexAttribs[1].Pointer = (const GLvoid *)offsetof( ovrCubeVertices, colors );
-
-  geometry->VertexAttribs[2].Index = VERTEX_ATTRIBUTE_LOCATION_UV;
-  geometry->VertexAttribs[2].Size = 4;
-  geometry->VertexAttribs[2].Type = GL_UNSIGNED_BYTE;
-  geometry->VertexAttribs[2].Normalized = true;
-  geometry->VertexAttribs[2].Stride = sizeof( cubeVertices.uvs[0] );
-  geometry->VertexAttribs[2].Pointer = (const GLvoid *)offsetof( ovrCubeVertices, uvs );
 
   GL( glGenBuffers( 1, &geometry->VertexBuffer ) );
   GL( glBindBuffer( GL_ARRAY_BUFFER, geometry->VertexBuffer ) );
@@ -957,7 +937,7 @@ ovrScene
 ================================================================================
 */
 
-#define NUM_INSTANCES  1 // 1500
+#define NUM_INSTANCES   100 // 1500
 
 struct ovrScene
 {
@@ -975,7 +955,6 @@ struct ovrScene
     int                 bufferId;
     // VRWEBGL END
   ovrGeometry     Cube;
-  GLuint        textureID;
   GLuint        InstanceTransformBuffer;
   ovrVector3f     CubePositions[NUM_INSTANCES];
   ovrVector3f     CubeRotations[NUM_INSTANCES];
@@ -984,30 +963,24 @@ struct ovrScene
 static const char VERTEX_SHADER[] =
   "#version 300 es\n"
   "in vec3 vertexPosition;\n"
-  "in vec2 vertexUv;\n"
   "in vec4 vertexColor;\n"
   "in mat4 vertexTransform;\n"
   "uniform mat4 ViewMatrix;\n"
   "uniform mat4 ProjectionMatrix;\n"
   "out vec4 fragmentColor;\n"
-  "out vec2 uv;\n"
   "void main()\n"
   "{\n"
   " gl_Position = ProjectionMatrix * ( ViewMatrix * ( vertexTransform * vec4( vertexPosition, 1.0 ) ) );\n"
-  " uv = vertexUv;\n"
   " fragmentColor = vertexColor;\n"
   "}\n";
 
 static const char FRAGMENT_SHADER[] =
   "#version 300 es\n"
- " uniform sampler2D tex; \n"
   "in lowp vec4 fragmentColor;\n"
-  "in lowp vec2 uv;\n"
   "out lowp vec4 outColor;\n"
   "void main()\n"
   "{\n"
-    " outColor = texture(tex, uv);\n"
-   //" outColor = fragmentColor;\n"
+  " outColor = fragmentColor;\n"
   "}\n";
 
 static const char VERTEX_SHADER_GLSL_CODE[] =
@@ -1084,18 +1057,6 @@ static void ovrScene_Create( ovrScene * scene )
 
   ovrGeometry_CreateCube( &scene->Cube );
 
-  glGenTextures(1, &scene->textureID);
-
-  unsigned char mask[512 * 512];
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-             512,
-             512,
-             0,
-             GL_RGB,
-             GL_UNSIGNED_BYTE,
-             mask);
-
-
   // Create the instance transform attribute buffer.
   GL( glGenBuffers( 1, &scene->InstanceTransformBuffer ) );
   GL( glBindBuffer( GL_ARRAY_BUFFER, scene->InstanceTransformBuffer ) );
@@ -1151,13 +1112,13 @@ static void ovrScene_Create( ovrScene * scene )
       scene->CubeRotations[j] = scene->CubeRotations[j - 1];
     }
 
-    scene->CubePositions[insert].x = 0;
-    scene->CubePositions[insert].y = 0;
-    scene->CubePositions[insert].z = -5;
+    scene->CubePositions[insert].x = rx;
+    scene->CubePositions[insert].y = ry;
+    scene->CubePositions[insert].z = rz;
 
-    scene->CubeRotations[insert].x = 0.0;
-    scene->CubeRotations[insert].y = 0.0;
-    scene->CubeRotations[insert].z = 0.0;
+    scene->CubeRotations[insert].x = ovrScene_RandomFloat( scene );
+    scene->CubeRotations[insert].y = ovrScene_RandomFloat( scene );
+    scene->CubeRotations[insert].z = ovrScene_RandomFloat( scene );
   }
 
     // LUDEI BEGIN
@@ -1357,13 +1318,12 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
   GL( glBindBuffer( GL_ARRAY_BUFFER, scene->InstanceTransformBuffer ) );
   GL( ovrMatrix4f * cubeTransforms = (ovrMatrix4f *) glMapBufferRange( GL_ARRAY_BUFFER, 0,
         NUM_INSTANCES * sizeof( ovrMatrix4f ), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT ) );
-
   for ( int i = 0; i < NUM_INSTANCES; i++ )
   {
     const ovrMatrix4f rotation = ovrMatrix4f_CreateRotation(
-                    scene->CubeRotations[i].x,
-                    scene->CubeRotations[i].y,
-                    scene->CubeRotations[i].z );
+                    scene->CubeRotations[i].x * simulation->CurrentRotation.x,
+                    scene->CubeRotations[i].y * simulation->CurrentRotation.y,
+                    scene->CubeRotations[i].z * simulation->CurrentRotation.z );
     const ovrMatrix4f translation = ovrMatrix4f_CreateTranslation(
                       scene->CubePositions[i].x,
                       scene->CubePositions[i].y,
@@ -1371,7 +1331,6 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
     const ovrMatrix4f transform = ovrMatrix4f_Multiply( &translation, &rotation );
     cubeTransforms[i] = ovrMatrix4f_Transpose( &transform );
   }
-
   GL( glUnmapBuffer( GL_ARRAY_BUFFER ) );
   GL( glBindBuffer( GL_ARRAY_BUFFER, 0 ) );
 #endif
@@ -1406,21 +1365,13 @@ static ovrFrameParms ovrRenderer_RenderFrame( ovrRenderer * renderer, const ovrJ
     GL( glClearColor( 0.125f, 0.0f, 0.125f, 1.0f ) );
     GL( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 #if USE_SCENE
-    if(!VRWebGLCommandProcessor::getInstance()->ready())
-    {
-        GL( glUseProgram( scene->Program.Program ) );
-        GL( glUniformMatrix4fv( scene->Program.Uniforms[UNIFORM_VIEW_MATRIX], 1, GL_TRUE, (const GLfloat *)eyeViewMatrix.M[0] ) );
-        GL( glUniformMatrix4fv( scene->Program.Uniforms[UNIFORM_PROJECTION_MATRIX], 1, GL_TRUE, (const GLfloat *)renderer->ProjectionMatrix.M[0] ) );
-        GL( glBindVertexArray( scene->Cube.VertexArrayObject ) );
-
-        GL( glBindTexture(GL_TEXTURE_2D, scene->textureID); );
-
-        GL( glDrawElementsInstanced( GL_TRIANGLES, scene->Cube.IndexCount, GL_UNSIGNED_SHORT, NULL, NUM_INSTANCES ) );
-
-        GL( glBindTexture(GL_TEXTURE_2D, 0); );
-        GL( glBindVertexArray( 0 ) );
-        GL( glUseProgram( 0 ) );
-    }
+    GL( glUseProgram( scene->Program.Program ) );
+    GL( glUniformMatrix4fv( scene->Program.Uniforms[UNIFORM_VIEW_MATRIX], 1, GL_TRUE, (const GLfloat *)eyeViewMatrix.M[0] ) );
+    GL( glUniformMatrix4fv( scene->Program.Uniforms[UNIFORM_PROJECTION_MATRIX], 1, GL_TRUE, (const GLfloat *)renderer->ProjectionMatrix.M[0] ) );
+    GL( glBindVertexArray( scene->Cube.VertexArrayObject ) );
+    GL( glDrawElementsInstanced( GL_TRIANGLES, scene->Cube.IndexCount, GL_UNSIGNED_SHORT, NULL, NUM_INSTANCES ) );
+    GL( glBindVertexArray( 0 ) );
+    GL( glUseProgram( 0 ) );
 #endif
 
 

@@ -470,17 +470,6 @@ void VRWebGLCommandProcessor::reset() {
     pthread_mutex_unlock( &m_mutex );
 }
 
-void VRWebGLCommandProcessor::ready(bool flag) {
-    if(flag != m_ready) {
-        m_ready = flag;
-    }
-}
-
-bool VRWebGLCommandProcessor::ready() {
-    return m_ready;
-}
-
-
 bool VRWebGLCommandProcessor::m_synchronousVRWebGLCommandBeenProcessedInUpdate() const
 {
     return m_synchronousVRWebGLCommandProcessedInUpdate;

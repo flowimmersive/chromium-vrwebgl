@@ -2166,12 +2166,6 @@ void VRWebGLRenderingContext::viewport(GLint x, GLint y, GLsizei width, GLsizei 
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::viewport end";
 }
 
-GLboolean VRWebGLRenderingContext::ready(GLboolean flag)
-{
-    VRWebGLCommandProcessor::getInstance()->ready(flag);
-    return VRWebGLCommandProcessor::getInstance()->ready();
-}
-
 void VRWebGLRenderingContext::startFrame()
 {
 	// VLOG(0) << "VRWebGL: VRWebGLRenderingContext::startFrame begin";

@@ -176,7 +176,6 @@ public:
     void vertexAttribPointer(ScriptState*, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, long long offset);
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
-    GLboolean ready(GLboolean flag);
     void startFrame();
     void endFrame();
     Vector<GLfloat> getProjectionMatrix();
