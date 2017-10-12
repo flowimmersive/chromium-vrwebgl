@@ -81,7 +81,7 @@ const BrowserDescriptor kBrowserDescriptors[] = {
   {
     "org.chromium.android_webview.shell",
     "webview_devtools_remote",
-    "WebView Test Shell"
+    "VRWebGL Shell"
   },
   {
     "org.chromium.content_shell_apk",
