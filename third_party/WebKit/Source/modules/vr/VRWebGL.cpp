@@ -2861,7 +2861,7 @@ bool VRWebGLCommand_texParameteri::canBeProcessedImmediately() const
 void* VRWebGLCommand_texParameteri::process()
 {
     // A hack to fix the assignment of the correct filter to the external textures.
-    if (m_texture && m_texture->externalTextureId() != 0 && (m_pname == GL_TEXTURE_MIN_FILTER || m_pname == GL_TEXTURE_MAG_FILTER))
+    if (m_texture && m_texture->externalTextureId() != 0)
     {
         m_target = GL_TEXTURE_EXTERNAL_OES;
     }
