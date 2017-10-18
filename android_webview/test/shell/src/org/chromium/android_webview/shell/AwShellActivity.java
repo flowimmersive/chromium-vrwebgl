@@ -997,29 +997,6 @@ public class AwShellActivity extends Activity implements
                     GeolocationPermissions.Callback callback) {
                 callback.invoke(origin, false, false);
             }
-
-            @Override
-            public void onReceivedError(int errorCode, String description, String failingUrl) {
-                Utils.createAlertDialog(AwShellActivity.this, "ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();
-            }
-
-            // @Override
-            // public void onReceivedError2(AwWebResourceRequest request, AwWebResourceError error) {
-            //     String failingUrl = request.url;
-            //     int errorCode = error.errorCode;
-            //     String description = error.description;
-            //     Utils.createAlertDialog(AwShellActivity.this, "ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();
-            // }
-
-            @Override
-            public void onReceivedHttpError(AwWebResourceRequest request, AwWebResourceResponse response) {
-                String failingUrl = request.url;
-                // HACK! Do not show the icon loading error.
-                if (failingUrl.toLowerCase().contains("favicon.ico")) return;
-                int errorCode = response.getStatusCode();
-                String description = response.getReasonPhrase();
-                Utils.createAlertDialog(AwShellActivity.this, "HTTP ERROR: " + errorCode, failingUrl + ": " + description, null, 1, "Ok", null, null).show();
-            }
         };
 
         SharedPreferences sharedPreferences =
