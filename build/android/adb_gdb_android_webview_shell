@@ -12,5 +12,5 @@ export ADB_GDB_PROGNAME=$(basename "$0")
 export ADB_GDB_ACTIVITY=.AwShellActivity
 "$PROGDIR"/adb_gdb \
     --program-name=AwShellApplication \
-    --package-name=org.chromium.android_webview.shell \
+    --package-name=org.chromium.android_vrwebgl_webview.shell \
     "$@"

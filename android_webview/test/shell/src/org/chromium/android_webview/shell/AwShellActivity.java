@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package org.chromium.android_webview.shell;
+package org.chromium.android_vrwebgl_webview.shell;
 
 import android.Manifest;
 import android.app.Activity;
@@ -52,8 +52,8 @@ import org.chromium.android_webview.AwContentsClient.AwWebResourceRequest;
 import org.chromium.android_webview.AwContentsStatics;
 import org.chromium.android_webview.AwDevToolsServer;
 import org.chromium.android_webview.AwSettings;
-import org.chromium.android_webview.test.AwTestContainerView;
-import org.chromium.android_webview.test.NullContentsClient;
+import org.chromium.android_vrwebgl_webview.test.AwTestContainerView;
+import org.chromium.android_vrwebgl_webview.test.NullContentsClient;
 import org.chromium.android_webview.JsResultReceiver;
 import org.chromium.android_webview.JsPromptResultReceiver;
 import org.chromium.base.BaseSwitches;

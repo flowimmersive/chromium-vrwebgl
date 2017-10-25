@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package org.chromium.android_webview.test;
+package org.chromium.android_vrwebgl_webview.test;
 
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +22,7 @@ import android.view.inputmethod.InputConnection;
 import android.widget.FrameLayout;
 
 import org.chromium.android_webview.AwContents;
-import org.chromium.android_webview.shell.DrawGL;
+import org.chromium.android_vrwebgl_webview.shell.DrawGL;
 import org.chromium.content.browser.ContentViewCore;
 
 import javax.microedition.khronos.egl.EGLConfig;

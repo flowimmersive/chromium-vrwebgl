@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package org.chromium.android_webview.test;
+package org.chromium.android_vrwebgl_webview.test;
 
 import android.app.Service;
 import android.content.Intent;
@@ -13,7 +13,7 @@ import android.os.Process;
 
 import org.chromium.android_webview.AwBrowserProcess;
 import org.chromium.android_webview.AwResource;
-import org.chromium.android_webview.shell.R;
+import org.chromium.android_vrwebgl_webview.shell.R;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.SuppressFBWarnings;

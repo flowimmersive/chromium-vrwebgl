@@ -2625,7 +2625,7 @@ Activity lifecycle
 
 extern "C"
 {
-    JNIEXPORT jlong JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnCreate( JNIEnv * env, jobject obj, jobject activity )
+    JNIEXPORT jlong JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnCreate( JNIEnv * env, jobject obj, jobject activity )
     {
         ALOGV( "VRWebGL: onCreate()" );
 
@@ -2640,7 +2640,7 @@ extern "C"
         return (jlong)((size_t)appThread);
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnStart( JNIEnv * env, jobject obj, jlong handle )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnStart( JNIEnv * env, jobject obj, jlong handle )
     {
         ALOGV( "VRWebGL: onStart()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2649,7 +2649,7 @@ extern "C"
         ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnResume( JNIEnv * env, jobject obj, jlong handle )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnResume( JNIEnv * env, jobject obj, jlong handle )
     {
         ALOGV( "VRWebGL: onResume()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2658,7 +2658,7 @@ extern "C"
         ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnPause( JNIEnv * env, jobject obj, jlong handle )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnPause( JNIEnv * env, jobject obj, jlong handle )
     {
         ALOGV( "VRWebGL: onPause()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2667,7 +2667,7 @@ extern "C"
         ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnStop( JNIEnv * env, jobject obj, jlong handle )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnStop( JNIEnv * env, jobject obj, jlong handle )
     {
         ALOGV( "VRWebGL: onStop()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2676,7 +2676,7 @@ extern "C"
         ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnDestroy( JNIEnv * env, jobject obj, jlong handle )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnDestroy( JNIEnv * env, jobject obj, jlong handle )
     {
         ALOGV( "VRWebGL: onDestroy()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2697,7 +2697,7 @@ extern "C"
     ================================================================================
     */
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnSurfaceCreated( JNIEnv * env, jobject obj, jlong handle, jobject surface )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnSurfaceCreated( JNIEnv * env, jobject obj, jlong handle, jobject surface )
     {
         ALOGV( "    onSurfaceCreated()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2720,7 +2720,7 @@ extern "C"
         ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnSurfaceChanged( JNIEnv * env, jobject obj, jlong handle, jobject surface )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnSurfaceChanged( JNIEnv * env, jobject obj, jlong handle, jobject surface )
     {
         ALOGV( "    onSurfaceChanged()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2762,7 +2762,7 @@ extern "C"
         }
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnSurfaceDestroyed( JNIEnv * env, jobject obj, jlong handle )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnSurfaceDestroyed( JNIEnv * env, jobject obj, jlong handle )
     {
         ALOGV( "    onSurfaceDestroyed()" );
         ovrAppThread * appThread = (ovrAppThread *)((size_t)handle);
@@ -2774,7 +2774,7 @@ extern "C"
         appThread->NativeWindow = NULL;
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnPageStarted( JNIEnv * env, jobject obj )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnPageStarted( JNIEnv * env, jobject obj )
     {
         ALOGV( "    onPageStarted()" );
         VRWebGLCommandProcessor::getInstance()->reset();
@@ -2788,7 +2788,7 @@ extern "C"
     ================================================================================
     */
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnKeyEvent( JNIEnv * env, jobject obj, jlong handle, int keyCode, int action )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnKeyEvent( JNIEnv * env, jobject obj, jlong handle, int keyCode, int action )
     {
         if ( action == AKEY_EVENT_ACTION_UP )
         {
@@ -2802,7 +2802,7 @@ extern "C"
         ovrMessageQueue_PostMessage( &appThread->MessageQueue, &message );
     }
 
-    JNIEXPORT void JNICALL Java_org_chromium_android_1webview_shell_AwShellActivity_nativeOnTouchEvent( JNIEnv * env, jobject obj, jlong handle, int action, float x, float y )
+    JNIEXPORT void JNICALL Java_org_chromium_android_1vrwebgl_1webview_shell_AwShellActivity_nativeOnTouchEvent( JNIEnv * env, jobject obj, jlong handle, int action, float x, float y )
     {
         if ( action == AMOTION_EVENT_ACTION_UP )
         {

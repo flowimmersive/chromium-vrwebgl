@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package org.chromium.android_webview.test;
+package org.chromium.android_vrwebgl_webview.test;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -13,7 +13,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 
 import org.chromium.android_webview.AwBrowserProcess;
-import org.chromium.android_webview.shell.AwShellResourceProvider;
+import org.chromium.android_vrwebgl_webview.shell.AwShellResourceProvider;
 import org.chromium.base.ContextUtils;
 
 /**

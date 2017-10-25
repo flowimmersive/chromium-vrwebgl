@@ -68,7 +68,7 @@ android_apk("android_webview_apk") {
 
 android_resources("android_webview_apk_resources") {
   resource_dirs = [ "shell/res" ]
-  custom_package = "org.chromium.android_webview.shell"
+  custom_package = "org.chromium.android_vrwebgl_webview.shell"
 }
 
 android_assets("android_webview_apk_assets") {

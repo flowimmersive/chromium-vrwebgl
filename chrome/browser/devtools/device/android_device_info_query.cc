@@ -79,7 +79,7 @@ const BrowserDescriptor kBrowserDescriptors[] = {
     "Work Chrome"
   },
   {
-    "org.chromium.android_webview.shell",
+    "org.chromium.android_vrwebgl_webview.shell",
     "webview_devtools_remote",
     "VRWebGL Shell"
   },

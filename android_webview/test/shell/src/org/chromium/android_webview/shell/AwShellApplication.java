@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package org.chromium.android_webview.shell;
+package org.chromium.android_vrwebgl_webview.shell;
 
 import org.chromium.base.CommandLine;
 import org.chromium.base.annotations.SuppressFBWarnings;

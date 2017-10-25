@@ -40,8 +40,8 @@ PACKAGE_INFO.update({
         '/data/local/tmp/castshell-command-line',
         None),
     'android_webview_shell': chrome.PackageInfo(
-        'org.chromium.android_webview.shell',
-        'org.chromium.android_webview.shell.AwShellActivity',
+        'org.chromium.android_vrwebgl_webview.shell',
+        'org.chromium.android_vrwebgl_webview.shell.AwShellActivity',
         '/data/local/tmp/android-webview-command-line',
         None),
     'gtest': chrome.PackageInfo(

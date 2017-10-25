@@ -1,4 +1,4 @@
-package org.chromium.android_webview.shell;
+package org.chromium.android_vrwebgl_webview.shell;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

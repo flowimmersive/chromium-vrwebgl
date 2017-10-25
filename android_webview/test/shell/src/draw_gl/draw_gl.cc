@@ -15,7 +15,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 // This code goes into its own dynamic library, so we cannot depend on
 // any other components like base.
 JNIEXPORT void JNICALL
-    Java_org_chromium_android_1webview_shell_DrawGL_nativeDrawGL(
+    Java_org_chromium_android_1vrwebgl_1webview_shell_DrawGL_nativeDrawGL(
         JNIEnv*,
         jclass,
         jlong draw_gl,
