@@ -115,8 +115,7 @@ public class AwShellActivity extends Activity implements
     private static final String PREFERENCES_NAME = "AwShellPrefs";
     private static final String INITIAL_URL = "No URL provided either in the intent nor in the config.json";
     private static final String LAST_USED_URL_KEY = "url";
-    private static final int READ_EXTERNAL_STORAGE_PERMISSION_ID = 3;
-    private static final int RECORD_AUDIO_PERMISSION_ID = 4;
+    private static final int PERMISSIONS_ID = 5;
     private AwBrowserContext mBrowserContext;
     private AwDevToolsServer mDevToolsServer;
     private AwTestContainerView mAwTestContainerView;
@@ -555,52 +554,15 @@ public class AwShellActivity extends Activity implements
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
-    private void requestExternalStorageReadPermission()
-    {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-        {
-            // Should we show an explanation?
-            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE))
-            // {
-
-            //     // Show an expanation to the user *asynchronously* -- don't block
-            //     // this thread waiting for the user's response! After the user
-            //     // sees the explanation, try again to request the permission.
-
-            // }
-            // else
-            {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        READ_EXTERNAL_STORAGE_PERMISSION_ID);
-            }
-        }
-    }
-
-    private void requestRecordAudioPermission()
-    {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
-        {
-            // Should we show an explanation?
-            // if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE))
-            // {
-
-            //     // Show an expanation to the user *asynchronously* -- don't block
-            //     // this thread waiting for the user's response! After the user
-            //     // sees the explanation, try again to request the permission.
-
-            // }
-            // else
-            {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECORD_AUDIO},
-                        RECORD_AUDIO_PERMISSION_ID);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_ID: {
+                if (grantResults.length == 0
+                    || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                   finishAffinity();
+                }
+                return;
             }
         }
     }
@@ -608,9 +570,6 @@ public class AwShellActivity extends Activity implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        requestExternalStorageReadPermission();
-        requestRecordAudioPermission();
 
         CommandLine.init(new String[] { "chrome", "--ignore-gpu-blacklist", "--enable-webvr", "--enable-blink-features=ScriptedSpeech,GamepadExtensions" });
 
@@ -776,8 +735,16 @@ public class AwShellActivity extends Activity implements
 
         audioManager = (AudioManager) getSystemService( Context.AUDIO_SERVICE );
 
-        // Create the native side
-        nativePointer = nativeOnCreate( this );
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
+           ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        ) {
+          ActivityCompat.requestPermissions(this,
+                  new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
+                  PERMISSIONS_ID);
+        } else {
+             // Create the native side
+             nativePointer = nativeOnCreate( this );
+        }
     }
 
     @Override protected void onStart()
